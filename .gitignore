@@ -1,0 +1,101 @@
+# ============================================================
+# Rayquaza — .gitignore
+# ============================================================
+
+# --- SECURITY: Never commit secrets ---
+.env
+.env.*
+*.key
+*.pem
+*.secret
+secrets/
+api_keys.txt
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.venv/
+ENV/
+pip-log.txt
+pip-delete-this-directory.txt
+*.egg-info/
+dist/
+build/
+*.egg
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# --- C / C++ builds (liboqs, harness) ---
+*.o
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+build/
+_build/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# --- liboqs build artifacts ---
+liboqs/
+liboqs-build/
+install/
+
+# --- AFL++ output ---
+afl-out/
+afl_output/
+findings/
+fuzzer-output/
+crashes/
+hangs/
+queue/
+.cur_input
+
+# --- Timing / results data (keep samples, not bulk dumps) ---
+track-a-target/results/*.csv
+track-a-target/results/*.bin
+track-a-target/results/*.raw
+shared/benchmark/*.csv
+shared/benchmark/*.bin
+shared/analysis/*.csv
+# To commit a sample: git add -f path/to/sample.csv
+
+# --- IDE / editor ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+*.iml
+
+# --- OS files ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# --- Logs ---
+*.log
+logs/
