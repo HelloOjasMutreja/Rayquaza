@@ -1,6 +1,6 @@
 # Track A Plan — Crypto & Systems
 
-Owner: [your name]. Tag all my tracking entries [A].
+Owner: Ojas. Tag all my tracking entries [A].
 
 ## Phase A0 — Foundations & Setup (Days 1-3)
 Goal: repo, environment, liboqs building, Kyber round-trip working.

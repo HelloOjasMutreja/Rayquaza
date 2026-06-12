@@ -1,6 +1,6 @@
 # Track B Plan — AI & Attack Engine
 
-Owner: [teammate name]. Tag all entries [B]. (Maintained by Track B; do not edit from Track A.)
+Owner: Vedanth. Tag all entries [B]. (Maintained by Track B; do not edit from Track A.)
 
 ## Phase B0 (Days 1-3): Repo setup, Claude API access, read charter.
 ## Phase B1 (Days 4-7): LLM-for-security survey, prompt templates, code-ingestion pipeline.

@@ -6,8 +6,8 @@ an attacker find weaknesses in post-quantum cryptography implementations (CRYSTA
 CRYSTALS-Dilithium) faster than classical fuzzing?
 
 ## Team
-- Track A (Crypto & Systems): [your name]
-- Track B (AI & Attack Engine): [teammate name]
+- Track A (Crypto & Systems): Ojas
+- Track B (AI & Attack Engine): Vedanth
 
 ## How to navigate this repo
 Read `AGENTS.md` first if you are an AI agent. Humans should start with 
