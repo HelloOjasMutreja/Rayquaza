@@ -27,6 +27,11 @@ or needs something from the other. This is how the two halves stay coupled.
     variance_A (float), variance_B (float), t_statistic (float), significant (bool),
     generated_by (string — use "harness" for real runs, "mock" for synthetic).
   See shared/feedback/ for an example output file.
+- [READY] 2026-06-14 B3: LLM adversary loop is ready for integration. Track A: drop timing
+  JSON files into shared/feedback/ with the filename containing the hypothesis_id
+  (e.g. timing_H001_<timestamp>.json). Format: see shared/feedback/mock_timing_*.json for
+  the schema. Once real files land there, drop the --use-mock flag to close the loop
+  (the loop polls shared/feedback/ every 30s, 600s timeout per hypothesis).
 - [PENDING] B3: test-vector format spec (so A harness can consume them).
 
 ## Open coordination questions

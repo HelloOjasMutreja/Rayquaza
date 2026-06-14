@@ -12,6 +12,7 @@ Tag entries [A] (Track A) or [B] (Track B). Use ISO dates.
 ## In Progress
 - [A] Phase A1: deep-read Kyber liboqs implementation, map secret flow in Decaps.
 - [B] Phase B2: AFL++ fuzzing baseline — harness.c (stub OQS_KEM_decaps), Dockerfile, build/run/summarize scripts ready. Next: build container, replace stub with real liboqs, run 24h baseline.
+- [B] Phase B3: full LLM adversary loop (adversary_loop.py + main.py) — ingest→vectorize→feedback→refine→log→state cycle working end-to-end. Mock loop verified: 3-cycle run on dummy.c promoted H001 & H002 (t≈93.7/95.2, significant). READY FOR TRACK A INTEGRATION — drop real timing JSON into shared/feedback/ to replace mock (see SYNC.md). Open item: codellama:7b vectors not yet compilable (B-002), prompt iteration is Phase B4.
 
 ## Blocked
 (none yet — B2 harness uses a stub and is NOT blocked; liboqs A0 build flags already delivered, see SYNC.md)
