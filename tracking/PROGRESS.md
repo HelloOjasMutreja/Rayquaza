@@ -7,10 +7,11 @@ Tag entries [A] (Track A) or [B] (Track B). Use ISO dates.
 - 2026-06-13 [A/B] Repository scaffold created.
 - 2026-06-14 [A] Phase A0: WSL2 + Ubuntu 24.04, liboqs built, Kyber512 round-trip verified.
 - 2026-06-14 [B] Phase B0: Repo scaffold, directory structure, AGENTS.md Ollama rules, EXPERIMENT_LOG.md, prompt library (stage1/2/3), dummy.c test target, ollama_test.py, mock_feedback.py — all created.
+- 2026-06-14 [B] Phase B1: ingest.py ingestion pipeline (CodeIngester + Hypothesis dataclass) — preprocess/analyze/save working; verified on dummy.c, codellama:7b returned 2 HIGH-confidence ranked hypotheses (2/3 functions flagged; compare() has no secret-token params).
 
 ## In Progress
 - [A] Phase A1: deep-read Kyber liboqs implementation, map secret flow in Decaps.
-- [B] Phase B1: ingestion pipeline (ollama_test.py → ingest.py), verify Ollama connectivity with codellama:7b on dummy.c.
+- [B] Phase B2: AFL++ fuzzing baseline — harness.c (stub OQS_KEM_decaps), Dockerfile, build/run/summarize scripts ready. Next: build container, replace stub with real liboqs, run 24h baseline.
 
 ## Blocked
-(none yet)
+(none yet — B2 harness uses a stub and is NOT blocked; liboqs A0 build flags already delivered, see SYNC.md)

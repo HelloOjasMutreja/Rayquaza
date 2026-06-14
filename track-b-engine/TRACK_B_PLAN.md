@@ -15,13 +15,14 @@ Owner: Vedanth. Tag all entries [B]. (Maintained by Track B; do not edit from Tr
 - Validate prompt output quality on dummy.c (all 3 patterns detected).
 - Build stage2 refinement loop using mock_feedback.py output.
 - Build stage3 vector generator: hypothesis → compilable C timing test.
-- Status: IN PROGRESS
+- Status: DONE 2026-06-14 (ingest.py working on dummy.c; stage2/3 wiring continues in B3).
 
 ## Phase B2 (Week 2): AFL++ baseline on clean Kyber.
 - Needs: A0 build flags (DELIVERED).
 - Set up AFL++ with liboqs Kyber512 decaps as target.
 - Collect baseline coverage and crash stats (no LLM guidance).
 - This is the control condition for the research comparison.
+- Status: IN PROGRESS 2026-06-14 — harness/Dockerfile/scripts ready in fuzzing/ (stub decaps). Next: container build, real liboqs link, 24h run.
 
 ## Phase B3 (Week 2-3): Full adversary loop (depends on Track A harness).
 - Needs: A2 timing harness, A3 weakened targets.
