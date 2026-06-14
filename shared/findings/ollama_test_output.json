@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-06-14T22:04:47.961413",
+  "model": "codellama:7b",
+  "source_file": "/Users/vedanthdama/Rayquaza/track-b-engine/ingestion/test_targets/dummy.c",
+  "findings": [
+    {
+      "file": "cryptographic_security.c",
+      "line": 4,
+      "description": "Timing side-channel risk in 'check_key' function due to secret-dependent branch",
+      "category": "timing_side_channel"
+    },
+    {
+      "file": "cryptographic_security.c",
+      "line": 16,
+      "description": "Timing side-channel risk in 'lookup' function due to variable-time memory access",
+      "category": "timing_side_channel"
+    },
+    {
+      "file": "cryptographic_security.c",
+      "line": 25,
+      "description": "Timing side-channel risk in 'compare' function due to non-constant-time comparison",
+      "category": "timing_side_channel"
+    }
+  ]
+}
