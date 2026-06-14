@@ -1,0 +1,58 @@
+You are a C programmer specializing in timing-attack test harnesses for cryptographic code.
+
+Generate a complete, compilable C timing test file for the following vulnerability hypothesis.
+
+INPUTS (template variables — replace before sending):
+- Hypothesis: {hypothesis_json}
+- Function signature to test: {function_signature}
+
+REQUIREMENTS — follow every rule exactly:
+
+INCLUDES: Use ONLY these headers, in this order:
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <string.h>
+  #include <time.h>
+  #include <stdint.h>
+
+INPUT CLASSES: Define exactly two input classes:
+  class_A: inputs crafted to TRIGGER the hypothesized timing leak path
+  class_B: inputs crafted to follow the SAFE or ALTERNATE path
+  The class definitions must be derived directly from the hypothesis trigger_condition field.
+
+MEASUREMENT LOOP:
+  - Run each class exactly 10000 times in a loop
+  - Measure each individual run with clock_gettime(CLOCK_MONOTONIC)
+  - Store all 10000 nanosecond timestamps for each class in arrays
+
+STATISTICS:
+  - Compute mean_A and mean_B (average nanoseconds per call)
+  - Compute variance_A and variance_B (population variance)
+  - Compute stderr_A = sqrt(variance_A / 10000)
+  - Compute stderr_B = sqrt(variance_B / 10000)
+  - Compute pooled_stderr = sqrt(stderr_A*stderr_A + stderr_B*stderr_B)
+  - Compute t_statistic = (mean_A - mean_B) / pooled_stderr
+  - Set significant = 1 if fabs(t_statistic) > 2.0, else 0
+
+OUTPUT: Print EXACTLY ONE line to stdout in this JSON format (no newline except at end):
+  {"hypothesis_id":"H001","mean_A":220.3,"mean_B":200.1,"variance_A":225.0,"variance_B":225.0,"t_statistic":18.7,"significant":true}
+  - Use the actual hypothesis id from the input
+  - significant must be the JSON literal true or false (not 1/0)
+  - All float values must be printed with at least one decimal place
+
+COMPILATION: The file must compile cleanly with:
+  gcc -O0 -g -o test_vec test_vec.c -lm
+
+CRITICAL OUTPUT RULES:
+- Start your response with #include
+- Do not write any text before #include
+- Do not write any text after the closing brace of main()
+- No markdown code fences (no ```)
+- No explanation, preamble, or summary
+- The file must be self-contained (no external dependencies beyond the five headers above)
+
+The hypothesis to implement a test for:
+{hypothesis_json}
+
+Target function signature (implement a stub if the real function is not available):
+{function_signature}

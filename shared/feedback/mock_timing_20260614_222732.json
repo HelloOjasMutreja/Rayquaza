@@ -1,0 +1,11 @@
+{
+  "hypothesis_id": "H001",
+  "run_count": 10000,
+  "mean_A": 219.9556,
+  "mean_B": 200.2618,
+  "variance_A": 216.5505,
+  "variance_B": 225.1654,
+  "t_statistic": 93.704271,
+  "significant": true,
+  "generated_by": "mock"
+}

@@ -40,3 +40,13 @@ After completing any unit of work, update:
 Track B's attack engine (phase B3) depends on Track A delivering: a timing harness (A2) and 
 deliberately-weakened Kyber targets (A3). This is the project's critical path. Track A's 
 weeks 1-2 are top priority. Track B builds against mocks until those land.
+
+## Track B — LLM Engine Rules
+- All AI agents must read tracking/PROGRESS.md and tracking/SYNC.md before any work.
+- Tag all Track B entries with [B]. Never edit Track A files or track-a-target/.
+- Log every experiment run to EXPERIMENT_LOG.md (append-only).
+- Ollama runs locally at http://localhost:11434. Always check reachability before use.
+- Models: codellama:7b for code analysis and vector generation; qwen3:8b for reasoning and feedback refinement.
+- Prompt templates live in track-b-engine/prompts/. Never inline prompt text in engine code.
+- Test vectors go to shared/vectors/. Timing feedback goes to shared/feedback/. Findings go to shared/findings/.
+- Mock feedback (track-b-engine/engine/mock_feedback.py) is the stand-in until Track A delivers A2.

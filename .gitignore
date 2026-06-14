@@ -62,6 +62,14 @@ afl-out/
 afl_output/
 findings/
 fuzzer-output/
+
+# --- Track B shared dirs (exceptions — these must be tracked) ---
+!shared/findings/
+!shared/findings/**
+!shared/vectors/
+!shared/vectors/**
+!shared/feedback/
+!shared/feedback/**
 crashes/
 hangs/
 queue/
