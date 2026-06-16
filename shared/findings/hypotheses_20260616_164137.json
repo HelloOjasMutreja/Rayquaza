@@ -1,0 +1,43 @@
+{
+  "generated_at": "2026-06-16T16:41:37.445261",
+  "model": "codellama:7b",
+  "count": 4,
+  "hypotheses": [
+    {
+      "id": "H006",
+      "category": "nonconstant_comparison",
+      "location": "mld_sign_verify_internal() line 31",
+      "hypothesis": "Comparing two secret values c and c2 directly leaks the difference between them.",
+      "trigger_condition": "Two different values of c and c2",
+      "confidence": "HIGH",
+      "test_vector_hint": "Run 10000 calls with c=c1, then 10000 calls with c=c2, measure delta."
+    },
+    {
+      "id": "H007",
+      "category": "rejection_sampling_leaks",
+      "location": "mld_sign_verify_internal() line 34",
+      "hypothesis": "Repeatedly sampling coefficients exceeding GAMMA1/BETA leaks information about the secret polynomials.",
+      "trigger_condition": "Any two different values of norm_exceeds_bound(z, pk)",
+      "confidence": "HIGH",
+      "test_vector_hint": "Sweep through all possible values of z, measuring cache-timing variance across 10000 runs."
+    },
+    {
+      "id": "H008",
+      "category": "signature_validity_branches",
+      "location": "mld_sign_verify_internal() line 41",
+      "hypothesis": "Branch on the outcome of norm_exceeds_bound(z, pk) creates measurable timing difference between zero and nonzero first byte.",
+      "trigger_condition": "norm_exceeds_bound(z, pk) == true vs false",
+      "confidence": "HIGH",
+      "test_vector_hint": "Run 10000 calls with norm_exceeds_bound(z, pk)=true (class A) vs 10000 calls with norm_exceeds_bound(z, pk)=false (class B), measure delta."
+    },
+    {
+      "id": "H009",
+      "category": "nonce_reuse",
+      "location": "mld_sign_verify_internal() line 48",
+      "hypothesis": "Repeatedly using the same nonce leaks information about the secret key.",
+      "trigger_condition": "Any two different values of z",
+      "confidence": "HIGH",
+      "test_vector_hint": "Sweep through all possible values of z, measuring cache-timing variance across 10000 runs."
+    }
+  ]
+}

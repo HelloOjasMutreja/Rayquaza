@@ -1,0 +1,12 @@
+{
+  "hypothesis_id": "H006",
+  "run_count": 50000,
+  "mean_A": 24.898,
+  "mean_B": 24.861,
+  "variance_A": 416.869,
+  "variance_B": 417.223,
+  "t_statistic": 0.2687,
+  "significant": false,
+  "generated_by": "harness",
+  "note": "LEAK-1 memcmp ML-DSA-44 challenge comparison oracle. Cond-A: memcmp(c,c2,32) where c==c2 (full 32-byte scan). Cond-B: memcmp(c,c2,32) where c[0]!=c2[0] (exits at byte 0). Injection: mld_ct_memcmp replaced with memcmp in mld_sign_verify_internal. Signal: early-exit timing of non-constant-time challenge comparison."
+}
