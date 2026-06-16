@@ -53,6 +53,7 @@ Makefile
 !CMakeLists.txt
 # Keep handwritten Makefiles in source directories
 !track-a-target/harness/Makefile
+!track-a-target/targets/kyber512_leak1/Makefile
 !track-a-target/targets/kyber512_leak2/Makefile
 !track-a-target/targets/kyber512_leak4/Makefile
 !track-a-target/targets/kyber512_leak5/Makefile

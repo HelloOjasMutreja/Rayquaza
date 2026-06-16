@@ -10,6 +10,39 @@ Format:
 
 ---
 
+## 2026-06-16 [A] LEAK-1 — cmov clangover class assessment and oracle
+- What: Assessed whether Clang 18 + LTO defeats the asm barrier in cmov() (verify.c:40).
+  Compiled with LTO (gold linker), examined IR bitcode and final assembly.
+  Also tested without barrier (merged TU, clang -O2 and -O3).
+- Settings: clang-18 -O2 -flto, gold plugin linker; WSL2/Ubuntu 24.04, x86-64.
+  Test: two-TU simulation (verify_ct + cmov_ct) to match real kem.c + verify.c layout.
+- Result: Barrier survives LTO — #APP/#NO_APP visible in IR and asm output.
+  Without barrier, clang -O2 emits 'cmoveq' (conditional move instruction, constant-time).
+  Without barrier, clang -O3: fully unrolled byte XOR loop, also no branch.
+  Conclusion: clangover does NOT reproduce on Clang 18/x86-64 for this cmov pattern.
+  Manual injection (explicit if/memcpy branch): oracle t=74.74, significant=true (n=50k, REPS=100).
+  Target: track-a-target/targets/kyber512_leak1/harness_oracle.c
+- Takeaway: Clang 18/x86-64 is not vulnerable to clangover for this implementation.
+  The risk exists on ARM Cortex-M and older compilers lacking cmov. Oracle demonstrates
+  what the timing leak would look like if a branch were introduced.
+
+## 2026-06-16 [A] Task 3 — LEAK-5 equivalence check in liboqs (full API)
+- What: Patched both ref and AVX2 kyber512 kem.c in ~/liboqs source with memcmp injection
+  (same as LEAK-5). Rebuilt liboqs with ninja, installed, ran OQS_KEM_decaps timing.
+  Condition A: valid ciphertext; Condition B: invalid ciphertext.
+- Settings: n=50k and n=200k, full OQS_KEM_decaps() call path, gcc -O2 harness.
+  Patched: pqcrystals-kyber_kyber512_ref/kem.c AND pqcrystals-kyber_kyber512_avx2/kem.c.
+  liboqs selects AVX2 backend at runtime (CPU has AVX2). Reverted after experiment.
+- Result:
+  n=50k:  mean_A=8122ns, mean_B=8110ns, std≈728ns, t=2.52, significant=false.
+  n=200k: mean_A=7052ns, mean_B=7050ns, std≈389ns, t=1.84, significant=false.
+  The ~3ns memcmp signal is below the full-decaps noise floor even with AVX2 backend.
+- Takeaway: Same code modification exists in the library, but oracle isolation is required
+  to reliably confirm the vulnerability. Full-API detection would need impractically large
+  n (est. n>600k) or a dedicated microarchitectural measurement setup. This validates the
+  oracle hypothesis generation methodology — the LLM identifies the code pattern, the
+  oracle isolates the signal. liboqs reverted to clean state after experiment.
+
 ## 2026-06-14 [A] liboqs build + Kyber512 round-trip
 - What: Built liboqs from source on WSL2/Ubuntu 24.04; ran minimal C test for Kyber512 keygen -> encaps -> decaps.
 - Settings: gcc 13.3, cmake 3.28, OpenSSL 3.0.13, ninja 1.11.1. Flags: BUILD_SHARED_LIBS=ON, OQS_BUILD_ONLY_LIB=ON, OQS_DIST_BUILD=ON, KEM_KYBER=ON, SIG_DILITHIUM=ON.

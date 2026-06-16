@@ -1,0 +1,11 @@
+{
+  "hypothesis_id": "LEAK5-EQUIV-LIBOQS",
+  "run_count": 100000,
+  "mean_A": 7284.345,
+  "mean_B": 7287.239,
+  "variance_A": 356157.538,
+  "variance_B": 361423.164,
+  "t_statistic": -1.0250,
+  "significant": false,
+  "generated_by": "harness"
+}
