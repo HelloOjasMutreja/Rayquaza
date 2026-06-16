@@ -1,0 +1,12 @@
+{
+  "hypothesis_id": "LEAK5-ORACLE",
+  "run_count": 50000,
+  "mean_A": 28.928,
+  "mean_B": 25.787,
+  "variance_A": 55.076,
+  "variance_B": 16.212,
+  "t_statistic": 78.9305,
+  "significant": true,
+  "generated_by": "harness_oracle",
+  "note": "isolates FO comparison only; full-decaps detection needs AVX2 backend or ~2M samples"
+}
