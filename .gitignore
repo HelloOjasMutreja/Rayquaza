@@ -53,6 +53,7 @@ Makefile
 !CMakeLists.txt
 # Keep handwritten Makefiles in source directories
 !track-a-target/harness/Makefile
+!track-a-target/targets/kyber512_leak5/Makefile
 
 # --- liboqs build artifacts ---
 liboqs/
