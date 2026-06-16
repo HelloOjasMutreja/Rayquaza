@@ -15,8 +15,16 @@ or needs something from the other. This is how the two halves stay coupled.
     -DOQS_ENABLE_SIG_DILITHIUM=ON
   Installs to ~/liboqs-install/{include,lib}. Link with -loqs -lssl -lcrypto -lpthread.
   Tested on Ubuntu 24.04, gcc 13.3, cmake 3.28, OpenSSL 3.0.13.
-- [PENDING] A2: timing harness + input/output format (needed for B3 engine loop).
-- [PENDING] A3: weakened Kyber targets + ground truth (needed for B3 testing).
+- [PENDING] A2: timing harness + input/output format (needed for B3 engine loop AND B4 real runs).
+  NOTE 2026-06-16: B4 is now actively waiting on this. Track B expects a `harness_oracle`
+  binary per target, invoked as `./harness_oracle <hypothesis_id> <n_samples>`, that writes
+  shared/feedback/timing_<hyp_id>_<ts>.json (schema = shared/feedback/mock_timing_*.json).
+  The real loop (no --use-mock) already polls shared/feedback/ for *<hyp_id>* filenames.
+- [PENDING] A3: weakened Kyber targets + ground truth (needed for B3 testing AND B4 real runs).
+  NOTE 2026-06-16: track-a-target/targets/ currently holds only .gitkeep — no kyber512_leak5/
+  (kem.c), no kyber512_leak2/ (poly.c), no harness_oracle. These were assumed present for a
+  B4 run on 2026-06-16 but are absent; the run was deferred, not faked. Deliver into
+  track-a-target/targets/ to unblock.
 - [PENDING] A5: Dilithium target (needed for B5).
 
 ## Track B -> Track A (deliverables A depends on)
@@ -35,4 +43,8 @@ or needs something from the other. This is how the two halves stay coupled.
 - [PENDING] B3: test-vector format spec (so A harness can consume them).
 
 ## Open coordination questions
-(none yet)
+- 2026-06-16 [B→A] B4 was kicked off assuming three live oracles in track-a-target/targets/
+  (kyber512_leak5/kem.c, kyber512_leak2/poly.c, + harness_oracle). None are present in the repo.
+  Track A: have these been built but not committed/pushed? If so, please commit them (and the
+  harness_oracle build) so Track B can run the real loop. Until then B4 real runs stay blocked.
+  Track B's integration side is ready (live-mode polling verified in B3).
