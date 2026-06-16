@@ -18,7 +18,8 @@ Tag entries [A] (Track A) or [B] (Track B). Use ISO dates.
 - [A] LEAK-3 (Kyber512 basemul branch) — optional extension, lower priority.
 - [A] Integration: run B's adversary loop against all three confirmed targets (LEAK-2/4/5).
 - [B] Phase B2: AFL++ fuzzing baseline — harness.c (stub OQS_KEM_decaps), Dockerfile, build/run/summarize scripts ready. Next: build container, replace stub with real liboqs, run 24h baseline.
-- [B] Phase B3: full LLM adversary loop (adversary_loop.py + main.py) — ingest→vectorize→feedback→refine→log→state cycle working end-to-end. Mock loop verified: 3-cycle run on dummy.c promoted H001 & H002 (t≈93.7/95.2, significant). READY FOR TRACK A INTEGRATION — drop real timing JSON into shared/feedback/ to replace mock (see SYNC.md). Open item: codellama:7b vectors not yet compilable (B-002), prompt iteration is Phase B4.
+- [B] Phase B3: full LLM adversary loop (adversary_loop.py + main.py) — ingest→vectorize→feedback→refine→log→state cycle working end-to-end. Mock loop verified: 3-cycle run on dummy.c promoted H001 & H002 (t≈93.7/95.2, significant). READY FOR TRACK A INTEGRATION — drop real timing JSON into shared/feedback/ to replace mock (see SYNC.md).
+- [B] Phase B4: secondary-scan fix applied to ingest.py — UNflagged functions now re-scanned for memcmp/strcmp/strncmp, secret-looking branches, and fixed/variable loops; verified on dummy.c (compare() now caught + analyzed, fixing the B1 miss). The real-oracle runs against LEAK-5 (kem.c) and LEAK-2 (poly.c) could NOT be performed — see Blocked.
 
 ## Blocked
-(none yet — B2 harness uses a stub and is NOT blocked; liboqs A0 build flags already delivered, see SYNC.md)
+- [B] Phase B4 real-oracle runs: BLOCKED on Track A. The targets named for B4 (track-a-target/targets/kyber512_leak5/kem.c, kyber512_leak2/poly.c) and the harness_oracle binary DO NOT EXIST in the repo (targets/ holds only .gitkeep). SYNC.md still lists A2+A3 as PENDING. No real timing measurement or rediscovery was run; nothing fabricated. Unblock: Track A delivers A2 (harness_oracle) + A3 (weakened targets). See ISSUE B-003.
