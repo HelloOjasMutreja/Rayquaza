@@ -1,5 +1,8 @@
 CC     = gcc
-CFLAGS = -O2 -Wall -Wextra -I. -I$(HOME)/liboqs-install/include
+CFLAGS = -O2 -Wall -Wextra \
+         -I. \
+         -I$(HOME)/liboqs-install/include \
+         -I$(HOME)/liboqs/src/common/pqclean_shims
 LDFLAGS = -L$(HOME)/liboqs-install/lib \
           -loqs -lssl -lcrypto -lpthread -lm \
           -Wl,-rpath,$(HOME)/liboqs-install/lib
