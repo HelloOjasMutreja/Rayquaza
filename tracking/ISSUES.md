@@ -40,9 +40,12 @@ STATUS = OPEN / IN-PROGRESS / RESOLVED.
   fqmul() → montgomery_reduce(). Reference is branchless on x86-64 (imul constant latency).
   On ARM Cortex-M and some embedded CPUs, multiply latency is data-dependent for small
   operand values, making secret key coefficient magnitudes observable.
-  Hardware assessment: QEMU not acceptable for timing measurements. Cloud ARM (AWS Graviton
-  or similar) confirmed available. Next: provision ARM instance, cross-compile basemul harness,
-  measure with branch injection `if (a[0] < 0) a[0] += KYBER_Q;`. See SYNC.md for setup steps.
+  Hardware assessment: QEMU not acceptable for timing measurements. Cloud ARM confirmed and
+  provisioned: AWS t4g.micro (ARM Graviton2), Ubuntu 24.04 arm64, ap-southeast-2.
+  Target created: track-a-target/targets/kyber512_leak3/harness_oracle.c
+  Injection: `if (a0 < 0) a0 += KYBER_Q;` before fqmul — branches on sign of secret NTT coeff.
+  Cond-A: a0=+1000 (branch not taken). Cond-B: a0=-1000 (branch taken, +KYBER_Q).
+  Next: push to repo, SSH to ARM instance, clone, compile -O0 -fno-inline, run oracle.
 
 - [RESOLVED] 2026-06-16 [A] LEAK-4 GitHub#7 | indcpa.c:325 | indcpa_dec() normalization | Category: branch on secret-derived NTT values | Confirmed: t=-318.58, significant=true (normalization loop oracle, n=50000). Target: track-a-target/targets/kyber512_leak4/.
   File: src/kem/kyber/pqcrystals-kyber_kyber512_ref/indcpa.c, function indcpa_dec().
