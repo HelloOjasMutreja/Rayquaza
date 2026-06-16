@@ -10,6 +10,24 @@ Format:
 
 ---
 
+## 2026-06-16 [A] A6 — LEAK-3 basemul ARM oracle confirmed (AWS t4g.micro Graviton2)
+- What: Built and ran LEAK-3 oracle on AWS t4g.micro (ARM Graviton2, aarch64, Ubuntu 24.04).
+  Injection: `if (a0 < 0) a0 += KYBER_Q;` before fqmul(a0, b0) in basemul() step.
+  Condition A: a0=+1000 (positive NTT coeff, branch not taken — no addition).
+  Condition B: a0=-1000 (negative NTT coeff, branch taken — add KYBER_Q=3329).
+  Compiled -O0 -fno-inline to preserve branch. REPS=500 per timing sample.
+- Settings: n=50000, 5% trim, Welch t-test, CLOCK_MONOTONIC_RAW, CPU pinned core 0.
+  Hardware: AWS t4g.micro, ARM Graviton2 (A72-class), 2 vCPUs, ap-southeast-2.
+  SSH from local, SCP harness, compiled natively on ARM64.
+- Result: mean_A=13.202ns, mean_B=15.341ns, variance_A=1442, variance_B=1844,
+  t=-3956.26, significant=true. Delta: 2.14ns/call, extremely high |t| due to low
+  per-sample variance relative to large sample count. JSON: shared/feedback/timing_LEAK3-ARM-GRAVITON2_*.json.
+- Takeaway: LEAK-3 CONFIRMED on ARM Graviton2. Branch on sign of secret NTT coefficient
+  is timing-observable on real ARM hardware. x86-64 is immune (IMUL constant latency,
+  compiler emits cmov). Hardware boundary clearly demonstrated: ARM = vulnerable,
+  x86-64 = not vulnerable. All five Kyber512 timing leaks now confirmed across
+  three hardware/compiler categories.
+
 ## 2026-06-16 [A] LEAK-1 — cmov clangover class assessment and oracle
 - What: Assessed whether Clang 18 + LTO defeats the asm barrier in cmov() (verify.c:40).
   Compiled with LTO (gold linker), examined IR bitcode and final assembly.
