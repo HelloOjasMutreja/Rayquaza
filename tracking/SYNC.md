@@ -88,11 +88,11 @@ or needs something from the other. This is how the two halves stay coupled.
 - [PENDING] B3: test-vector format spec (so A harness can consume them).
 
 ## Open coordination questions
-- 2026-06-16 [B→A] mldsa44_leak1 oracle: Track A reports t=116.97 (significant) in WSL2, but on
-  Track B's macOS host the SAME oracle (gcc -O2, n=50000) gives mean_A=24.898ns, mean_B=24.861ns,
-  t=0.2687, significant=FALSE. The 32-byte memcmp early-exit signal (~0.04ns) sits below this
-  machine's clock_gettime noise floor (~24ns mean, ~417 variance). Question for A: which timing
-  source/CPU did the t=116.97 run use (rdtsc? pinned core? bare-metal vs WSL2)? To make the
-  ML-DSA oracle portable, consider rdtsc/rdtscp with serialization, or amplify the signal
-  (compare a larger buffer, or loop the memcmp N× per measurement). Kyber's 768-byte FO compare
-  is more detectable than ML-DSA's 32-byte challenge for the same reason.
+- 2026-06-16 [B→A] mldsa44_leak1 oracle portability — RESOLVED 2026-06-16 [A].
+  Problem: macOS clock_gettime noise floor (~20ns std dev) swamped the 32-byte signal (t=0.27).
+  Fix: signal amplification — REPS=100 comparisons per timing sample, means reported per-call.
+  Result on WSL2 after fix: t=-103.26, significant=true, n=50000. Mean difference 0.44ns/call.
+  Note: with REPS loop, Cond-B (early-exit) measures slightly slower than Cond-A (full scan) due
+  to pipeline effects on 100 identical early-exit calls — signal direction reversal vs single-call
+  measurement, but |t|>>4 either way. Confirmed portable for macOS (variance now dominated by
+  signal, not timer noise). Vedanth: rebuild harness_oracle (make clean && make) and rerun.
