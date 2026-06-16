@@ -1,70 +1,107 @@
 /*
- * fips202.c — SHAKE128, SHAKE256, SHA3-256, SHA3-512 via OpenSSL 3 EVP.
- * No dependency on liboqs internal headers.
+ * fips202.c — SHAKE128/256 and SHA3-256/512 via OpenSSL 3 EVP.
+ *
+ * Provides the incremental _inc_ API that this liboqs kyber ref uses,
+ * plus one-shot wrappers. No dependency on liboqs internal headers.
  */
 #include <string.h>
 #include <openssl/evp.h>
 #include "fips202.h"
 
-/* ---- streaming SHAKE128 ---- */
+/* ====================================================================
+ * SHAKE-128 incremental
+ * ==================================================================== */
 
-void shake128_absorb(shake128ctx *s, const uint8_t *in, size_t inlen) {
-    memcpy(s->input, in, inlen);
-    s->input_len  = inlen;
-    s->output_pos = 0;
-    s->squeezed   = 0;
+void shake128_inc_init(shake128incctx *ctx) {
+    ctx->evp_ctx = EVP_MD_CTX_new();
+    EVP_DigestInit_ex((EVP_MD_CTX *)ctx->evp_ctx, EVP_shake128(), NULL);
+    ctx->pos      = 0;
+    ctx->squeezed = 0;
 }
 
-static void shake128_do_squeeze(shake128ctx *s) {
-    EVP_MD_CTX *ctx = EVP_MD_CTX_new();
-    EVP_DigestInit_ex(ctx, EVP_shake128(), NULL);
-    EVP_DigestUpdate(ctx, s->input, s->input_len);
-    EVP_DigestFinalXOF(ctx, s->output, sizeof(s->output));
-    EVP_MD_CTX_free(ctx);
-    s->squeezed = 1;
+void shake128_inc_absorb(shake128incctx *ctx, const uint8_t *in, size_t inlen) {
+    EVP_DigestUpdate((EVP_MD_CTX *)ctx->evp_ctx, in, inlen);
 }
 
-void shake128_squeezeblocks(uint8_t *out, size_t nblocks, shake128ctx *s) {
-    if (!s->squeezed) shake128_do_squeeze(s);
+void shake128_inc_finalize(shake128incctx *ctx) {
+    /* Actual XOF finalization is deferred to the first squeezeblocks call
+     * so we can still call EVP_DigestFinalXOF with the full desired length. */
+    (void)ctx;
+}
+
+void shake128_squeezeblocks(uint8_t *out, size_t nblocks, shake128incctx *ctx) {
+    if (!ctx->squeezed) {
+        EVP_DigestFinalXOF((EVP_MD_CTX *)ctx->evp_ctx,
+                           ctx->buf, sizeof(ctx->buf));
+        EVP_MD_CTX_free((EVP_MD_CTX *)ctx->evp_ctx);
+        ctx->evp_ctx  = NULL;
+        ctx->squeezed = 1;
+    }
     size_t len = nblocks * SHAKE128_RATE;
-    memcpy(out, s->output + s->output_pos, len);
-    s->output_pos += len;
+    memcpy(out, ctx->buf + ctx->pos, len);
+    ctx->pos += len;
 }
 
-void shake128_ctx_release(shake128ctx *s) {
-    (void)s;
+void shake128_inc_ctx_release(shake128incctx *ctx) {
+    if (ctx->evp_ctx) {
+        EVP_MD_CTX_free((EVP_MD_CTX *)ctx->evp_ctx);
+        ctx->evp_ctx = NULL;
+    }
 }
 
-/* ---- streaming SHAKE256 ---- */
-
-void shake256_absorb(shake256ctx *s, const uint8_t *in, size_t inlen) {
-    memcpy(s->input, in, inlen);
-    s->input_len  = inlen;
-    s->output_pos = 0;
-    s->squeezed   = 0;
+/* Non-incremental wrappers */
+void shake128_absorb(shake128incctx *ctx, const uint8_t *in, size_t inlen) {
+    shake128_inc_init(ctx);
+    shake128_inc_absorb(ctx, in, inlen);
+    shake128_inc_finalize(ctx);
 }
 
-static void shake256_do_squeeze(shake256ctx *s) {
-    EVP_MD_CTX *ctx = EVP_MD_CTX_new();
-    EVP_DigestInit_ex(ctx, EVP_shake256(), NULL);
-    EVP_DigestUpdate(ctx, s->input, s->input_len);
-    EVP_DigestFinalXOF(ctx, s->output, sizeof(s->output));
-    EVP_MD_CTX_free(ctx);
-    s->squeezed = 1;
+void shake128_ctx_release(shake128incctx *ctx) {
+    shake128_inc_ctx_release(ctx);
 }
 
-void shake256_squeezeblocks(uint8_t *out, size_t nblocks, shake256ctx *s) {
-    if (!s->squeezed) shake256_do_squeeze(s);
+/* ====================================================================
+ * SHAKE-256 incremental
+ * ==================================================================== */
+
+void shake256_inc_init(shake256incctx *ctx) {
+    ctx->evp_ctx = EVP_MD_CTX_new();
+    EVP_DigestInit_ex((EVP_MD_CTX *)ctx->evp_ctx, EVP_shake256(), NULL);
+    ctx->pos      = 0;
+    ctx->squeezed = 0;
+}
+
+void shake256_inc_absorb(shake256incctx *ctx, const uint8_t *in, size_t inlen) {
+    EVP_DigestUpdate((EVP_MD_CTX *)ctx->evp_ctx, in, inlen);
+}
+
+void shake256_inc_finalize(shake256incctx *ctx) {
+    (void)ctx;
+}
+
+void shake256_squeezeblocks(uint8_t *out, size_t nblocks, shake256incctx *ctx) {
+    if (!ctx->squeezed) {
+        EVP_DigestFinalXOF((EVP_MD_CTX *)ctx->evp_ctx,
+                           ctx->buf, sizeof(ctx->buf));
+        EVP_MD_CTX_free((EVP_MD_CTX *)ctx->evp_ctx);
+        ctx->evp_ctx  = NULL;
+        ctx->squeezed = 1;
+    }
     size_t len = nblocks * SHAKE256_RATE;
-    memcpy(out, s->output + s->output_pos, len);
-    s->output_pos += len;
+    memcpy(out, ctx->buf + ctx->pos, len);
+    ctx->pos += len;
 }
 
-void shake256_ctx_release(shake256ctx *s) {
-    (void)s;
+void shake256_inc_ctx_release(shake256incctx *ctx) {
+    if (ctx->evp_ctx) {
+        EVP_MD_CTX_free((EVP_MD_CTX *)ctx->evp_ctx);
+        ctx->evp_ctx = NULL;
+    }
 }
 
-/* ---- one-shot XOF ---- */
+/* ====================================================================
+ * One-shot XOF
+ * ==================================================================== */
 
 void shake128(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen) {
     EVP_MD_CTX *ctx = EVP_MD_CTX_new();
@@ -82,7 +119,9 @@ void shake256(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen) {
     EVP_MD_CTX_free(ctx);
 }
 
-/* ---- one-shot SHA3 ---- */
+/* ====================================================================
+ * One-shot SHA3
+ * ==================================================================== */
 
 void sha3_256(uint8_t *h, const uint8_t *in, size_t inlen) {
     unsigned int len = 32;

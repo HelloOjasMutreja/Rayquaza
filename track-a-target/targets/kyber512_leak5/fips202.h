@@ -9,36 +9,51 @@
 #define SHA3_512_RATE  72
 
 /*
- * Internal buffer large enough for kyber512 matrix generation:
- * 2x2 polys * ceil(512/168) = 4 blocks per seed.
- * 16 blocks = 2688 bytes gives headroom.
+ * Pre-squeezed output buffer. Kyber512 matrix generation needs at most
+ * 4 blocks (672 bytes) per polynomial; 16 blocks gives comfortable headroom.
  */
-#define _SHAKE128_BUF_BLOCKS 16
+#define _FIPS202_BUF_BLOCKS 16
 
+/* Incremental SHAKE-128 context (what this liboqs version calls shake128incctx) */
 typedef struct {
-    uint8_t  input[256];
-    size_t   input_len;
-    uint8_t  output[SHAKE128_RATE * _SHAKE128_BUF_BLOCKS];
-    size_t   output_pos;
+    void    *evp_ctx;   /* EVP_MD_CTX* during absorb; NULL after first squeeze */
+    uint8_t  buf[SHAKE128_RATE * _FIPS202_BUF_BLOCKS];
+    size_t   pos;
     int      squeezed;
-} shake128ctx;
+} shake128incctx;
 
+/* Alias so any code using the old shake128ctx name still compiles */
+typedef shake128incctx shake128ctx;
+
+/* Incremental SHAKE-256 context */
 typedef struct {
-    uint8_t  input[256];
-    size_t   input_len;
-    uint8_t  output[SHAKE256_RATE * _SHAKE128_BUF_BLOCKS];
-    size_t   output_pos;
+    void    *evp_ctx;
+    uint8_t  buf[SHAKE256_RATE * _FIPS202_BUF_BLOCKS];
+    size_t   pos;
     int      squeezed;
-} shake256ctx;
+} shake256incctx;
 
-void shake128_absorb(shake128ctx *state, const uint8_t *in, size_t inlen);
-void shake128_squeezeblocks(uint8_t *out, size_t nblocks, shake128ctx *state);
-void shake128_ctx_release(shake128ctx *state);
+typedef shake256incctx shake256ctx;
 
-void shake256_absorb(shake256ctx *state, const uint8_t *in, size_t inlen);
-void shake256_squeezeblocks(uint8_t *out, size_t nblocks, shake256ctx *state);
-void shake256_ctx_release(shake256ctx *state);
+/* --- Incremental SHAKE-128 (used by symmetric.h / indcpa.c) --- */
+void shake128_inc_init(shake128incctx *state);
+void shake128_inc_absorb(shake128incctx *state, const uint8_t *in, size_t inlen);
+void shake128_inc_finalize(shake128incctx *state);
+void shake128_squeezeblocks(uint8_t *out, size_t nblocks, shake128incctx *state);
+void shake128_inc_ctx_release(shake128incctx *state);
 
+/* Non-incremental wrappers (one-shot absorb) */
+void shake128_absorb(shake128incctx *state, const uint8_t *in, size_t inlen);
+void shake128_ctx_release(shake128incctx *state);
+
+/* --- Incremental SHAKE-256 --- */
+void shake256_inc_init(shake256incctx *state);
+void shake256_inc_absorb(shake256incctx *state, const uint8_t *in, size_t inlen);
+void shake256_inc_finalize(shake256incctx *state);
+void shake256_squeezeblocks(uint8_t *out, size_t nblocks, shake256incctx *state);
+void shake256_inc_ctx_release(shake256incctx *state);
+
+/* --- One-shot XOF / hash --- */
 void shake128(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen);
 void shake256(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen);
 void sha3_256(uint8_t *h, const uint8_t *in, size_t inlen);
