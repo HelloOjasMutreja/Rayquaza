@@ -32,6 +32,18 @@ SECRET_TOKENS = [
 # Confidence ranking for sorting (HIGH first).
 CONFIDENCE_RANK = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
 
+# Secondary-scan patterns: catch leaky functions whose params/locals are NOT
+# named with secret tokens (e.g. Kyber's poly_tomsg(), or a bare memcmp on
+# secret data). Matched against the comment-stripped function body. Each entry
+# is (label, compiled regex). This is the Task-1 fix for the B1 compare() miss.
+SECONDARY_PATTERNS = [
+    ("nonconstant_comparison", re.compile(r"\b(?:memcmp|strcmp|strncmp)\s*\(")),
+    ("secret_dependent_branch", re.compile(r"\bif\b[^\n;{]*KYBER_Q")),
+    ("secret_dependent_branch", re.compile(r"\bif\b[^\n;{]*==\s*0\b")),
+    ("variable_loop", re.compile(r"\bfor\b[^\n;{]*\b256\b")),
+    ("variable_loop", re.compile(r"\bwhile\b[^\n;{]*\bcount\b")),
+]
+
 
 @dataclass
 class Hypothesis:
@@ -63,6 +75,8 @@ class FunctionInfo:
     body: str
     flagged: bool = False
     matched_tokens: list = field(default_factory=list)
+    secondary_scan: bool = False
+    secondary_matches: list = field(default_factory=list)
 
 
 class CodeIngester:
@@ -124,10 +138,33 @@ class CodeIngester:
 
         flagged_functions = [f for f in functions if f.flagged]
 
+        # Secondary scan: re-examine functions NOT flagged by secret tokens,
+        # looking for leak-shaped code patterns (memcmp/strcmp, secret-looking
+        # branches, fixed/variable loops). This catches cases like Kyber's
+        # poly_tomsg() or dummy.c's compare(), whose params carry no secret
+        # token but still contain a side-channel-relevant construct.
+        secondary_functions = []
+        for f in functions:
+            if f.flagged:
+                continue
+            hits = []
+            for label, pat in SECONDARY_PATTERNS:
+                if pat.search(f.body):
+                    hits.append(label)
+            if hits:
+                f.secondary_scan = True
+                f.secondary_matches = sorted(set(hits))
+                secondary_functions.append(f)
+
+        # Functions actually sent to the analyzer: token-flagged + secondary.
+        analyzed_functions = flagged_functions + secondary_functions
+
         return {
             "raw_source": raw_source,
             "functions": functions,
             "flagged_functions": flagged_functions,
+            "secondary_functions": secondary_functions,
+            "analyzed_functions": analyzed_functions,
             "line_count": raw_source.count("\n") + 1,
             "filepath": str(path),
         }
@@ -175,15 +212,24 @@ class CodeIngester:
 
         system_prompt = PROMPT_FILE.read_text()
 
-        flagged = context_dict["flagged_functions"]
-        if not flagged:
+        # Prefer the combined set (token-flagged + secondary-scan); fall back
+        # to flagged-only for callers built before the secondary scan existed.
+        analyzed = context_dict.get("analyzed_functions")
+        if analyzed is None:
+            analyzed = context_dict["flagged_functions"]
+
+        if not analyzed:
             print("No secret-handling functions flagged; analyzing full source.")
             user_content = context_dict["raw_source"]
         else:
-            user_content = "\n\n".join(
-                f"// function: {f.name}  (flagged on: {', '.join(f.matched_tokens)})\n{f.signature} {f.body}"
-                for f in flagged
-            )
+            blocks = []
+            for f in analyzed:
+                if f.flagged:
+                    why = f"flagged on secret token: {', '.join(f.matched_tokens)}"
+                else:
+                    why = f"secondary scan: {', '.join(f.secondary_matches)}"
+                blocks.append(f"// function: {f.name}  ({why})\n{f.signature} {f.body}")
+            user_content = "\n\n".join(blocks)
 
         raw = ""
         records = None
@@ -257,10 +303,13 @@ def main():
     print(
         f"  lines={context['line_count']} "
         f"functions={len(context['functions'])} "
-        f"flagged={len(context['flagged_functions'])}"
+        f"flagged={len(context['flagged_functions'])} "
+        f"secondary={len(context.get('secondary_functions', []))}"
     )
     for f in context["flagged_functions"]:
-        print(f"    flagged: {f.name}()  [{', '.join(f.matched_tokens)}]")
+        print(f"    flagged:   {f.name}()  [{', '.join(f.matched_tokens)}]")
+    for f in context.get("secondary_functions", []):
+        print(f"    secondary: {f.name}()  [{', '.join(f.secondary_matches)}]")
 
     print(f"\n[{datetime.now().isoformat()}] Calling {MODEL} for Stage 1 analysis ...")
     try:
