@@ -15,7 +15,14 @@ or needs something from the other. This is how the two halves stay coupled.
     -DOQS_ENABLE_SIG_DILITHIUM=ON
   Installs to ~/liboqs-install/{include,lib}. Link with -loqs -lssl -lcrypto -lpthread.
   Tested on Ubuntu 24.04, gcc 13.3, cmake 3.28, OpenSSL 3.0.13.
-- [PENDING] A2: timing harness + input/output format (needed for B3 engine loop).
+- [DELIVERED] 2026-06-16 A2: timing harness ready. Location: track-a-target/harness/.
+  Build: cd track-a-target/harness && make
+  Run:   ./run.sh <hypothesis_id> [run_count]  →  saves JSON to shared/feedback/
+  Schema: confirmed matches mock_timing format (hypothesis_id, run_count, mean_A/B ns,
+    variance_A/B, t_statistic, significant, generated_by:"harness").
+  Baseline (ref build, 10000 runs, WSL2): mean≈5870ns, std≈241ns, t=-3.29 (not significant).
+  Noise floor: ~241ns std dev in WSL2. Injected vulnerabilities should produce >500ns
+  mean difference to be clearly detectable above noise.
 - [PENDING] A3: weakened Kyber targets + ground truth (needed for B3 testing).
 - [PENDING] A5: Dilithium target (needed for B5).
 

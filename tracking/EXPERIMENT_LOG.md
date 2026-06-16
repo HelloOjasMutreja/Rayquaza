@@ -26,3 +26,13 @@ Format:
   CT by inspection but has known real-world failures at compiler and microarch layers.
 - Takeaway: A1 complete. LEAK-5 (memcmp/FO compare) is highest-value A3 injection target.
   LEAK-1 (cmov/clangover) is easiest to trigger. Next: A2 — timing harness.
+
+## 2026-06-16 [A] A2 — Timing harness baseline run (ref implementation)
+- What: Built harness.c and ran 10000 interleaved decaps measurements on pqcrystals ref build.
+  Condition A: valid ciphertext. Condition B: random (invalid) ciphertext.
+- Settings: CLOCK_MONOTONIC_RAW, 500 warmup runs, 5% trim, Welch t-test, WSL2/Ubuntu 24.04,
+  gcc -O2, liboqs depth-1 main. CPU affinity attempted (pin core 0, WSL2 best-effort).
+- Result: mean_A=5869.8ns, mean_B=5881.7ns, var_A=58368, var_B=59169, t=-3.29, significant=false.
+- Takeaway: A2 complete. Ref implementation is constant-time as expected (|t|<4). Noise floor
+  ~241ns std dev in WSL2. Need >~500ns mean diff for clear detection in A3. JSON saved to
+  shared/feedback/. Harness schema confirmed compatible with Track B mock format.
