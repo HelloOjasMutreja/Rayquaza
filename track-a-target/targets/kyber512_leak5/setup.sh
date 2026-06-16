@@ -23,8 +23,7 @@ for f in \
     verify.c verify.h \
     cbd.c cbd.h \
     symmetric-shake.c symmetric.h \
-    params.h api.h kem.h \
-    randombytes.h; do
+    params.h api.h kem.h; do
     cp "$REF/$f" "$DIR/"
     echo "  copied $f"
 done
