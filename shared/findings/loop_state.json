@@ -1,86 +1,45 @@
 {
-  "target_file": "track-b-engine/ingestion/test_targets/dummy.c",
-  "current_cycle": 2,
+  "target_file": "track-b-engine/ingestion/test_targets/mldsa44_synthetic.c",
+  "current_cycle": 1,
   "total_cycles": 3,
   "hypotheses": [
     {
-      "id": "H001",
-      "category": "secret_dependent_branch",
-      "location": "check_key() line 4",
-      "hypothesis": "Branch on key[0]==0 creates measurable timing difference between zero and nonzero first byte.",
-      "trigger_condition": "key[0] == 0x00 vs key[0] != 0x00",
+      "id": "H006",
+      "category": "nonconstant_comparison",
+      "location": "mld_sign_verify_internal() line 47",
+      "hypothesis": "The memcmp function is used to compare the challenge hash values c and c2, which are secret-derived. The memcmp function returns early on the first mismatch, leaking the secret value byte-by-byte.",
+      "trigger_condition": "Any two different values of c and c2",
       "confidence": "HIGH",
-      "test_vector_hint": "Run 10000 calls with key[0]=0x00 (class A) vs key[0]=0xFF (class B), measure delta.",
-      "status": "PROMOTED",
-      "revised_confidence": "HIGH",
-      "evidence": "mean_A=219.9556ns vs mean_B=200.2618ns, t_statistic=93.7, significant=true across 10000 runs.",
-      "next_test_hint": "Sweep all 256 values of key[0] to build a full timing profile.",
-      "t_statistic": 93.704271,
-      "significant": true,
-      "vector_file": "/Users/vedanthdama/Rayquaza/shared/vectors/vec_H001_20260614_222732.c",
+      "test_vector_hint": "Run 10000 iterations with different values of c and c2, measure delta.",
+      "status": "INVALIDATED",
+      "revised_confidence": "NONE",
+      "evidence": "mean_A=24.898ns vs mean_B=24.861ns, t_statistic=0.2687, significant=false across 50000 runs.",
+      "next_test_hint": "Retest with higher sample counts (100000+) and refined conditions to detect subtle timing variations.",
+      "t_statistic": 0.2687,
+      "significant": false,
+      "vector_file": "/Users/vedanthdama/Rayquaza/shared/vectors/vec_H006_20260616_164715.c",
       "feedback": {
-        "hypothesis_id": "H001",
-        "run_count": 10000,
-        "mean_A": 219.9556,
-        "mean_B": 200.2618,
-        "variance_A": 216.5505,
-        "variance_B": 225.1654,
-        "t_statistic": 93.704271,
-        "significant": true,
-        "generated_by": "mock"
+        "hypothesis_id": "H006",
+        "run_count": 50000,
+        "mean_A": 24.898,
+        "mean_B": 24.861,
+        "variance_A": 416.869,
+        "variance_B": 417.223,
+        "t_statistic": 0.2687,
+        "significant": false,
+        "generated_by": "harness",
+        "note": "LEAK-1 memcmp ML-DSA-44 challenge comparison oracle. Cond-A: memcmp(c,c2,32) where c==c2 (full 32-byte scan). Cond-B: memcmp(c,c2,32) where c[0]!=c2[0] (exits at byte 0). Injection: mld_ct_memcmp replaced with memcmp in mld_sign_verify_internal. Signal: early-exit timing of non-constant-time challenge comparison."
       },
-      "exploitation_path": [
-        "Collect 10000 timing samples per candidate byte value (256 classes).",
-        "Compute mean timing per class; identify the class with minimum timing (matches secret byte).",
-        "Repeat for each byte position to recover the full key byte-by-byte.",
-        "Validate recovered key by running check_key() and verifying return value.",
-        "Escalate to full key recovery using Welch t-test across all byte positions."
-      ]
-    },
-    {
-      "id": "H002",
-      "category": "variable_time_access",
-      "location": "lookup() line 9",
-      "hypothesis": "Cache-line access pattern leaks secret_key[0] value via table index.",
-      "trigger_condition": "Any two different values of secret_key[0]",
-      "confidence": "HIGH",
-      "test_vector_hint": "Sweep secret_key[0] from 0 to 255 and measure cache-timing variance across 10000 runs.",
-      "status": "PROMOTED",
-      "revised_confidence": "HIGH",
-      "evidence": "mean_A=220.171ns vs mean_B=200.1035ns, t_statistic=95.17, significant=true across 10000 runs.",
-      "next_test_hint": "Verify if timing leakage persists across multiple CPU cores using cache-flushing (clflush) between operations.",
-      "t_statistic": 95.169611,
-      "significant": true,
-      "vector_file": "/Users/vedanthdama/Rayquaza/shared/vectors/vec_H002_20260614_223109.c",
-      "feedback": {
-        "hypothesis_id": "H002",
-        "run_count": 10000,
-        "mean_A": 220.171,
-        "mean_B": 200.1035,
-        "variance_A": 219.6693,
-        "variance_B": 224.9529,
-        "t_statistic": 95.169611,
-        "significant": true,
-        "generated_by": "mock"
-      },
-      "exploitation_path": [
-        "Collect 10000 timing samples per candidate byte value (256 classes).",
-        "Compute mean timing per class; identify the class with minimum timing (matches secret byte).",
-        "Repeat for each byte position to recover the full key byte-by-byte.",
-        "Validate recovered key by running check_key() and verifying return value.",
-        "Escalate to full key recovery using Welch t-test across all byte positions"
-      ]
+      "exploitation_path": null
     }
   ],
-  "last_updated": "2026-06-14T22:32:06.845601",
+  "last_updated": "2026-06-16T16:50:58.659122",
   "completed_ids": [
-    "H001",
-    "H002"
+    "H006"
   ],
-  "promoted_ids": [
-    "H001",
-    "H002"
-  ],
+  "promoted_ids": [],
   "demoted_ids": [],
-  "invalidated_ids": []
+  "invalidated_ids": [
+    "H006"
+  ]
 }

@@ -17,6 +17,43 @@ Analyze the following C source code and identify ONLY these five specific vulner
 5. VARIABLE-LENGTH LOOPS
    Definition: for/while loops where the iteration count or loop-exit condition is derived from secret data (e.g., while (key[i] != 0) or for (i=0; i<secret_len; i++)). The number of iterations leaks the secret value.
 
+=== ML-DSA / DILITHIUM SPECIFIC PATTERNS ===
+
+ML-DSA (Dilithium) is a SIGNATURE scheme, not a KEM. Its attack surface differs from Kyber.
+In ML-DSA / Dilithium verification and signing code, ALSO look for these patterns:
+
+6. CHALLENGE HASH COMPARISON
+   Definition: any comparison of challenge hash arrays (commonly named c, c2, ctilde, cp,
+   challenge, or *_ctilde) using memcmp / strncmp / a manual byte loop instead of a
+   constant-time equivalent (mld_ct_memcmp, ct_verify, verify(), ct_memcmp). The challenge
+   hash is secret-derived during verification; an early-exit compare leaks where it first
+   differs. Map this to category: nonconstant_comparison.
+
+7. REJECTION SAMPLING LEAKS
+   Definition: loops that RETRY based on secret polynomial norms or rejection conditions
+   (e.g., while (norm_exceeds_bound(z, sk)), do { ... } while (reject), for-loops that break
+   when a sampled coefficient exceeds GAMMA1/BETA/bound). The iteration/retry count is
+   secret-dependent and leaks information about the secret polynomials. Map this to
+   category: variable_loop.
+
+8. SIGNATURE VALIDITY BRANCHES
+   Definition: early returns or branches inside verification/signing functions that are taken
+   based on a comparison result, norm check, or hint-decode result (e.g., return -1 on
+   compare mismatch, if (rej) continue, branches on the outcome of a secret-dependent check).
+   Map this to category: early_return (for early return statements) or secret_dependent_branch
+   (for non-returning branches).
+
+9. NONCE / RHO REUSE
+   Definition: any path where signing randomness (nonce, y, rho, rhoprime, key) is reused
+   across iterations, or derived from secret key material in a way whose timing/structure
+   depends on the secret. Deterministic ML-DSA derives y from the secret key + message; a
+   non-constant derivation or a reused nonce leaks secret state. Map this to category:
+   secret_dependent_branch.
+
+When analyzing ML-DSA / Dilithium code, apply BOTH the 5 general patterns above and these 4
+signature-specific patterns. Still emit each finding using ONLY the existing category enum
+values listed in the OUTPUT RULES below (use the mappings given in patterns 6-9).
+
 CRITICAL OUTPUT RULES — follow exactly, 7B models must not deviate:
 - Start your response with the character [
 - End your response with the character ]

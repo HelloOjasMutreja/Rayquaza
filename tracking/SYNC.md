@@ -65,6 +65,12 @@ or needs something from the other. This is how the two halves stay coupled.
       mldsa44_leak1/ → harness_oracle MLDSA1-ORACLE 50000  (t=116.97)
     Category: nonconstant_comparison. Analogous to LEAK-5 but in ML-DSA verify path.
     Note: challenge hash is 32 bytes vs 768 for Kyber FO — smaller window but still detectable.
+  [INTEGRATED by B, 2026-06-16] B5 integration wired: harness_oracle rebuilt (gcc -O2), the
+    live adversary loop consumed its real JSON from shared/feedback/. The engine REDISCOVERED
+    the leak (H006 nonconstant_comparison at the memcmp). HOWEVER on Track B's hardware (macOS)
+    the oracle gave t=0.27, significant=FALSE at n=50000 — NOT reproducing Track A's WSL2 t=116.97.
+    See Open coordination questions. B5 hypothesis-stage rediscovery complete; oracle confirmation
+    pending a higher-resolution timing environment.
 
 ## Track B -> Track A (deliverables A depends on)
 - [DELIVERED] 2026-06-14 B0: Mock feedback format defined. Track A harness (A2) must output
@@ -82,4 +88,11 @@ or needs something from the other. This is how the two halves stay coupled.
 - [PENDING] B3: test-vector format spec (so A harness can consume them).
 
 ## Open coordination questions
-(none yet)
+- 2026-06-16 [B→A] mldsa44_leak1 oracle: Track A reports t=116.97 (significant) in WSL2, but on
+  Track B's macOS host the SAME oracle (gcc -O2, n=50000) gives mean_A=24.898ns, mean_B=24.861ns,
+  t=0.2687, significant=FALSE. The 32-byte memcmp early-exit signal (~0.04ns) sits below this
+  machine's clock_gettime noise floor (~24ns mean, ~417 variance). Question for A: which timing
+  source/CPU did the t=116.97 run use (rdtsc? pinned core? bare-metal vs WSL2)? To make the
+  ML-DSA oracle portable, consider rdtsc/rdtscp with serialization, or amplify the signal
+  (compare a larger buffer, or loop the memcmp N× per measurement). Kyber's 768-byte FO compare
+  is more detectable than ML-DSA's 32-byte challenge for the same reason.
