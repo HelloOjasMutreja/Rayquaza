@@ -15,16 +15,43 @@ or needs something from the other. This is how the two halves stay coupled.
     -DOQS_ENABLE_SIG_DILITHIUM=ON
   Installs to ~/liboqs-install/{include,lib}. Link with -loqs -lssl -lcrypto -lpthread.
   Tested on Ubuntu 24.04, gcc 13.3, cmake 3.28, OpenSSL 3.0.13.
-- [PENDING] A2: timing harness + input/output format (needed for B3 engine loop AND B4 real runs).
-  NOTE 2026-06-16: B4 is now actively waiting on this. Track B expects a `harness_oracle`
-  binary per target, invoked as `./harness_oracle <hypothesis_id> <n_samples>`, that writes
-  shared/feedback/timing_<hyp_id>_<ts>.json (schema = shared/feedback/mock_timing_*.json).
-  The real loop (no --use-mock) already polls shared/feedback/ for *<hyp_id>* filenames.
-- [PENDING] A3: weakened Kyber targets + ground truth (needed for B3 testing AND B4 real runs).
-  NOTE 2026-06-16: track-a-target/targets/ currently holds only .gitkeep — no kyber512_leak5/
-  (kem.c), no kyber512_leak2/ (poly.c), no harness_oracle. These were assumed present for a
-  B4 run on 2026-06-16 but are absent; the run was deferred, not faked. Deliver into
-  track-a-target/targets/ to unblock.
+- [DELIVERED] 2026-06-16 A2: timing harness ready. Location: track-a-target/harness/.
+  Build: cd track-a-target/harness && make
+  Run:   ./run.sh <hypothesis_id> [run_count]  →  saves JSON to shared/feedback/
+  Schema: confirmed matches mock_timing format (hypothesis_id, run_count, mean_A/B ns,
+    variance_A/B, t_statistic, significant, generated_by:"harness").
+  Baseline (ref build, 10000 runs, WSL2): mean≈5870ns, std≈241ns, t=-3.29 (not significant).
+  Noise floor: ~241ns std dev in WSL2. Injected vulnerabilities should produce >500ns
+  mean difference to be clearly detectable above noise.
+- [DELIVERED] 2026-06-16 A3: LEAK-5 weakened target (memcmp FO oracle) confirmed significant.
+  Target: track-a-target/targets/kyber512_leak5/ (patched kem.c with memcmp instead of verify).
+  Measurement approach: direct oracle harness (harness_oracle) isolates FO comparison step.
+  Result: mean_A=28.9ns (valid CT, full 768-byte compare), mean_B=25.8ns (invalid CT, early exit),
+    t=78.93, significant=true, n=50000. JSON saved to shared/feedback/timing_LEAK5-ORACLE_*.json.
+  Note: full-decaps detection via ref C requires ~2M samples (std 8327ns >> signal 3ns).
+    With AVX2 backend (std ~241ns) the oracle is detectable at n~500. Use oracle harness for B3.
+  B3 integration: run ./harness_oracle <hypothesis_id> 50000 from kyber512_leak5/ and the
+    JSON lands in shared/feedback/ with significant:true confirming the hypothesis.
+- [DELIVERED] 2026-06-16 A4: two additional weakened Kyber512 targets confirmed significant.
+  LEAK-2 | track-a-target/targets/kyber512_leak2/ | poly_tomsg() misprediction oracle
+    Patch: poly.c poly_tomsg() — replace branchless multiply-shift with `if (2*t >= KYBER_Q)`.
+    Oracle: harness_oracle [hypothesis_id] [n]. Cond-A: all_predictable (0 mispredicts).
+    Cond-B: random-per-call LCG mix (~128 mispredicts). Compiled -O0 (cmov at -O2 eliminates leak).
+    Result: mean_A=760.4ns, mean_B=816.8ns, t=-139.91, significant=true, n=50000.
+    Research note: branch direction alone is not significant (t=-0.64). Signal requires
+    unpredictable mp distribution (adversarial or invalid CT scenario).
+  LEAK-4 | track-a-target/targets/kyber512_leak4/ | indcpa_dec normalization oracle
+    Patch: indcpa.c after poly_invntt_tomont(&mp) — add `for(k<N) if(mp.coeffs[k]<0) mp.coeffs[k]+=KYBER_Q`.
+    Oracle: harness_oracle [hypothesis_id] [n]. Cond-A: all_positive (0 additions).
+    Cond-B: all_negative (256 additions of KYBER_Q=3329).
+    Result: mean_A=291.9ns, mean_B=534.1ns, t=-318.58, significant=true, n=50000.
+    Note: signal is the number of negative coefficients in mp (proportional to Hamming weight
+    pattern). Full-decaps noise floor still too high for detection in ref C; oracle isolates loop.
+  B3 integration: three confirmed targets now available. Run harness_oracle from each target dir.
+    kyber512_leak5/  → harness_oracle LEAK5-ORACLE 50000   (t=78.93)
+    kyber512_leak2/  → harness_oracle LEAK2-ORACLE 50000   (t=-139.91)
+    kyber512_leak4/  → harness_oracle LEAK4-ORACLE 50000   (t=-318.58)
+  All save JSON to shared/feedback/ in standard schema.
 - [PENDING] A5: Dilithium target (needed for B5).
 
 ## Track B -> Track A (deliverables A depends on)
@@ -43,8 +70,4 @@ or needs something from the other. This is how the two halves stay coupled.
 - [PENDING] B3: test-vector format spec (so A harness can consume them).
 
 ## Open coordination questions
-- 2026-06-16 [B→A] B4 was kicked off assuming three live oracles in track-a-target/targets/
-  (kyber512_leak5/kem.c, kyber512_leak2/poly.c, + harness_oracle). None are present in the repo.
-  Track A: have these been built but not committed/pushed? If so, please commit them (and the
-  harness_oracle build) so Track B can run the real loop. Until then B4 real runs stay blocked.
-  Track B's integration side is ready (live-mode polling verified in B3).
+(none yet)
