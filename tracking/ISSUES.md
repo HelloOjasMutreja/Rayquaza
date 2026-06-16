@@ -20,7 +20,7 @@ STATUS = OPEN / IN-PROGRESS / RESOLVED.
   generally safe; Clang -O2 -flto is not. Injection for A3: remove the asm barrier and
   compile with clang -O2 -flto, or replace the XOR-select with an explicit if/memcpy.
 
-- [OPEN] 2026-06-16 [A] LEAK-2 GitHub#5 | poly.c:191–210 | poly_tomsg() | Category: branch on secret-derived rounding
+- [RESOLVED] 2026-06-16 [A] LEAK-2 GitHub#5 | poly.c:191–210 | poly_tomsg() | Category: branch on secret-derived rounding | Confirmed: t=-139.91, significant=true (misprediction oracle, n=50000). Target: track-a-target/targets/kyber512_leak2/.
   File: src/kem/kyber/pqcrystals-kyber_kyber512_ref/poly.c, function poly_tomsg(), lines 191–210.
   Rounds each coefficient of mp = v - s^T·b (fully secret-derived) to a message bit.
   Reference uses a branchless multiply-shift (80635 * t >> 28). Naive/commented alternative
@@ -28,6 +28,9 @@ STATUS = OPEN / IN-PROGRESS / RESOLVED.
   Any branch here leaks whether each secret-derived coefficient rounds up or down, revealing
   mp and therefore sk. Targeted by Pessl et al. single-trace power analysis. Injection for
   A3: replace multiply-shift with `if (2*t >= KYBER_Q) bit=1; else bit=0;`.
+  Oracle note: branch direction alone (both predictable) is not significant (t=-0.64). Signal
+  emerges from misprediction overhead when pattern is unpredictable (random-per-call Cond-B,
+  t=-139.91). Compiled with -O0; at -O2 GCC emits cmov, eliminating the leak (research finding).
 
 - [OPEN] 2026-06-16 [A] LEAK-3 GitHub#6 | ntt.c:139–145 | basemul() | Category: timing on secret key coefficients
   File: src/kem/kyber/pqcrystals-kyber_kyber512_ref/ntt.c, function basemul(), lines 139–145.
@@ -38,14 +41,13 @@ STATUS = OPEN / IN-PROGRESS / RESOLVED.
   behavior differs. Injection for A3: add `if (a[0] < 0) a[0] += KYBER_Q;` before use —
   branch directly on secret key coefficient sign.
 
-- [OPEN] 2026-06-16 [A] LEAK-4 GitHub#7 | ntt.c:106–126 | invntt() via barrett_reduce | Category: branch on secret-derived NTT values
-  File: src/kem/kyber/pqcrystals-kyber_kyber512_ref/ntt.c, function invntt(), lines 106–126.
-  Applied to mp (= s^T·b, secret-derived) via poly_invntt_tomont(). barrett_reduce() returns
-  centered representatives in {-(q-1)/2,...,(q-1)/2}. Naive callers often add a conditional
-  normalization (`if (x < 0) x += q`) which branches on secret-derived values. Reference
-  avoids this by keeping the centered representation throughout — but it is an easy mistake
-  to introduce. Injection for A3: add a normalization loop after poly_invntt_tomont() in
-  indcpa_dec() that branches on mp.coeffs[i] < 0.
+- [RESOLVED] 2026-06-16 [A] LEAK-4 GitHub#7 | indcpa.c:325 | indcpa_dec() normalization | Category: branch on secret-derived NTT values | Confirmed: t=-318.58, significant=true (normalization loop oracle, n=50000). Target: track-a-target/targets/kyber512_leak4/.
+  File: src/kem/kyber/pqcrystals-kyber_kyber512_ref/indcpa.c, function indcpa_dec().
+  After poly_invntt_tomont(&mp), added: for(k<KYBER_N) if(mp.coeffs[k]<0) mp.coeffs[k]+=KYBER_Q.
+  barrett_reduce() returns centered reps in {-(q-1)/2,...,(q-1)/2}. This conditional +=KYBER_Q
+  branches on the SIGN of each secret-derived coefficient of mp = s^T*b (fully secret), and
+  executes up to 256 extra integer additions. Signal: mean_A=291.9ns (0 additions, all positive),
+  mean_B=534.1ns (256 additions, all negative) → 242ns difference, t=-318.58.
 
 - [RESOLVED] 2026-06-16 [A] LEAK-5 GitHub#8 | kem.c:116 → verify.c:16–25 | verify() FO comparison | Category: timing oracle via non-CT compare | Confirmed: t=78.93, significant=true (oracle harness, n=50000). Target: track-a-target/targets/kyber512_leak5/.
   File: src/kem/kyber/pqcrystals-kyber_kyber512_ref/kem.c line 116, calling verify.c:16–25.

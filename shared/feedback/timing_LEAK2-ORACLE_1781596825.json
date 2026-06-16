@@ -1,0 +1,12 @@
+{
+  "hypothesis_id": "LEAK2-ORACLE",
+  "run_count": 50000,
+  "mean_A": 760.411,
+  "mean_B": 816.846,
+  "variance_A": 3664.714,
+  "variance_B": 4470.493,
+  "t_statistic": -139.9114,
+  "significant": true,
+  "generated_by": "harness",
+  "note": "LEAK-2 poly_tomsg misprediction oracle. Cond-A: all coeffs=2500 (>q/2, predictor learns not-taken, 0 mispredicts). Cond-B: random-per-call mix of 100/2500 (predictor cannot learn, ~128 mispredicts). Signal: branch misprediction overhead from secret-derived unpredictable bit pattern. Compiled -O0 to prevent cmov optimization of if-branch."
+}

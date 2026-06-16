@@ -32,6 +32,26 @@ or needs something from the other. This is how the two halves stay coupled.
     With AVX2 backend (std ~241ns) the oracle is detectable at n~500. Use oracle harness for B3.
   B3 integration: run ./harness_oracle <hypothesis_id> 50000 from kyber512_leak5/ and the
     JSON lands in shared/feedback/ with significant:true confirming the hypothesis.
+- [DELIVERED] 2026-06-16 A4: two additional weakened Kyber512 targets confirmed significant.
+  LEAK-2 | track-a-target/targets/kyber512_leak2/ | poly_tomsg() misprediction oracle
+    Patch: poly.c poly_tomsg() — replace branchless multiply-shift with `if (2*t >= KYBER_Q)`.
+    Oracle: harness_oracle [hypothesis_id] [n]. Cond-A: all_predictable (0 mispredicts).
+    Cond-B: random-per-call LCG mix (~128 mispredicts). Compiled -O0 (cmov at -O2 eliminates leak).
+    Result: mean_A=760.4ns, mean_B=816.8ns, t=-139.91, significant=true, n=50000.
+    Research note: branch direction alone is not significant (t=-0.64). Signal requires
+    unpredictable mp distribution (adversarial or invalid CT scenario).
+  LEAK-4 | track-a-target/targets/kyber512_leak4/ | indcpa_dec normalization oracle
+    Patch: indcpa.c after poly_invntt_tomont(&mp) — add `for(k<N) if(mp.coeffs[k]<0) mp.coeffs[k]+=KYBER_Q`.
+    Oracle: harness_oracle [hypothesis_id] [n]. Cond-A: all_positive (0 additions).
+    Cond-B: all_negative (256 additions of KYBER_Q=3329).
+    Result: mean_A=291.9ns, mean_B=534.1ns, t=-318.58, significant=true, n=50000.
+    Note: signal is the number of negative coefficients in mp (proportional to Hamming weight
+    pattern). Full-decaps noise floor still too high for detection in ref C; oracle isolates loop.
+  B3 integration: three confirmed targets now available. Run harness_oracle from each target dir.
+    kyber512_leak5/  → harness_oracle LEAK5-ORACLE 50000   (t=78.93)
+    kyber512_leak2/  → harness_oracle LEAK2-ORACLE 50000   (t=-139.91)
+    kyber512_leak4/  → harness_oracle LEAK4-ORACLE 50000   (t=-318.58)
+  All save JSON to shared/feedback/ in standard schema.
 - [PENDING] A5: Dilithium target (needed for B5).
 
 ## Track B -> Track A (deliverables A depends on)

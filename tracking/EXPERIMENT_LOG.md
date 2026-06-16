@@ -37,6 +37,25 @@ Format:
   ~241ns std dev in WSL2. Need >~500ns mean diff for clear detection in A3. JSON saved to
   shared/feedback/. Harness schema confirmed compatible with Track B mock format.
 
+## 2026-06-16 [A] A4 — LEAK-2 and LEAK-4 timing oracles confirmed
+- What: Injected two additional weakened Kyber512 targets and ran oracle harnesses.
+  LEAK-2: patched poly_tomsg() in poly.c to replace branchless multiply-shift with
+    `if (2*t >= KYBER_Q) t=1; else t=0;` — branches on secret-derived rounding decision.
+  LEAK-4: added conditional normalization loop in indcpa_dec() after poly_invntt_tomont(&mp):
+    `for(k<N) if(mp.coeffs[k]<0) mp.coeffs[k]+=KYBER_Q` — 256 branches on sign of secret NTT poly.
+- Settings: Both oracle harnesses compiled with -O0 -fno-inline (prevent cmov optimization).
+  LEAK-2 oracle: misprediction design — Cond-A: all coeffs=2500 (predictor learns, 0 mispredicts);
+    Cond-B: random-per-call LCG mix (predictor can't learn, ~128 mispredicts). n=50000.
+  LEAK-4 oracle: direct normalization timing — Cond-A: all_positive (0 additions);
+    Cond-B: all_negative (256 additions of KYBER_Q=3329). n=50000.
+- Result:
+  LEAK-2: mean_A=760.4ns, mean_B=816.8ns, t=-139.91, significant=true.
+  LEAK-4: mean_A=291.9ns, mean_B=534.1ns, t=-318.58, significant=true.
+  Note: LEAK-2 direction oracle alone (both predictable) gives t=-0.64 (not significant).
+    The leak requires unpredictable branch patterns — compiler at -O2 also eliminates it (cmov).
+- Takeaway: A4 complete. All three standalone timing oracles confirmed (LEAK-2/4/5). Track B
+  now has three targets for adversary loop integration. JSON saved to shared/feedback/.
+
 ## 2026-06-16 [A] A3 — LEAK-5 timing oracle confirmed (memcmp FO comparison)
 - What: Injected LEAK-5 into Kyber512 FO transform (kem.c line 116): replaced constant-time
   verify() with memcmp(). Built standalone harness from pqcrystals ref C source with custom
