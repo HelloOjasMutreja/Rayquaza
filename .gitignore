@@ -51,6 +51,8 @@ CMakeFiles/
 Makefile
 *.cmake
 !CMakeLists.txt
+# Keep handwritten Makefiles in source directories
+!track-a-target/harness/Makefile
 
 # --- liboqs build artifacts ---
 liboqs/
