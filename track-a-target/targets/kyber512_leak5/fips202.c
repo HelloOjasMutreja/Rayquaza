@@ -49,11 +49,21 @@ void shake128_inc_ctx_release(shake128incctx *ctx) {
     }
 }
 
+/* One-shot absorb. Frees any ctx left by a prior inc_init (the kyber matrix-gen
+ * path calls xof_init -> shake128_inc_init then xof_absorb -> shake128_absorb_once,
+ * so a context may already be allocated) before re-initializing. */
+void shake128_absorb_once(shake128incctx *ctx, const uint8_t *in, size_t inlen) {
+    if (ctx->evp_ctx) EVP_MD_CTX_free((EVP_MD_CTX *)ctx->evp_ctx);
+    ctx->evp_ctx = EVP_MD_CTX_new();
+    EVP_DigestInit_ex((EVP_MD_CTX *)ctx->evp_ctx, EVP_shake128(), NULL);
+    EVP_DigestUpdate((EVP_MD_CTX *)ctx->evp_ctx, in, inlen);
+    ctx->pos      = 0;
+    ctx->squeezed = 0;
+}
+
 /* Non-incremental wrappers */
 void shake128_absorb(shake128incctx *ctx, const uint8_t *in, size_t inlen) {
-    shake128_inc_init(ctx);
-    shake128_inc_absorb(ctx, in, inlen);
-    shake128_inc_finalize(ctx);
+    shake128_absorb_once(ctx, in, inlen);
 }
 
 void shake128_ctx_release(shake128incctx *ctx) {
@@ -97,6 +107,15 @@ void shake256_inc_ctx_release(shake256incctx *ctx) {
         EVP_MD_CTX_free((EVP_MD_CTX *)ctx->evp_ctx);
         ctx->evp_ctx = NULL;
     }
+}
+
+void shake256_absorb_once(shake256incctx *ctx, const uint8_t *in, size_t inlen) {
+    if (ctx->evp_ctx) EVP_MD_CTX_free((EVP_MD_CTX *)ctx->evp_ctx);
+    ctx->evp_ctx = EVP_MD_CTX_new();
+    EVP_DigestInit_ex((EVP_MD_CTX *)ctx->evp_ctx, EVP_shake256(), NULL);
+    EVP_DigestUpdate((EVP_MD_CTX *)ctx->evp_ctx, in, inlen);
+    ctx->pos      = 0;
+    ctx->squeezed = 0;
 }
 
 /* ====================================================================

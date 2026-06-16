@@ -12,7 +12,7 @@
  * Pre-squeezed output buffer. Kyber512 matrix generation needs at most
  * 4 blocks (672 bytes) per polynomial; 16 blocks gives comfortable headroom.
  */
-#define _FIPS202_BUF_BLOCKS 16
+#define _FIPS202_BUF_BLOCKS 32
 
 /* Incremental SHAKE-128 context (what this liboqs version calls shake128incctx) */
 typedef struct {
@@ -42,6 +42,10 @@ void shake128_inc_finalize(shake128incctx *state);
 void shake128_squeezeblocks(uint8_t *out, size_t nblocks, shake128incctx *state);
 void shake128_inc_ctx_release(shake128incctx *state);
 
+/* One-shot absorb into an (optionally pre-inited) incremental context.
+ * Used by kyber_shake128_absorb in symmetric-shake.c. */
+void shake128_absorb_once(shake128incctx *state, const uint8_t *in, size_t inlen);
+
 /* Non-incremental wrappers (one-shot absorb) */
 void shake128_absorb(shake128incctx *state, const uint8_t *in, size_t inlen);
 void shake128_ctx_release(shake128incctx *state);
@@ -52,6 +56,7 @@ void shake256_inc_absorb(shake256incctx *state, const uint8_t *in, size_t inlen)
 void shake256_inc_finalize(shake256incctx *state);
 void shake256_squeezeblocks(uint8_t *out, size_t nblocks, shake256incctx *state);
 void shake256_inc_ctx_release(shake256incctx *state);
+void shake256_absorb_once(shake256incctx *state, const uint8_t *in, size_t inlen);
 
 /* --- One-shot XOF / hash --- */
 void shake128(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen);

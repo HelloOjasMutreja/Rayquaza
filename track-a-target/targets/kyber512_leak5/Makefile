@@ -1,5 +1,6 @@
 CC     = gcc
 CFLAGS = -O2 -Wall -Wextra \
+         -DKYBER_K=2 \
          -I. \
          -I$(HOME)/liboqs-install/include
 LDFLAGS = -L$(HOME)/liboqs-install/lib \

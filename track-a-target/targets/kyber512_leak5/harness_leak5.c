@@ -19,7 +19,7 @@
 #include <sched.h>
 
 #include "params.h"
-#include "api.h"
+#include "kem.h"
 #include "randombytes.h"
 
 #define DEFAULT_WARMUP 500
