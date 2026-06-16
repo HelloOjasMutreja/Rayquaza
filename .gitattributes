@@ -1,0 +1,10 @@
+# Normalize all text files to LF in the repository.
+# This prevents CRLF/LF noise showing as modifications on Windows/WSL.
+* text=auto eol=lf
+
+# Binary files — never touch line endings.
+*.png binary
+*.jpg binary
+*.pdf binary
+*.so  binary
+*.a   binary

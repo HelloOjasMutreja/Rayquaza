@@ -1,33 +1,32 @@
 /*
  * harness_oracle.c — Direct timing oracle for LEAK-5 (memcmp FO comparison)
  *
- * Instead of measuring the full decaps (which adds ~80µs of NTT noise from
- * the reference C implementation), this harness isolates and times ONLY the
- * FO ciphertext comparison — the exact step that is vulnerable.
+ * Standalone: no params.h, no randombytes, no liboqs dependency.
+ * Compiles on Linux and macOS: gcc -O2 harness_oracle.c -o harness_oracle -lm
  *
  * Condition A: memcmp(ct, cmp, 768) where ct == cmp  → reads all 768 bytes (SLOW)
  * Condition B: memcmp(ct, cmp, 768) where ct[0] != cmp[0] → exits at byte 0 (FAST)
  *
- * This proves the comparison itself is timing-variable (the oracle exists).
- * Expected: mean_A > mean_B, |t| >> 10, significant: true.
+ * Kyber512 ciphertext is 768 bytes (KYBER_CIPHERTEXTBYTES with KYBER_K=2).
+ * Expected result: mean_A > mean_B, |t| >> 10, significant: true.
  *
- * A separate analysis note explains why full-decaps detection requires either:
- *  a) the AVX2 liboqs backend (std ~241ns → detectable at n~500), or
- *  b) ~2M samples against the reference C backend (std ~8327ns).
+ * Full-decaps detection requires AVX2 backend (std ~241ns) or ~2M samples
+ * against the reference C backend (std ~8327ns). Oracle approach isolates the
+ * vulnerable comparison step directly.
  */
 
+#ifdef __linux__
 #define _GNU_SOURCE
+#include <sched.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
 #include <math.h>
-#include <sched.h>
 
-#include "params.h"
-#include "randombytes.h"
-
+#define KYBER_CIPHERTEXTBYTES 768  /* Kyber512 with KYBER_K=2 */
 #define DEFAULT_WARMUP 1000
 #define DEFAULT_RUNS   50000
 #define TRIM_PCT       5
@@ -83,29 +82,33 @@ int main(int argc, char *argv[]) {
     const char *hyp_id = (argc > 1) ? argv[1] : "LEAK5-ORACLE";
     int runs            = (argc > 2) ? atoi(argv[2]) : DEFAULT_RUNS;
 
-    /* Pin to CPU 0 */
+#ifdef __linux__
+    /* Pin to CPU 0 for stable timing on Linux */
     cpu_set_t mask; CPU_ZERO(&mask); CPU_SET(0, &mask);
     sched_setaffinity(0, sizeof(mask), &mask);
+#endif
 
     /*
      * Condition A: buffers that MATCH (memcmp reads all 768 bytes)
+     * Use fixed fill pattern — timing result is independent of byte values.
+     */
+    uint8_t buf_A[KYBER_CIPHERTEXTBYTES];
+    uint8_t buf_A_match[KYBER_CIPHERTEXTBYTES];
+    memset(buf_A, 0xAB, KYBER_CIPHERTEXTBYTES);
+    memcpy(buf_A_match, buf_A, KYBER_CIPHERTEXTBYTES);   /* identical → full compare */
+
+    /*
      * Condition B: buffers that MISMATCH at byte 0 (memcmp exits immediately)
      */
-    uint8_t buf_A[KYBER_CIPHERTEXTBYTES];       /* ct  — same for both below */
-    uint8_t buf_A_match[KYBER_CIPHERTEXTBYTES];  /* cmp matches ct */
-    uint8_t buf_B[KYBER_CIPHERTEXTBYTES];        /* ct  — differs from cmp at byte 0 */
+    uint8_t buf_B[KYBER_CIPHERTEXTBYTES];
     uint8_t buf_B_mismatch[KYBER_CIPHERTEXTBYTES];
-
-    randombytes(buf_A, KYBER_CIPHERTEXTBYTES);
-    memcpy(buf_A_match, buf_A, KYBER_CIPHERTEXTBYTES);   /* identical */
-
-    randombytes(buf_B, KYBER_CIPHERTEXTBYTES);
-    randombytes(buf_B_mismatch, KYBER_CIPHERTEXTBYTES);
-    buf_B_mismatch[0] ^= buf_B[0] ^ (buf_B[0] + 1);      /* guarantee byte 0 differs */
-    if (buf_B_mismatch[0] == buf_B[0]) buf_B_mismatch[0]++;
+    memset(buf_B, 0xCD, KYBER_CIPHERTEXTBYTES);
+    memset(buf_B_mismatch, 0xCD, KYBER_CIPHERTEXTBYTES);
+    buf_B_mismatch[0] = 0x00;                            /* byte 0 differs → early exit */
 
     uint64_t *sa = malloc(runs * sizeof(uint64_t));
     uint64_t *sb = malloc(runs * sizeof(uint64_t));
+    if (!sa || !sb) { perror("malloc"); return 1; }
 
     /* Warmup */
     volatile int sink = 0;
@@ -130,6 +133,12 @@ int main(int argc, char *argv[]) {
     double t = welch_t(ma, va, na, mb, vb, nb);
     int sig = fabs(t) > 4.0;
 
+    const char *note =
+        "LEAK-5 memcmp FO comparison oracle. "
+        "Cond-A: memcmp(ct,cmp,768) where ct==cmp (full 768-byte scan). "
+        "Cond-B: memcmp(ct,cmp,768) where ct[0]!=cmp[0] (exits at byte 0). "
+        "Signal: early-exit timing of non-constant-time FO comparison.";
+
     printf("{\n");
     printf("  \"hypothesis_id\": \"%s\",\n", hyp_id);
     printf("  \"run_count\": %d,\n", runs);
@@ -139,9 +148,32 @@ int main(int argc, char *argv[]) {
     printf("  \"variance_B\": %.3f,\n", vb);
     printf("  \"t_statistic\": %.4f,\n", t);
     printf("  \"significant\": %s,\n", sig ? "true" : "false");
-    printf("  \"generated_by\": \"harness_oracle\",\n");
-    printf("  \"note\": \"isolates FO comparison only; full-decaps detection needs AVX2 backend or ~2M samples\"\n");
+    printf("  \"generated_by\": \"harness\",\n");
+    printf("  \"note\": \"%s\"\n", note);
     printf("}\n");
+
+    /* Save to shared/feedback/ */
+    char fname[256];
+    snprintf(fname, sizeof(fname),
+             "../../../shared/feedback/timing_%s_%lu.json",
+             hyp_id, (unsigned long)time(NULL));
+    FILE *f = fopen(fname, "w");
+    if (f) {
+        fprintf(f, "{\n");
+        fprintf(f, "  \"hypothesis_id\": \"%s\",\n", hyp_id);
+        fprintf(f, "  \"run_count\": %d,\n", runs);
+        fprintf(f, "  \"mean_A\": %.3f,\n", ma);
+        fprintf(f, "  \"mean_B\": %.3f,\n", mb);
+        fprintf(f, "  \"variance_A\": %.3f,\n", va);
+        fprintf(f, "  \"variance_B\": %.3f,\n", vb);
+        fprintf(f, "  \"t_statistic\": %.4f,\n", t);
+        fprintf(f, "  \"significant\": %s,\n", sig ? "true" : "false");
+        fprintf(f, "  \"generated_by\": \"harness\",\n");
+        fprintf(f, "  \"note\": \"%s\"\n", note);
+        fprintf(f, "}\n");
+        fclose(f);
+        fprintf(stderr, "Saved: %s\n", fname);
+    }
 
     free(sa); free(sb);
     return 0;

@@ -115,3 +115,27 @@ desktop.ini
 logs/
 track-a-target/targets/*/harness_oracle
 track-a-target/targets/*/harness_leak*
+
+# --- kyber512_leak5 ref files (copied by setup.sh from liboqs, not ours to track) ---
+track-a-target/targets/kyber512_leak5/api.h
+track-a-target/targets/kyber512_leak5/cbd.c
+track-a-target/targets/kyber512_leak5/cbd.h
+track-a-target/targets/kyber512_leak5/indcpa.c
+track-a-target/targets/kyber512_leak5/indcpa.h
+track-a-target/targets/kyber512_leak5/kem.h
+track-a-target/targets/kyber512_leak5/ntt.c
+track-a-target/targets/kyber512_leak5/ntt.h
+track-a-target/targets/kyber512_leak5/params.h
+track-a-target/targets/kyber512_leak5/poly.c
+track-a-target/targets/kyber512_leak5/poly.h
+track-a-target/targets/kyber512_leak5/polyvec.c
+track-a-target/targets/kyber512_leak5/polyvec.h
+track-a-target/targets/kyber512_leak5/reduce.c
+track-a-target/targets/kyber512_leak5/reduce.h
+track-a-target/targets/kyber512_leak5/symmetric-shake.c
+track-a-target/targets/kyber512_leak5/symmetric.h
+track-a-target/targets/kyber512_leak5/verify.c
+track-a-target/targets/kyber512_leak5/verify.h
+
+# --- stale/early timing feedback files ---
+shared/feedback/timing_LEAK5-001_*.json

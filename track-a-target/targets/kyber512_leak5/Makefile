@@ -20,8 +20,8 @@ all: $(TARGET) $(TARGET2)
 $(TARGET): harness_leak5.c $(KYBER_SRCS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-$(TARGET2): harness_oracle.c randombytes.c
-	$(CC) $(CFLAGS) $^ -o $@ -lm
+$(TARGET2): harness_oracle.c
+	$(CC) -O2 -Wall -Wextra $^ -o $@ -lm
 
 setup:
 	bash setup.sh
