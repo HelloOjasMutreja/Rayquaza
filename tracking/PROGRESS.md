@@ -12,9 +12,10 @@ Tag entries [A] (Track A) or [B] (Track B). Use ISO dates.
 - 2026-06-16 [A] Phase A2: timing harness built and verified; baseline JSON saved to shared/feedback/.
 - 2026-06-16 [A] Phase A3: LEAK-5 (memcmp FO comparison) injected and confirmed. Direct oracle measurement: mean_A=28.9ns (valid CT, full compare), mean_B=25.8ns (invalid CT, early exit), t=78.9, significant=true. Ground truth in shared/feedback/. FIRST MAJOR INTEGRATION MILESTONE.
 - 2026-06-16 [A] Phase A4: LEAK-2 (poly_tomsg branch) and LEAK-4 (indcpa_dec normalization) injected and confirmed. Oracles: LEAK-2 t=-139.91, LEAK-4 t=-318.58 (both n=50000, significant=true). Three weakened targets now available in track-a-target/targets/. JSON saved to shared/feedback/.
+- 2026-06-16 [A] Phase A5: MLDSA-LEAK-1 (memcmp challenge comparison in ML-DSA-44 verify) injected and confirmed. Oracle: t=116.97, significant=true (n=50000). Target: track-a-target/targets/mldsa44_leak1/. Fourth target now available.
 
 ## In Progress
-- [A] Phase A5: Dilithium target (needed for B5). LEAK-3 (basemul branch) — optional extension.
+- [A] LEAK-3 (Kyber512 basemul branch) — optional extension, lower priority.
 - [A] Integration: run B's adversary loop against all three confirmed targets (LEAK-2/4/5).
 - [B] Phase B2: AFL++ fuzzing baseline — harness.c (stub OQS_KEM_decaps), Dockerfile, build/run/summarize scripts ready. Next: build container, replace stub with real liboqs, run 24h baseline.
 - [B] Phase B3: full LLM adversary loop (adversary_loop.py + main.py) — ingest→vectorize→feedback→refine→log→state cycle working end-to-end. Mock loop verified: 3-cycle run on dummy.c promoted H001 & H002 (t≈93.7/95.2, significant). READY FOR TRACK A INTEGRATION — drop real timing JSON into shared/feedback/ to replace mock (see SYNC.md). Open item: codellama:7b vectors not yet compilable (B-002), prompt iteration is Phase B4.

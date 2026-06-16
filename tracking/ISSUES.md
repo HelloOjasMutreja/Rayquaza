@@ -50,6 +50,20 @@ STATUS = OPEN / IN-PROGRESS / RESOLVED.
   mean_B=534.1ns (256 additions, all negative) → 242ns difference, t=-318.58.
 
 - [RESOLVED] 2026-06-16 [A] LEAK-5 GitHub#8 | kem.c:116 → verify.c:16–25 | verify() FO comparison | Category: timing oracle via non-CT compare | Confirmed: t=78.93, significant=true (oracle harness, n=50000). Target: track-a-target/targets/kyber512_leak5/.
+
+## A5 — ML-DSA-44 (FIPS 204) Weakened Target
+
+- [RESOLVED] 2026-06-16 [A] MLDSA-LEAK-1 | sign.c:1197 | mld_sign_verify_internal() challenge comparison | Category: nonconstant_comparison | Confirmed: t=116.97, significant=true (oracle harness, n=50000). Target: track-a-target/targets/mldsa44_leak1/.
+  File: mldsa-native_ml-dsa-44_ref/mldsa/src/sign.c, function mld_sign_verify_internal(), line 1197.
+  Injection: replace mld_ct_memcmp(c, c2, MLDSA_CTILDEBYTES) with memcmp(c, c2, MLDSA_CTILDEBYTES).
+  mld_ct_memcmp is XOR-accumulate (constant-time, analogous to Kyber's verify()). memcmp exits
+  early on first differing byte, creating a timing oracle on the 32-byte challenge hash comparison.
+  In the real ML-DSA verify path, c is derived from the signature and c2 is recomputed from the
+  message — a forgery or invalid signature differs in challenge bytes, leaking WHERE it first
+  differs and potentially reconstructing the expected challenge. Analogous to KyberSlash1 (LEAK-5).
+  Oracle: mean_A=16.195ns (c==c2, full 32-byte scan), mean_B=15.790ns (c[0]!=c2[0], early exit),
+    t=116.97, significant=true, n=50000. Small absolute difference (0.4ns) but |t|=116 due to
+    very low variance — the 32-byte memcmp is a tight, repeatable operation with minimal noise.
   File: src/kem/kyber/pqcrystals-kyber_kyber512_ref/kem.c line 116, calling verify.c:16–25.
   The FO transform compares original ct with re-encrypted cmp over 768 bytes. Reference uses
   XOR-accumulate (no early exit) — constant-time. Replacing with memcmp() or any early-exit

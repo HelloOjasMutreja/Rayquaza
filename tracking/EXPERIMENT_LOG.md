@@ -56,6 +56,20 @@ Format:
 - Takeaway: A4 complete. All three standalone timing oracles confirmed (LEAK-2/4/5). Track B
   now has three targets for adversary loop integration. JSON saved to shared/feedback/.
 
+## 2026-06-16 [A] A5 — MLDSA-LEAK-1 timing oracle confirmed (ML-DSA-44 memcmp challenge comparison)
+- What: Injected MLDSA-LEAK-1 into ML-DSA-44 verify path (sign.c line 1197): replaced
+  constant-time mld_ct_memcmp(c, c2, MLDSA_CTILDEBYTES) with memcmp(c, c2, 32).
+  Built standalone oracle harness (no liboqs dependency, compiles -O2 on any Unix).
+- Settings: harness_oracle, n=50000, 5% trim, Welch t-test, CLOCK_MONOTONIC_RAW, CPU pinned.
+  Condition A: memcmp(c, c2, 32) where c == c2 (matching challenge hash, reads all 32 bytes).
+  Condition B: memcmp(c, c2, 32) where c[0] != c2[0] (differing at byte 0, early exit).
+  Algorithm: ML-DSA-44 (FIPS 204, parameter set 2, MLDSA_CTILDEBYTES=32).
+- Result: mean_A=16.195ns, mean_B=15.790ns, t=116.97, significant=true.
+  Absolute difference: 0.405ns over 32 bytes. Very low variance → high |t| despite small delta.
+- Takeaway: A5 complete. MLDSA-LEAK-1 oracle CONFIRMED. First ML-DSA weakened target operational.
+  Category: nonconstant_comparison — directly analogous to LEAK-5 (Kyber FO comparison).
+  Target available for Track B B5 multi-algorithm experiments. JSON saved to shared/feedback/.
+
 ## 2026-06-16 [A] A3 — LEAK-5 timing oracle confirmed (memcmp FO comparison)
 - What: Injected LEAK-5 into Kyber512 FO transform (kem.c line 116): replaced constant-time
   verify() with memcmp(). Built standalone harness from pqcrystals ref C source with custom

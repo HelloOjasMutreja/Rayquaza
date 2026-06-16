@@ -47,12 +47,24 @@ or needs something from the other. This is how the two halves stay coupled.
     Result: mean_A=291.9ns, mean_B=534.1ns, t=-318.58, significant=true, n=50000.
     Note: signal is the number of negative coefficients in mp (proportional to Hamming weight
     pattern). Full-decaps noise floor still too high for detection in ref C; oracle isolates loop.
-  B3 integration: three confirmed targets now available. Run harness_oracle from each target dir.
+  B3 integration: three confirmed Kyber512 targets now available. Run harness_oracle from each target dir.
     kyber512_leak5/  → harness_oracle LEAK5-ORACLE 50000   (t=78.93)
     kyber512_leak2/  → harness_oracle LEAK2-ORACLE 50000   (t=-139.91)
     kyber512_leak4/  → harness_oracle LEAK4-ORACLE 50000   (t=-318.58)
   All save JSON to shared/feedback/ in standard schema.
-- [PENDING] A5: Dilithium target (needed for B5).
+- [DELIVERED] 2026-06-16 A5: ML-DSA-44 (Dilithium) weakened target confirmed significant.
+  MLDSA-LEAK-1 | track-a-target/targets/mldsa44_leak1/ | challenge comparison (memcmp vs ct_memcmp)
+    Algorithm: ML-DSA-44 (FIPS 204, 128-bit security level).
+    Patch: sign.c mld_sign_verify_internal() — replace mld_ct_memcmp(c, c2, MLDSA_CTILDEBYTES)
+      with memcmp(c, c2, MLDSA_CTILDEBYTES). MLDSA_CTILDEBYTES=32 for ML-DSA-44.
+    Oracle: standalone harness_oracle (no liboqs dependency), compiled -O2.
+      Cond-A: memcmp(c, c2, 32) where c==c2 (full 32-byte scan, SLOW).
+      Cond-B: memcmp(c, c2, 32) where c[0]!=c2[0] (exits at byte 0, FAST).
+    Result: mean_A=16.195ns, mean_B=15.790ns, t=116.97, significant=true, n=50000.
+    B3 integration: run harness_oracle <hypothesis_id> 50000 from mldsa44_leak1/.
+      mldsa44_leak1/ → harness_oracle MLDSA1-ORACLE 50000  (t=116.97)
+    Category: nonconstant_comparison. Analogous to LEAK-5 but in ML-DSA verify path.
+    Note: challenge hash is 32 bytes vs 768 for Kyber FO — smaller window but still detectable.
 
 ## Track B -> Track A (deliverables A depends on)
 - [DELIVERED] 2026-06-14 B0: Mock feedback format defined. Track A harness (A2) must output
