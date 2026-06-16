@@ -24,6 +24,31 @@ After completing any unit of work, update:
 - tracking/SYNC.md — if you produced something the other track needs, or need something.
 - tracking/ISSUES.md — log any new problem, bug, or open question.
 
+## GitHub Issues — Mandatory Sync
+tracking/ISSUES.md and GitHub Issues MUST stay in sync. This is required of all agents on both tracks:
+
+1. **Opening an issue:** Whenever you add an OPEN entry to tracking/ISSUES.md, immediately also
+   create the matching GitHub issue using:
+   ```
+   gh issue create --repo HelloOjasMutreja/Rayquaza --title "..." --body "..."
+   ```
+   Use the same ID and description. Include file/function/line references in the body.
+
+2. **Closing an issue:** Whenever you mark an entry RESOLVED in tracking/ISSUES.md, immediately
+   also close the matching GitHub issue using:
+   ```
+   gh issue close <number> --repo HelloOjasMutreja/Rayquaza
+   ```
+
+3. **Never disclose AI involvement** in any GitHub issue title, body, or comment — no model
+   names, no tool names, no attribution lines. Write issues as the project team.
+
+4. `gh` CLI is installed at `C:\Program Files\GitHub CLI\gh.exe` on the Windows host.
+   In WSL, call `gh` directly if it is on PATH, or invoke the Windows binary via
+   `/mnt/c/Program\ Files/GitHub\ CLI/gh.exe`.
+
+Current open issues and their GitHub numbers are tracked in tracking/ISSUES.md next to each entry.
+
 ## Rules
 - Tag every tracking entry with [A] or [B] to show which track it belongs to.
 - Keep entries concise and timestamped (use ISO dates: YYYY-MM-DD).
