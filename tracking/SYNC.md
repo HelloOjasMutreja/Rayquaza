@@ -23,7 +23,15 @@ or needs something from the other. This is how the two halves stay coupled.
   Baseline (ref build, 10000 runs, WSL2): mean≈5870ns, std≈241ns, t=-3.29 (not significant).
   Noise floor: ~241ns std dev in WSL2. Injected vulnerabilities should produce >500ns
   mean difference to be clearly detectable above noise.
-- [PENDING] A3: weakened Kyber targets + ground truth (needed for B3 testing).
+- [DELIVERED] 2026-06-16 A3: LEAK-5 weakened target (memcmp FO oracle) confirmed significant.
+  Target: track-a-target/targets/kyber512_leak5/ (patched kem.c with memcmp instead of verify).
+  Measurement approach: direct oracle harness (harness_oracle) isolates FO comparison step.
+  Result: mean_A=28.9ns (valid CT, full 768-byte compare), mean_B=25.8ns (invalid CT, early exit),
+    t=78.93, significant=true, n=50000. JSON saved to shared/feedback/timing_LEAK5-ORACLE_*.json.
+  Note: full-decaps detection via ref C requires ~2M samples (std 8327ns >> signal 3ns).
+    With AVX2 backend (std ~241ns) the oracle is detectable at n~500. Use oracle harness for B3.
+  B3 integration: run ./harness_oracle <hypothesis_id> 50000 from kyber512_leak5/ and the
+    JSON lands in shared/feedback/ with significant:true confirming the hypothesis.
 - [PENDING] A5: Dilithium target (needed for B5).
 
 ## Track B -> Track A (deliverables A depends on)

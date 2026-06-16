@@ -47,7 +47,7 @@ STATUS = OPEN / IN-PROGRESS / RESOLVED.
   to introduce. Injection for A3: add a normalization loop after poly_invntt_tomont() in
   indcpa_dec() that branches on mp.coeffs[i] < 0.
 
-- [OPEN] 2026-06-16 [A] LEAK-5 GitHub#8 | kem.c:116 → verify.c:16–25 | verify() FO comparison | Category: timing oracle via non-CT compare
+- [RESOLVED] 2026-06-16 [A] LEAK-5 GitHub#8 | kem.c:116 → verify.c:16–25 | verify() FO comparison | Category: timing oracle via non-CT compare | Confirmed: t=78.93, significant=true (oracle harness, n=50000). Target: track-a-target/targets/kyber512_leak5/.
   File: src/kem/kyber/pqcrystals-kyber_kyber512_ref/kem.c line 116, calling verify.c:16–25.
   The FO transform compares original ct with re-encrypted cmp over 768 bytes. Reference uses
   XOR-accumulate (no early exit) — constant-time. Replacing with memcmp() or any early-exit

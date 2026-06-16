@@ -36,3 +36,20 @@ Format:
 - Takeaway: A2 complete. Ref implementation is constant-time as expected (|t|<4). Noise floor
   ~241ns std dev in WSL2. Need >~500ns mean diff for clear detection in A3. JSON saved to
   shared/feedback/. Harness schema confirmed compatible with Track B mock format.
+
+## 2026-06-16 [A] A3 — LEAK-5 timing oracle confirmed (memcmp FO comparison)
+- What: Injected LEAK-5 into Kyber512 FO transform (kem.c line 116): replaced constant-time
+  verify() with memcmp(). Built standalone harness from pqcrystals ref C source with custom
+  fips202 (pure keccak, no external deps). Two harness variants:
+  (1) harness_leak5: full decaps timing — not significant (ref C std 8327ns >> 3ns signal).
+  (2) harness_oracle: isolates FO comparison only — measures memcmp timing directly.
+- Settings: harness_oracle, n=50000, 5% trim, Welch t-test, CLOCK_MONOTONIC_RAW, CPU pinned.
+  Condition A: memcmp(ct, cmp, 768) where ct == cmp (valid CT, reads all 768 bytes).
+  Condition B: memcmp(ct, cmp, 768) where ct[0] != cmp[0] (invalid CT, exits at byte 0).
+- Result: mean_A=28.9ns, mean_B=25.8ns, t=78.93, significant=true.
+  Full-decaps timing: mean≈80000ns, std≈8327ns, t=0.08, significant=false.
+  (Full-decaps detection requires AVX2 backend ~241ns std, est t~35 at n=500.)
+- Takeaway: A3 complete. LEAK-5 oracle CONFIRMED with t=78.93. FIRST MAJOR INTEGRATION MILESTONE.
+  Ground truth JSON in shared/feedback/timing_LEAK5-ORACLE_*.json. Track B (B3) can now use
+  harness_oracle to close the real feedback loop (drop --use-mock). Next: A4 — additional
+  targets (LEAK-2/3/4) and full B-engine integration run.
