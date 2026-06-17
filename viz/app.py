@@ -32,13 +32,13 @@ class API:
         payload = json.dumps(targets)
         self._window.evaluate_js(f"window.initTargets({payload})")
 
-    def start_replay_all(self) -> None:
+    def start_replay_all(self, step_delay: float = 0.6) -> None:
         paths = self._orchestrator.all_replay_paths()
         if not paths:
             self._push_state({"run_id": "none", "model_label": "No replay files found",
                               "targets": {}, "finished": True})
             return
-        self._orchestrator.start_replay(paths[-1], step_delay=0.6)
+        self._orchestrator.start_replay_all(paths, step_delay=step_delay)
 
     def stop_run(self) -> None:
         if self._orchestrator:

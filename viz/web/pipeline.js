@@ -152,14 +152,32 @@ function updateRow(row, targetId, targetState) {
   }
 }
 
+// ── Speed control ─────────────────────────────────────────────────────────────
+// Slider positions 0–4 map to named speeds; step_delay is passed to Python.
+const SPEED_STEPS = [
+  { label: "0.25×", delay: 2.4 },
+  { label: "0.5×",  delay: 1.2 },
+  { label: "1×",    delay: 0.6 },
+  { label: "2×",    delay: 0.3 },
+  { label: "4×",    delay: 0.15 },
+];
+
+function updateSpeedLabel(val) {
+  document.getElementById("speed-val").textContent = SPEED_STEPS[val].label;
+}
+
+function currentStepDelay() {
+  const val = parseInt(document.getElementById("speed-slider").value, 10);
+  return SPEED_STEPS[val].delay;
+}
+
 // ── Button handlers — call through pywebview JS bridge ──────────────────────
 function startReplayAll() {
-  // Clear existing rows
   document.getElementById("pipeline-container").innerHTML = "";
   document.getElementById("btn-replay-all").disabled = true;
   document.getElementById("btn-stop").disabled = false;
   document.getElementById("status-bar").textContent = "Starting replay…";
-  window.pywebview.api.start_replay_all();
+  window.pywebview.api.start_replay_all(currentStepDelay());
 }
 
 function stopRun() {

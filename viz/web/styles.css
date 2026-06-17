@@ -45,6 +45,17 @@ body {
 #controls button:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
 #controls button:disabled { opacity: 0.4; cursor: default; }
 
+#speed-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-left: 8px;
+}
+#speed-slider { width: 80px; accent-color: var(--blue); cursor: pointer; }
+#speed-val { color: var(--text); min-width: 24px; }
+
 /* ── Pipeline container ── */
 #pipeline-container {
   flex: 1;

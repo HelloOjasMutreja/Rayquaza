@@ -12,39 +12,65 @@ FINDINGS_DIR = REPO_ROOT / "shared" / "findings"
 
 
 class Orchestrator:
-    """Drives a run source, folds events into RunState, and pushes updates to a callback.
+    """Drives run sources, folds events into RunState, and pushes updates to a callback.
 
     The callback receives a JSON-serializable dict on every StageEvent.
-    Runs in a daemon thread so the pywebview main loop is never blocked.
+    All sources run in daemon threads so the pywebview main loop is never blocked.
     """
 
     def __init__(self, on_state: Callable[[dict], None]):
         self._on_state = on_state
+        self._lock = threading.Lock()
+        # Parallel replay (list of sources + threads)
+        self._replay_sources: list[RunSource] = []
+        self._replay_threads: list[threading.Thread] = []
+        # Live (single source)
         self._source: Optional[RunSource] = None
         self._thread: Optional[threading.Thread] = None
 
+    def start_replay_all(self, paths: list[Path], step_delay: float = 0.6) -> None:
+        """Start parallel replay runs for every path, all animating simultaneously."""
+        if self._replay_threads and any(t.is_alive() for t in self._replay_threads):
+            return
+
+        self._replay_sources = []
+        self._replay_threads = []
+
+        # One shared RunState — all sources fold their events into it
+        first_data = state_file.load_loop_state(paths[0])
+        shared_state = RunState(run_id="replay-all")
+        shared_state.model_label = first_data.get("model", "unknown model") + " (replay)"
+
+        remaining = [len(paths)]  # mutable counter; hits 0 when all threads finish
+
+        for path in paths:
+            source = ReplaySource(path, step_delay=step_delay)
+            self._replay_sources.append(source)
+
+            def _run(src=source):
+                for event in src.start():
+                    with self._lock:
+                        fold_event(shared_state, event)
+                        self._on_state(shared_state.to_dict())
+                with self._lock:
+                    remaining[0] -= 1
+                    if remaining[0] == 0:
+                        shared_state.finished = True
+                        self._on_state(shared_state.to_dict())
+
+            t = threading.Thread(target=_run, daemon=True)
+            self._replay_threads.append(t)
+
+        for t in self._replay_threads:
+            t.start()
+
     def start_replay(self, loop_state_path: Path, step_delay: float = 0.6) -> None:
-        """Start a replay run in a background thread."""
-        if self._thread and self._thread.is_alive():
-            return  # already running
-
-        self._source = ReplaySource(loop_state_path, step_delay=step_delay)
-        state = RunState(run_id=self._source._run_id)
-
-        data = state_file.load_loop_state(loop_state_path)
-        state.model_label = data.get("model", "unknown model") + " (replay)"
-
-        def _run():
-            for event in self._source.start():
-                fold_event(state, event)
-                self._on_state(state.to_dict())
-            state.finished = True
-            self._on_state(state.to_dict())
-
-        self._thread = threading.Thread(target=_run, daemon=True)
-        self._thread.start()
+        """Start a replay run for a single target (delegates to start_replay_all)."""
+        self.start_replay_all([loop_state_path], step_delay=step_delay)
 
     def stop(self) -> None:
+        for src in self._replay_sources:
+            src.stop()
         if self._source:
             self._source.stop()
 
@@ -78,10 +104,12 @@ class Orchestrator:
             for event in self._source.start():
                 if not event.target_id:
                     event.target_id = target_id
-                fold_event(state, event)
+                with self._lock:
+                    fold_event(state, event)
+                    self._on_state(state.to_dict())
+            with self._lock:
+                state.finished = True
                 self._on_state(state.to_dict())
-            state.finished = True
-            self._on_state(state.to_dict())
 
         self._thread = threading.Thread(target=_run, daemon=True)
         self._thread.start()

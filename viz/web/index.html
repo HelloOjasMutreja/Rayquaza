@@ -13,6 +13,12 @@
     <div id="controls">
       <button id="btn-replay-all" onclick="startReplayAll()">▶ Replay All</button>
       <button id="btn-stop" onclick="stopRun()" disabled>■ Stop</button>
+      <label id="speed-label">
+        Speed
+        <input id="speed-slider" type="range" min="0" max="4" step="1" value="2"
+               oninput="updateSpeedLabel(this.value)">
+        <span id="speed-val">1×</span>
+      </label>
     </div>
   </div>
 
