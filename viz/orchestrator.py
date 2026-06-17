@@ -31,7 +31,7 @@ class Orchestrator:
         state = RunState(run_id=self._source._run_id)
 
         data = state_file.load_loop_state(loop_state_path)
-        state.model_label = data.get("model", "codellama:7b + qwen3:8b") + " (replay)"
+        state.model_label = data.get("model", "unknown model") + " (replay)"
 
         def _run():
             for event in self._source.start():
@@ -47,7 +47,7 @@ class Orchestrator:
         if self._source:
             self._source.stop()
 
-    def all_replay_paths(self) -> list:
+    def all_replay_paths(self) -> list[Path]:
         """Return paths to all committed loop_state_kyber512_*.json files, sorted by name."""
         return sorted(
             FINDINGS_DIR.glob("loop_state_kyber512_*.json"),
