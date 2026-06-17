@@ -17,6 +17,17 @@ class StageEvent:
     ts: float
     data: dict = field(default_factory=dict)
 
+    def to_dict(self) -> dict:
+        return {
+            "run_id": self.run_id,
+            "target_id": self.target_id,
+            "hyp_id": self.hyp_id,
+            "stage": self.stage,
+            "status": self.status,
+            "ts": self.ts,
+            "data": self.data,
+        }
+
 
 @dataclass
 class HypState:
