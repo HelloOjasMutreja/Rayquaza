@@ -13,3 +13,14 @@
 - 2026-06-17 [B→A] Housekeeping: track-a-target/targets/mldsa44_leak1/ confirmed clean on Track A side
   (only Makefile + harness_oracle.c + harness_oracle binary). If a DamsDen/ Next.js directory appears
   locally on Track B's machine, it was never committed — do not stage it.
+
+- 2026-06-17 [A→B] ROOT CAUSE for three "missing/unchanged" reports: **Track B's fork is behind main.**
+  ACTION: `git fetch origin && git merge origin/main` (or rebase) before further work. Specifics:
+  1. mldsa44_leak1/harness_oracle.c REPS=100 fix IS present + committed (1c7fb88 on main). The
+     "no REPS loop" report was a stale checkout. Track A additionally fixed the integer-division
+     quantization (raw total now divided at display) → reconfirmed WSL2/x86 t=-226.85, significant.
+  2. kyber512_leak1/ and kyber512_leak3/ ARE on main (harness_oracle.c + Makefile each) with ground
+     truth in shared/feedback/ (LEAK1-CMOV t=74.74; LEAK3-ARM-GRAVITON2 t=-3956.26). Note: for
+     leak1/leak3 the injection is embedded in the standalone harness_oracle.c, not a separate kem.c.
+  3. DamsDen/ was NEVER committed and is not in git history — purely local to Track B; delete locally.
+  Once pulled, the leak1/leak3 reconstruction placeholders Track B's agent made can be discarded.
