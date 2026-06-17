@@ -22,10 +22,16 @@ Tag entries [A] (Track A) or [B] (Track B). Use ISO dates.
   because codellama:7b fails on full Kyber TUs (prose/miss/timeout); full-file analysis deferred to the
   B6 multi-LLM phase (Claude/GPT-4o). Engine hardened: format:json on stage1+stage2, dict→list parser
   normalize, refine() no longer crashes on bad qwen3 JSON. RESULTS (rediscovery by category/location match):
-  LEAK-2 ✅ correct (secret_dependent_branch @ poly_tomsg rounding); LEAK-4 ✅ correct (secret_dependent_branch
-  @ indcpa_dec normalization, oracle t=-901 PROMOTED); LEAK-5 ✅ correct AFTER prompt fix (B-004 RESOLVED):
-  nonconstant_comparison @ crypto_kem_dec memcmp, oracle t=141 PROMOTED — a "MANDATORY FINDINGS" directive
-  built from the static secondary-scan now steers the model onto the memcmp. Net: 3/3 correct rediscoveries.
+  LEAK-2 ✅ AUTONOMOUS — codellama:7b produced secret_dependent_branch @ poly_tomsg rounding with no hints.
+  LEAK-4 ✅ AUTONOMOUS — codellama:7b produced secret_dependent_branch @ indcpa_dec normalization, oracle t=-901 PROMOTED.
+  LEAK-5 ⚠️  HINT-ASSISTED — codellama:7b MISSED the nonconstant_comparison on its own (fixated on sk-indexing
+  copy branch). Required the MANDATORY FINDINGS directive (built from the static secondary-scan's memcmp match)
+  to surface it. With hint: nonconstant_comparison @ crypto_kem_dec memcmp, oracle t=141 PROMOTED.
+  HEADLINE: 2/3 fully autonomous LLM rediscoveries (LEAK-2, LEAK-4); 1/3 hint-assisted (LEAK-5).
+  ABLATION: without-hint run logged in EXPERIMENT_LOG (2026-06-17 13:40) — model MISSED memcmp even with
+  a passive "; also contains: nonconstant_comparison" label. With-hint run (2026-06-17 14:02) — correct.
+  This is a key ablation for the paper: the static scanner found LEAK-5's vulnerability class; the LLM
+  alone did not. See docs/03_DECISIONS.md for full methodological framing.
   Snapshots: shared/findings/loop_state_kyber512_leak{2,4,5}.json. CAVEAT for paper: the oracle is NOT
   hypothesis-specific (PROMOTED ≠ correct rediscovery; judge by category/location vs ground truth).
 - [B] PRIORITY 2 — Real AFL++ baseline: Linux-ready harness PREPARED (track-b-engine/fuzzing/harness_kyber.c
