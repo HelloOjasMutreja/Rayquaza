@@ -23,12 +23,17 @@ Tag entries [A] (Track A) or [B] (Track B). Use ISO dates.
   B6 multi-LLM phase (Claude/GPT-4o). Engine hardened: format:json on stage1+stage2, dict→list parser
   normalize, refine() no longer crashes on bad qwen3 JSON. RESULTS (rediscovery by category/location match):
   LEAK-2 ✅ correct (secret_dependent_branch @ poly_tomsg rounding); LEAK-4 ✅ correct (secret_dependent_branch
-  @ indcpa_dec normalization, oracle t=-901 PROMOTED); LEAK-5 ❌ MISSED the memcmp (flagged sk-indexing instead;
-  oracle PROMOTED it anyway since the oracle is not hypothesis-specific → false rediscovery, see B-004).
-  Net: 2/3 correct rediscoveries. Snapshots: shared/findings/loop_state_kyber512_leak{2,4,5}.json.
-- [B] PRIORITY 2 — Real AFL++ baseline: BLOCKED on environment (see ISSUE B-005). This macOS/arm64 host
-  has no AFL++, no Docker, no ~/liboqs-install; AFL++/liboqs are Linux/WSL2. Must run on the WSL2 box.
-  Nothing faked. Next: decide (a) run on WSL2, or (b) Track B prepares Linux-ready harness for execution there.
+  @ indcpa_dec normalization, oracle t=-901 PROMOTED); LEAK-5 ✅ correct AFTER prompt fix (B-004 RESOLVED):
+  nonconstant_comparison @ crypto_kem_dec memcmp, oracle t=141 PROMOTED — a "MANDATORY FINDINGS" directive
+  built from the static secondary-scan now steers the model onto the memcmp. Net: 3/3 correct rediscoveries.
+  Snapshots: shared/findings/loop_state_kyber512_leak{2,4,5}.json. CAVEAT for paper: the oracle is NOT
+  hypothesis-specific (PROMOTED ≠ correct rediscovery; judge by category/location vs ground truth).
+- [B] PRIORITY 2 — Real AFL++ baseline: Linux-ready harness PREPARED (track-b-engine/fuzzing/harness_kyber.c
+  + build_weakened.sh + run_baseline_weakened.sh + README), fuzzes the WEAKENED reference Kyber per target.
+  NOT run here — this macOS/arm64 host has no AFL++/Docker/liboqs (ISSUE B-005); build+run on WSL2.
+- [B] Carryover (ML-DSA REPS check): DONE — REPS=100/1000/5000 all NON-significant on macOS/arm64 (|t|<1,
+  sign unstable). At -O2 on arm64 the 32-byte memcmp has no real early-exit saving. ML-DSA oracle
+  confirmation requires WSL2/x86. Track-B copy: track-b-engine/oracle_reps_check/harness_oracle_reps.c.
 - [B] Phase B2: AFL++ fuzzing baseline — harness.c (stub OQS_KEM_decaps), Dockerfile, build/run/summarize scripts ready. Superseded by Priority 2 above (real liboqs link).
 - [B] Phase B5: ML-DSA-44 (Dilithium) extension. stage1_analysis.txt extended with 4 ML-DSA/Dilithium patterns; synthetic verify target created; harness_oracle built. Live loop run on mldsa44_synthetic.c: engine REDISCOVERED the planted leak — H006 category=nonconstant_comparison at mld_sign_verify_internal() memcmp (hypothesis-stage milestone ACHIEVED). BUT oracle on THIS hardware (macOS) gave t=0.27, significant=false (32-byte memcmp signal below timer noise floor; Track A's WSL2 measured t=116.97) → qwen3 INVALIDATED H006, loop early-stopped. Rediscovery succeeded; oracle confirmation is hardware-dependent. Next: re-run oracle on Linux/WSL2 for significance; tighten stage1 enum mapping (7B invented non-enum categories for H007-H009).
 

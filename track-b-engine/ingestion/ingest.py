@@ -246,6 +246,7 @@ class CodeIngester:
             user_content = context_dict["raw_source"]
         else:
             blocks = []
+            mandates = []   # forceful directives for statically-detected patterns
             for f in analyzed:
                 if f.flagged:
                     why = f"flagged on secret token: {', '.join(f.matched_tokens)}"
@@ -256,7 +257,24 @@ class CodeIngester:
                 else:
                     why = f"secondary scan: {', '.join(f.secondary_matches)}"
                 blocks.append(f"// function: {f.name}  ({why})\n{f.signature} {f.body}")
+                # A static scan already PROVED these patterns are present. Make the
+                # model emit a finding for each rather than letting the secret-token
+                # label pull its single hypothesis elsewhere (the LEAK-5 memcmp miss).
+                for cat in f.secondary_matches:
+                    mandates.append(
+                        f"- Function {f.name}() contains a {cat} construct "
+                        f"(confirmed by static scan). You MUST output a separate "
+                        f"finding with category \"{cat}\" for it."
+                    )
+
             user_content = "\n\n".join(blocks)
+            if mandates:
+                user_content = (
+                    "MANDATORY FINDINGS — a static analyzer already detected these "
+                    "patterns; emit one array element for EACH, plus any others you find:\n"
+                    + "\n".join(mandates)
+                    + "\n\nSOURCE:\n" + user_content
+                )
 
         raw = ""
         records = None
