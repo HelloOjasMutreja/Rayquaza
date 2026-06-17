@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rayquaza — Pipeline Visualizer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="header">
+    <h1>Rayquaza</h1>
+    <div id="model-label">—</div>
+    <div id="controls">
+      <button id="btn-replay-all" onclick="startReplayAll()">▶ Replay All</button>
+      <button id="btn-stop" onclick="stopRun()" disabled>■ Stop</button>
+    </div>
+  </div>
+
+  <div id="pipeline-container">
+    <!-- Rows injected by pipeline.js based on RunState -->
+  </div>
+
+  <div id="status-bar">Ready</div>
+
+  <script src="pipeline.js"></script>
+</body>
+</html>
