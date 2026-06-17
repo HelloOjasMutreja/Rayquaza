@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-06-17T13:59:58.631559",
+  "model": "codellama:7b",
+  "count": 1,
+  "hypotheses": [
+    {
+      "id": "H003",
+      "category": "nonconstant_comparison",
+      "location": "crypto_kem_dec() line 17",
+      "hypothesis": "Comparing the ciphertext to a constant-time generated one creates measurable timing differences depending on the secret token value.",
+      "trigger_condition": "The memcmp function is used to compare the ciphertext with a constant-time generated one, where the secret token value is used to generate the latter.",
+      "confidence": "HIGH",
+      "test_vector_hint": "Sweep the secret token values from 0 to 255 and measure the delta in timing across 10000 runs."
+    }
+  ]
+}

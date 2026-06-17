@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-06-17T13:15:09.007668",
+  "model": "codellama:7b",
+  "count": 1,
+  "hypotheses": [
+    {
+      "id": "H001",
+      "category": "secret_dependent_branch",
+      "location": "crypto_kem_dec() line 35",
+      "hypothesis": "Branch on sk[KYBER_SECRETKEYBYTES-2*KYBER_SYMBYTES+i]==0 creates measurable timing difference between zero and nonzero first byte.",
+      "trigger_condition": "Any two different values of sk[KYBER_SECRETKEYBYTES-2*KYBER_SYMBYTES+i]",
+      "confidence": "HIGH",
+      "test_vector_hint": "Sweep sk[KYBER_SECRETKEYBYTES-2*KYBER_SYMBYTES+i] from 0 to 255 and measure cache-timing variance across 10000 runs."
+    }
+  ]
+}

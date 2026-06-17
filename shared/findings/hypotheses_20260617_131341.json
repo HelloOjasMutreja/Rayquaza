@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-06-17T13:13:41.027934",
+  "model": "codellama:7b",
+  "count": 1,
+  "hypotheses": [
+    {
+      "id": "H001",
+      "category": "secret_dependent_branch",
+      "location": "indcpa_dec() line 23",
+      "hypothesis": "The branch on mp.coeffs[k] < 0 creates a measurable timing difference between positive and negative coefficients of the secret key.",
+      "trigger_condition": "Any two different values of mp.coeffs[k]",
+      "confidence": "HIGH",
+      "test_vector_hint": "Sweep mp.coeffs[k] from 0 to KYBER_Q and measure delta."
+    }
+  ]
+}

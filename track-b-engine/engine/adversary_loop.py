@@ -63,8 +63,12 @@ def _ts() -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
-def call_ollama(model: str, system: str, user: str) -> str:
-    """One non-streaming chat call at temperature 0.2."""
+def call_ollama(model: str, system: str, user: str, fmt: str = None) -> str:
+    """One non-streaming chat call at temperature 0.2.
+
+    fmt="json" constrains the model to valid JSON (used for the refine step);
+    leave it None for vectorize, whose output is C source, not JSON.
+    """
     import requests
 
     payload = {
@@ -76,6 +80,8 @@ def call_ollama(model: str, system: str, user: str) -> str:
             {"role": "user", "content": user},
         ],
     }
+    if fmt:
+        payload["format"] = fmt
     resp = requests.post(OLLAMA_URL, json=payload, timeout=300)
     resp.raise_for_status()
     return resp.json().get("message", {}).get("content", "")
@@ -86,18 +92,31 @@ def strip_think(text: str) -> str:
     return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
 
 
+def _normalize_to_list(obj):
+    """Coerce a parsed JSON value into a list of record dicts (format:json may
+    return a bare object, a single record, or a {"results": [...]} wrapper)."""
+    if isinstance(obj, list):
+        return obj
+    if isinstance(obj, dict):
+        for v in obj.values():
+            if isinstance(v, list):
+                return v
+        return [obj]
+    return []
+
+
 def extract_json_array(text: str):
-    """Parse a JSON array tolerating surrounding prose / fences / think tags."""
+    """Parse a JSON array tolerating surrounding prose / fences / think tags / dict."""
     text = strip_think(text).strip()
     text = re.sub(r"^```(?:json)?\s*", "", text)
     text = re.sub(r"\s*```$", "", text)
     try:
-        return json.loads(text)
+        return _normalize_to_list(json.loads(text))
     except json.JSONDecodeError:
         pass
     start, end = text.find("["), text.rfind("]")
     if start != -1 and end != -1 and end > start:
-        return json.loads(text[start : end + 1])
+        return _normalize_to_list(json.loads(text[start : end + 1]))
     raise json.JSONDecodeError("no JSON array found", text, 0)
 
 
@@ -247,7 +266,8 @@ class AdversaryLoop:
             f"Run count: {run_count}"
         )
 
-        raw = call_ollama(REASON_MODEL, system, user)
+        raw = call_ollama(REASON_MODEL, system, user, fmt="json")
+        records = None
         try:
             records = extract_json_array(raw)
         except json.JSONDecodeError:
@@ -255,12 +275,33 @@ class AdversaryLoop:
                 "\n\nYour previous response was not valid JSON. Return ONLY "
                 "the JSON array starting with [ and ending with ]"
             )
-            raw = call_ollama(REASON_MODEL, retry_system, user)
-            records = extract_json_array(raw)
+            try:
+                raw = call_ollama(REASON_MODEL, retry_system, user, fmt="json")
+                records = extract_json_array(raw)
+            except json.JSONDecodeError:
+                records = None
+
+        # Keep only well-formed record objects — qwen3 + format:json sometimes
+        # returns a list of strings or an odd wrapper shape.
+        dict_records = [r for r in (records or []) if isinstance(r, dict)]
+
+        if not dict_records:
+            # Refiner gave nothing usable. Don't crash the loop — derive a status
+            # directly from the measured timing so the cycle still completes/logs.
+            sig = bool(timing.get("significant"))
+            return {
+                "id": hyp.id,
+                "original_hypothesis": hyp.hypothesis,
+                "status": "PROMOTED" if sig else "INVALIDATED",
+                "evidence": (f"Refiner JSON unusable; status derived from oracle: "
+                             f"t={timing.get('t_statistic')}, significant={sig}."),
+                "revised_confidence": "MEDIUM" if sig else "NONE",
+                "next_test_hint": "Re-run refine; qwen3 returned a non-object JSON shape.",
+            }
 
         # find the record matching this hypothesis id (default to first)
-        rec = next((r for r in records if str(r.get("id")) == hyp.id),
-                   records[0] if records else {})
+        rec = next((r for r in dict_records if str(r.get("id")) == hyp.id),
+                   dict_records[0])
         return rec
 
     # -- LOG ------------------------------------------------------------------
