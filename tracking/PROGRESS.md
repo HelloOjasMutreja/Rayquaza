@@ -29,19 +29,19 @@ Tag entries [A] (Track A) or [B] (Track B). Use ISO dates.
   the exact wrong strings (rejection_sampling_leaks, signature_validity_branches, nonce_reuse). B5 hypothesis
   rediscovery of MLDSA-LEAK-1 (H006, nonconstant_comparison) DONE. Oracle WSL2 confirmation pending (macOS
   arm64 architecture limitation — REPS amplification ineffective; t=0.27 on macOS vs t=116.97 on WSL2).
-- 2026-06-17 [B] Focused targets for LEAK-1 and LEAK-3 verified and updated. kyber512_leak1_focused.c:
-  corrected from for-loop to if(b) memcpy(r,x,len) matching harness_oracle injection. kyber512_leak3_focused.c:
-  corrected from in-place a[0] modification to local a0 variable pattern matching harness_oracle injection.
-  PLACEHOLDER banners removed. Oracle integration ready; adversary loop pending.
+- 2026-06-17 [B] Focused targets for LEAK-1 and LEAK-3 verified, corrected, and adversary loop run.
+  kyber512_leak1_focused.c: corrected to if(b) memcpy(r,x,len) → AUTONOMOUS rediscovery (t=213.48).
+  kyber512_leak3_focused.c: corrected to local a0 variable pattern → AUTONOMOUS rediscovery (t=-2421.91).
+  PLACEHOLDER banners removed. UPDATED HEADLINE: 4/5 Kyber leaks autonomous (LEAK-1/2/3/4);
+  1/5 hint-assisted (LEAK-5, nonconstant_comparison class). See docs/03_DECISIONS.md.
 - 2026-06-17 [B] ML-DSA REPS check complete. REPS=100/1000/5000 all non-significant on macOS/arm64 (|t|<1,
   sign unstable). Root cause: -O2 on arm64 compiles 32-byte memcmp as fixed NEON sequence with no real
   early-exit saving. ML-DSA oracle confirmation must run on WSL2/x86. Harness: track-b-engine/oracle_reps_check/.
 
 ## In Progress
-- [A] Integration: run B's adversary loop against LEAK-1/3 + MLDSA-LEAK-1. LEAK-2/4/5 done (2/3
-  autonomous + 1/3 hint-assisted). LEAK-1 and LEAK-3 focused targets now verified against harness_oracle.c
-  injections; adversary loop against LEAK-1/3 pending. MLDSA-LEAK-1 rediscovery done at hypothesis stage;
-  oracle confirmation needs WSL2 (macOS arm64 limitation).
+- [A] Integration: LEAK-1/2/3/4/5 adversary loop complete. FINAL RESULT: 4/5 Kyber autonomous
+  (LEAK-1/2/3/4 secret_dependent_branch class), 1/5 hint-assisted (LEAK-5 nonconstant_comparison).
+  MLDSA-LEAK-1 rediscovery done at hypothesis stage; oracle confirmation needs WSL2 (macOS arm64 limitation).
 - [B] PRIORITY 2 — Real AFL++ 24h baseline: BLOCKED on WSL2 environment (ISSUE B-005). Harness
   fully prepared for all 5 leaks: track-b-engine/fuzzing/harness_kyber.c + build_weakened.sh
   (leak1|2|3|4|5|clean) + run_baseline_weakened.sh + summarize_afl.py. Run on WSL2:

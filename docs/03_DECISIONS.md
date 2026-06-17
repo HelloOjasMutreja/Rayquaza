@@ -11,36 +11,42 @@ Format: date, decision, rationale.
 
 ## 2026-06-17: LEAK-5 rediscovery must be reported as hint-assisted, not autonomous
 
-**Decision:** The final Kyber rediscovery headline is **2/3 autonomous LLM + 1/3 hint-assisted**, not 3/3.
+**Decision:** The final Kyber rediscovery headline is **4/5 autonomous LLM + 1/5 hint-assisted**.
+
+**UPDATED 2026-06-17 (after LEAK-1/3 loop runs):** Original entry said 2/3; expanded to all 5 leaks.
+LEAK-1 and LEAK-3 adversary loops ran and both produced autonomous rediscoveries:
+- LEAK-1 (cmov if-branch): secret_dependent_branch @ cmov() line 9, oracle t=213.48, AUTONOMOUS.
+- LEAK-3 (basemul sign-branch): secret_dependent_branch @ basemul() line 25, oracle t=-2421.91, AUTONOMOUS.
+All four `secret_dependent_branch` targets (LEAK-1/2/3/4) were found without hints. Only LEAK-5
+(`nonconstant_comparison` class) required the static-scanner directive.
 
 **Background:** LEAK-5 (crypto_kem_dec memcmp / KyberSlash1) requires non-constant-time comparison
 detection — the `nonconstant_comparison` category. Without any steering, codellama:7b (the stage1
 model) consistently missed it: on the full kem.c it fixated on the keypair generation; on the focused
 kyber512_leak5_focused.c it fixated on the `sk[...]` copy branch and never emitted a finding for the
 `memcmp(ct, cmp, KYBER_CIPHERTEXTBYTES)` call even with a passive "; also contains:
-nonconstant_comparison" comment in the prompt (logged: 2026-06-17 13:40, H001
-secret_dependent_branch @ sk-indexing, oracle t=235.66 PROMOTED via wrong location).
+nonconstant_comparison" comment in the prompt.
 
 The fix — the MANDATORY FINDINGS directive prepended to the prompt — works by injecting the static
 scanner's categorical conclusion directly into the LLM's instruction. The model complies and emits the
 correct finding. But the *discovery* of the vulnerability class came from the static secondary scan
-(regex match on `memcmp(` in the function body), not from the LLM's reasoning. The LLM produced the
-correct category *after being told what category to look for*.
+(regex match on `memcmp(` in the function body), not from the LLM's reasoning.
 
 **Alternatives considered:**
-- Claim 3/3 because the PROMOTED outcome was correct — rejected: PROMOTED uses an oracle that isn't
+- Claim 5/5 because all PROMOTED outcomes were correct — rejected: PROMOTED uses an oracle that isn't
   hypothesis-specific; even wrong-location hypotheses get PROMOTED on leaky targets.
 - Discard the hint-on run entirely — rejected: it's a real result; the engine with static-scan
   integration does find LEAK-5, which is useful for the ablation.
-- Claim 2/3 and leave LEAK-5 as a plain miss — rejected: we have both runs and should report both.
+- Claim 4/5 and leave LEAK-5 as a plain miss — rejected: we have both runs and should report both.
 
 **Paper framing:**
-- LEAK-2, LEAK-4: **autonomous** — LLM correctly categorized and located the leak from source alone.
+- LEAK-1, LEAK-2, LEAK-3, LEAK-4: **autonomous** — LLM correctly categorized and located the leak
+  from source alone. All are in the `secret_dependent_branch` family (if-branch on secret-derived value).
 - LEAK-5: **scanner-directed** — static regex matched `memcmp`; MANDATORY directive told the LLM what
   category to emit; LLM produced the correct finding text and the oracle confirmed significance. Credit
   belongs to the static scan; the LLM added hypothesis text and location detail.
-- Headline stat: "codellama:7b autonomously rediscovered 2/3 planted Kyber leaks; the third required
-  static-analysis guidance (memcmp/nonconstant_comparison class is a miss for the 7B model alone)."
+- Headline stat: "codellama:7b autonomously rediscovered 4/5 planted Kyber leaks; the fifth (LEAK-5,
+  nonconstant_comparison class) required static-analysis guidance."
 - Ablation table (for paper §Results): run the engine in two modes — (a) stage1 only, no static hint;
   (b) stage1 + static secondary scan + MANDATORY directive — and report per-leak rediscovery rate for
   each mode. This isolates the LLM's autonomous coverage from the hybrid approach.
