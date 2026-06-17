@@ -86,6 +86,12 @@ or needs something from the other. This is how the two halves stay coupled.
   the schema. Once real files land there, drop the --use-mock flag to close the loop
   (the loop polls shared/feedback/ every 30s, 600s timeout per hypothesis).
 - [PENDING] B3: test-vector format spec (so A harness can consume them).
+- [PENDING] B→A: push kyber512_leak1/ and kyber512_leak3/ target directories to shared repo.
+  Track B has created focused ingestion targets (kyber512_leak1_focused.c, kyber512_leak3_focused.c)
+  in track-b-engine/ingestion/test_targets/ based on the ISSUES.md injection descriptions (LEAK-1:
+  if-branch cmov in verify.c; LEAK-3: if(a[0]<0) a[0]+=KYBER_Q in ntt.c basemul). These need to be
+  verified verbatim once Track A pushes the actual patched files. Also needed: harness_oracle binaries
+  for those targets so run_focused.sh can wire up the oracle integration loop.
 
 ## Open coordination questions
 - 2026-06-16→17 [B→A / A→B] mldsa44_leak1 oracle portability — PARTIALLY RESOLVED.

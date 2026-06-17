@@ -14,38 +14,37 @@ Tag entries [A] (Track A) or [B] (Track B). Use ISO dates.
 - 2026-06-16 [A] Phase A4: LEAK-2 (poly_tomsg branch) and LEAK-4 (indcpa_dec normalization) injected and confirmed. Oracles: LEAK-2 t=-139.91, LEAK-4 t=-318.58 (both n=50000, significant=true). Three weakened targets now available in track-a-target/targets/. JSON saved to shared/feedback/.
 - 2026-06-16 [A] Phase A5: MLDSA-LEAK-1 (memcmp challenge comparison in ML-DSA-44 verify) injected and confirmed. Oracle: t=116.97, significant=true (n=50000). Target: track-a-target/targets/mldsa44_leak1/. Fourth target now available.
 - 2026-06-16 [B] Phase B4: secondary-scan fix in ingest.py (memcmp/strcmp/strncmp + secret-branch + fixed/variable-loop re-scan of unflagged functions) verified on dummy.c (compare() now caught). Targets delivered by Track A; B-003 RESOLVED. DONE.
+- 2026-06-17 [B] PRIORITY 1 — Live adversary loop vs all three Kyber targets: 2/3 AUTONOMOUS + 1/3 HINT-ASSISTED.
+  LEAK-2 ✅ autonomous (secret_dependent_branch @ poly_tomsg, oracle t=-139.91).
+  LEAK-4 ✅ autonomous (secret_dependent_branch @ indcpa_dec normalization, oracle t=-901).
+  LEAK-5 ⚠️  hint-assisted — LLM alone missed the nonconstant_comparison; MANDATORY FINDINGS directive from
+  static scan steered it (B-004 RESOLVED). With hint: nonconstant_comparison @ crypto_kem_dec, oracle t=141.
+  ABLATION documented in docs/03_DECISIONS.md and EXPERIMENT_LOG. CAVEAT: oracle is not hypothesis-specific.
+  Focused targets: track-b-engine/ingestion/test_targets/kyber512_leak{2,4,5}_focused.c.
+- 2026-06-17 [B] Phase B5 (prompt fix): stage1_analysis.txt ML-DSA enum adherence tightened. Patterns 6-9
+  now lead with "category=<value>", each ends with "CATEGORY TO USE:", and an explicit FORBIDDEN list names
+  the exact wrong strings (rejection_sampling_leaks, signature_validity_branches, nonce_reuse). B5 hypothesis
+  rediscovery of MLDSA-LEAK-1 (H006, nonconstant_comparison) DONE. Oracle WSL2 confirmation pending (macOS
+  arm64 architecture limitation — REPS amplification ineffective; t=0.27 on macOS vs t=116.97 on WSL2).
+- 2026-06-17 [B] Focused targets for LEAK-1 and LEAK-3 created (kyber512_leak1_focused.c,
+  kyber512_leak3_focused.c). CAVEAT: reconstructed from ISSUES.md injection descriptions; verbatim content
+  should be verified once Track A pushes kyber512_leak1/ and kyber512_leak3/ to the shared repo.
 - 2026-06-16 [A] LEAK-1 (cmov clangover class): target kyber512_leak1/ created. Clang 18/x86-64 assessment: barrier survives LTO; compiler emits cmoveq even without barrier. Manual if-branch injection represents downstream/ARM scenario. Oracle: t=74.74, significant=true (n=50000, REPS=100).
 - 2026-06-16 [A] Task 3 equivalence check (LEAK-5 in liboqs): patched both ref and AVX2 kem.c in liboqs, rebuilt, ran full OQS_KEM_decaps timing. Result: t=2.52 at n=50k, t=1.84 at n=200k — NOT significant. Full-API detection below threshold; oracle isolation required. Finding: same code modification in library, but noise floor masking prevents direct detection through the full API. liboqs reverted to clean state.
 - 2026-06-16 [A] Phase A6: LEAK-3 (basemul ARM branch on secret NTT coefficient sign) confirmed. Oracle on AWS t4g.micro Graviton2: mean_A=13.202ns, mean_B=15.341ns, t=-3956.26, significant=true (n=50000). Target: track-a-target/targets/kyber512_leak3/. All five Kyber leaks now confirmed.
 
 ## In Progress
-- [A] Integration: run B's adversary loop against all confirmed targets (LEAK-1/2/3/4/5 + MLDSA-LEAK-1). All five Kyber leaks and MLDSA-LEAK-1 are now oracle-confirmed; extend B's focused targets to cover LEAK-1 and LEAK-3.
-- [B] PRIORITY 1 — Live adversary loop vs all three Kyber targets: DONE 2026-06-17 (headline result).
-  Method: focused targets holding the REAL patched functions verbatim (kyber512_leak{2,4,5}_focused.c),
-  because codellama:7b fails on full Kyber TUs (prose/miss/timeout); full-file analysis deferred to the
-  B6 multi-LLM phase (Claude/GPT-4o). Engine hardened: format:json on stage1+stage2, dict→list parser
-  normalize, refine() no longer crashes on bad qwen3 JSON. RESULTS (rediscovery by category/location match):
-  LEAK-2 ✅ AUTONOMOUS — codellama:7b produced secret_dependent_branch @ poly_tomsg rounding with no hints.
-  LEAK-4 ✅ AUTONOMOUS — codellama:7b produced secret_dependent_branch @ indcpa_dec normalization, oracle t=-901 PROMOTED.
-  LEAK-5 ⚠️  HINT-ASSISTED — codellama:7b MISSED the nonconstant_comparison on its own (fixated on sk-indexing
-  copy branch). Required the MANDATORY FINDINGS directive (built from the static secondary-scan's memcmp match)
-  to surface it. With hint: nonconstant_comparison @ crypto_kem_dec memcmp, oracle t=141 PROMOTED.
-  HEADLINE: 2/3 fully autonomous LLM rediscoveries (LEAK-2, LEAK-4); 1/3 hint-assisted (LEAK-5).
-  ABLATION: without-hint run logged in EXPERIMENT_LOG (2026-06-17 13:40) — model MISSED memcmp even with
-  a passive "; also contains: nonconstant_comparison" label. With-hint run (2026-06-17 14:02) — correct.
-  This is a key ablation for the paper: the static scanner found LEAK-5's vulnerability class; the LLM
-  alone did not. See docs/03_DECISIONS.md for full methodological framing.
-  Snapshots: shared/findings/loop_state_kyber512_leak{2,4,5}.json. CAVEAT for paper: the oracle is NOT
-  hypothesis-specific (PROMOTED ≠ correct rediscovery; judge by category/location vs ground truth).
-- [B] PRIORITY 2 — Real AFL++ baseline: Linux-ready harness PREPARED and extended to all 5 leaks.
-  track-b-engine/fuzzing/harness_kyber.c + build_weakened.sh (leak1|2|3|4|5|clean) +
-  run_baseline_weakened.sh + summarize_afl.py. Fuzzes the WEAKENED reference Kyber per target.
-  NOT run here — this macOS/arm64 host has no AFL++/Docker/liboqs (ISSUE B-005); build+run on WSL2.
-- [B] Phase B5 — PROMPT FIX APPLIED: stage1_analysis.txt ML-DSA enum mapping tightened. Patterns
-  6-9 now lead with "category=<value>" and have a "CATEGORY TO USE:" line at the end. Added an
-  explicit FORBIDDEN list naming the exact wrong strings the 7B model invented (rejection_sampling_leaks,
-  signature_validity_branches, nonce_reuse). Oracle WSL2 re-run still pending (macOS arm64 cannot
-  confirm 32-byte memcmp signal — architecture limitation, not amplification issue).
+- [A] Integration: run B's adversary loop against LEAK-1/3 + MLDSA-LEAK-1. LEAK-2/4/5 done (2/3
+  autonomous + 1/3 hint-assisted). LEAK-1 and LEAK-3 focused targets created by B but need Track A
+  to push kyber512_leak1/ and kyber512_leak3/ so oracle integration can be wired up. MLDSA-LEAK-1
+  rediscovery done at hypothesis stage; oracle confirmation needs WSL2 (macOS arm64 limitation).
+- [B] PRIORITY 2 — Real AFL++ 24h baseline: BLOCKED on WSL2 environment (ISSUE B-005). Harness
+  fully prepared for all 5 leaks: track-b-engine/fuzzing/harness_kyber.c + build_weakened.sh
+  (leak1|2|3|4|5|clean) + run_baseline_weakened.sh + summarize_afl.py. Run on WSL2:
+    ./build_weakened.sh <leak> && ./run_baseline_weakened.sh <leak>  (for each of leak1..leak5 + clean)
+- [B] Phase B5 oracle reconfirmation: ML-DSA oracle needs WSL2/x86 re-run.
+    cd track-a-target/targets/mldsa44_leak1 && ./harness_oracle MLDSA1-ORACLE 50000
+  Expected: t≈-103 (Track A's REPS=100 harness, significant on WSL2/x86).
 
 ## Blocked
 (none — B4 unblocked: Track A delivered A2 harness + A3/A4/A5 targets + harness_oracle; B-003 RESOLVED)
