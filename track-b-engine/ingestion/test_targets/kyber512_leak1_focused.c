@@ -1,12 +1,20 @@
 /*
+ * PLACEHOLDER — reconstructed from ISSUES.md, NOT verbatim, do not use for
+ * reported results until Track A pushes real source (kyber512_leak1/verify.c).
+ *
+ * Once real source lands: copy the patched cmov() (and verify() if modified)
+ * verbatim from track-a-target/targets/kyber512_leak1/verify.c — same process
+ * as kyber512_leak{2,4,5}_focused.c. Remove this banner and the NOTE below.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
  * kyber512_leak1_focused.c — focused ingestion target for Track B adversary loop.
  *
  * Contains the patched cmov() reconstructed from the ISSUES.md injection description
  * for track-a-target/targets/kyber512_leak1/ (LEAK-1: clangover / implicit-rejection
  * timing oracle). Isolated to the two functions in verify.c that are relevant.
  *
- * NOTE: kyber512_leak1/ has not yet been pushed to the shared repo. Verify and
- * replace the verbatim function body once Track A pushes verify.c there.
+ * NOTE: PLACEHOLDER — kyber512_leak1/ not yet pushed to shared repo. Swap in
+ * verbatim content once Track A delivers the real patched verify.c.
  *
  * Ground truth:
  *   secret_dependent_branch in cmov() — the `if(b)` branch selects between the

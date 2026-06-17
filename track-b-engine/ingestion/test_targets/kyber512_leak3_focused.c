@@ -1,4 +1,12 @@
 /*
+ * PLACEHOLDER — reconstructed from ISSUES.md, NOT verbatim, do not use for
+ * reported results until Track A pushes real source (kyber512_leak3/ntt.c).
+ *
+ * Once real source lands: copy the patched basemul() verbatim from
+ * track-a-target/targets/kyber512_leak3/ntt.c — same process as
+ * kyber512_leak{2,4,5}_focused.c. Remove this banner and the NOTE below.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
  * kyber512_leak3_focused.c — focused ingestion target for Track B adversary loop.
  *
  * Contains the patched basemul() reconstructed from the ISSUES.md injection
@@ -6,8 +14,8 @@
  * coefficient sign branch in NTT base multiplication). Isolated to the relevant
  * functions from ntt.c; helper fqmul/montgomery_reduce included for LLM context.
  *
- * NOTE: kyber512_leak3/ has not yet been pushed to the shared repo. Verify and
- * replace the verbatim function body once Track A pushes ntt.c there.
+ * NOTE: PLACEHOLDER — kyber512_leak3/ not yet pushed to shared repo. Swap in
+ * verbatim content once Track A delivers the real patched ntt.c.
  *
  * Ground truth:
  *   secret_dependent_branch in basemul() — the `if(a[0] < 0) a[0] += KYBER_Q`
