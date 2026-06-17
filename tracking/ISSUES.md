@@ -10,6 +10,16 @@ STATUS = OPEN / IN-PROGRESS / RESOLVED.
 - [RESOLVED] 2026-06-16 [B] [B-003] B4 real-oracle runs previously blocked: targets assumed for B4 were absent on 2026-06-16. RESOLVED: Track A delivered A2 (timing harness) + A3/A4 (LEAK-2, LEAK-4, LEAK-5 targets + harness_oracle) on 2026-06-16 — see SYNC.md. B4 real runs can now proceed.
 - [OPEN] 2026-06-17 [B] [B-004] LEAK-5 rediscovery MISS: on kyber512_leak5_focused.c (real crypto_kem_dec verbatim), codellama:7b did NOT identify the planted non-constant-time memcmp (KyberSlash1). It instead returned a single hypothesis — secret_dependent_branch on the sk-indexing copy `buf[KYBER_SYMBYTES+i] = sk[...]` — and never surfaced `memcmp(ct, cmp, KYBER_CIPHERTEXTBYTES)`. Adding a "; also contains: nonconstant_comparison" hint to the prompt (secondary scan now annotates flagged functions too) did NOT fix it; the 7B model returns just one finding and fixates on the sk token. The oracle PROMOTED the wrong hypothesis because the standalone oracle is not hypothesis-specific. Candidate fixes: (a) instruct stage1 to emit one finding PER detected pattern and rank memcmp/strcmp highest; (b) inject an explicit "a memcmp on secret data was detected at line N — you MUST emit a nonconstant_comparison finding for it" directive when the secondary scan matches; (c) the real fix is the B6 multi-LLM phase (Claude/GPT-4o) — larger/stronger models. NOTE: contrast LEAK-2 and LEAK-4, where the 7B correctly rediscovered the branch leaks. Status: OPEN (engine/prompt quality; not blocking — documented as an honest negative result).
 
+- [OPEN] 2026-06-17 [B] [B-005] PRIORITY-2 real AFL++ baseline BLOCKED on environment. This macOS/arm64
+  host has no AFL++ (afl-fuzz/afl-clang-fast absent), no Docker, and no ~/liboqs-install. AFL++ + the
+  project Dockerfile are Linux-oriented; Track A built liboqs on WSL2/Ubuntu. A real 24h coverage-guided
+  fuzz of the weakened Kyber targets must run on the WSL2/Linux box, not here. Nothing was faked. Options:
+  (a) run on the WSL2 box where liboqs already builds (recommended — apples-to-apples with Track A); or
+  (b) Track B prepares a Linux-ready harness (replace the stub OQS_KEM_decaps with real liboqs decaps,
+  retarget run_baseline.sh at kyber512_leak{2,4,5}, capture plot_data + crashes per target) for execution
+  there. Also re-confirm A0 liboqs flags are still current (Track A touched liboqs during LEAK-1/3 work).
+  Status: OPEN (blocked on Linux environment / cross-track).
+
 ## A1 — Candidate Timing Leak Locations in Kyber512 (pqcrystals-kyber_kyber512_ref)
 
 - [OPEN] 2026-06-16 [A] LEAK-1 GitHub#4 | verify.c:40–57 | cmov() | Category: compiler-level branch
