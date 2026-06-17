@@ -44,6 +44,10 @@ class API:
         if self._orchestrator:
             self._orchestrator.stop()
 
+    def start_live(self, target_id: str) -> None:
+        """Called by JS to start a live run (A2)."""
+        self._orchestrator.start_live(target_id)
+
 
 def start_app(autostart_replay: bool = False) -> None:
     """Create the pywebview window and enter the main loop."""
