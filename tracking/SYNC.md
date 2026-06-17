@@ -89,44 +89,50 @@ or needs something from the other. This is how the two halves stay coupled.
 - [RESOLVED] 2026-06-17 B→A: kyber512_leak1/ and kyber512_leak3/ target directories confirmed
   present on main (harness_oracle.c verified readable in both). Track B focused targets updated:
   kyber512_leak1_focused.c corrected to if(b) memcpy(r,x,len); kyber512_leak3_focused.c corrected
-  to local a0 variable pattern. PLACEHOLDER banners removed. Adversary loop against LEAK-1/3 pending.
+  to local a0 variable pattern. PLACEHOLDER banners removed. Adversary loop against LEAK-1/3 in
+  progress (LEAK-3 DONE: autonomous rediscovery confirmed; LEAK-1 in progress).
 
 ## Open coordination questions
-- 2026-06-16→17 [B→A / A→B] mldsa44_leak1 oracle portability — PARTIALLY RESOLVED.
+- 2026-06-16→17 [B→A / A→B] mldsa44_leak1 oracle portability — RESOLVED with hardware caveat.
   Original problem (B→A 2026-06-16): macOS clock_gettime noise floor (~24ns std dev) swamped the
   32-byte memcmp signal (t=0.27, single-call). B asked A for the WSL2 timing source.
-  Track A fix (A→B 2026-06-16): REPS=100 signal amplification — repeat compare 100× per timed
-  sample, report per-call mean. WSL2 result after fix: t=-103.26, significant=true, n=50000.
-  Mean difference 0.44ns/call. Note: Cond-B (early-exit) measures slightly slower than Cond-A
-  (full scan) under REPS due to pipeline effects — signal direction reversal but |t|>>4 either way.
-  B empirical check (B→A 2026-06-17): REPS=100/1000/5000 tested on macOS/arm64.
-  RESULT: ALL NON-SIGNIFICANT (t=0.91, -0.81, 0.75; sign unstable). The "portable for macOS"
-  claim does NOT hold on arm64. Root cause: at -O2 on arm64, 32-byte memcmp compiles to fixed
-  NEON compare instructions — no real early-exit path exists, so the early-exit signal Track A
-  sees on WSL2/x86 (byte-loop memcmp) essentially does not exist here regardless of REPS.
-  STATUS: confirmed significant on WSL2/x86 with REPS=100 (rebuild harness_oracle on WSL2 and
-  rerun). macOS/arm64 cannot confirm this oracle — hardware-environment finding, not engine failure.
-  Track-B REPS harness: track-b-engine/oracle_reps_check/harness_oracle_reps.c.
-- 2026-06-17 [B integration] PRIORITY-1 done: ran the live adversary loop against all three Kyber
-  targets (LEAK-2/4/5) using focused targets that embed Track A's REAL patched functions verbatim.
-  Result: 2/3 AUTONOMOUS + 1/3 HINT-ASSISTED (ablation result — see docs/03_DECISIONS.md).
+  Track A fix (A→B 2026-06-16): REPS=100 signal amplification (commit 1c7fb88 on main); integer-
+  division quantization fix added. WSL2 reconfirm: t=-226.85, significant=true, n=50000.
+  B empirical check (B→A 2026-06-17): REPS=100/1000/5000 tested on macOS/arm64 using
+  track-b-engine/oracle_reps_check/harness_oracle_reps.c. ALL NON-SIGNIFICANT (t≈0, sign unstable).
+  Root cause: at -O2 on arm64, 32-byte memcmp compiles to fixed NEON instructions — no real
+  early-exit path, so the WSL2/x86 byte-loop early-exit signal doesn't exist here regardless of REPS.
+  NOTE: Track B's "no REPS loop" report was from a stale checkout; the fix was already on main.
+  Track B's REPS test was against a local harness (harness_oracle_reps.c) built from scratch —
+  the macOS arm64 non-significance is a genuine hardware-ISA finding, not a stale-code issue.
+  CONCLUSION: ML-DSA oracle significant on WSL2/x86 (t=-226.85); non-significant on macOS/arm64.
+  Oracle confirmation requires WSL2/x86. macOS arm64 is architecturally unsuitable for this oracle.
+- 2026-06-17 [B integration] PRIORITY-1 done: ran the live adversary loop against Kyber targets.
+  As-of status: LEAK-2/4/5 done (2/3 AUTONOMOUS + 1/3 HINT-ASSISTED per ablation in docs/03_DECISIONS.md).
+  LEAK-3 done: ✅ AUTONOMOUS (secret_dependent_branch @ basemul(), oracle t=-2421.91 on macOS arm64).
+  LEAK-1: in progress (adversary loop running, LEAK-1 harness compiled cc -O2 on macOS).
   LEAK-2 ✅ autonomous — codellama:7b found secret_dependent_branch @ poly_tomsg with no hints.
   LEAK-4 ✅ autonomous — codellama:7b found secret_dependent_branch @ indcpa_dec, oracle t=-901.
-  LEAK-5 ⚠️  scanner-directed — model MISSED the memcmp autonomously; required a MANDATORY
-  FINDINGS directive built from the static secondary-scan's memcmp match (B-004 RESOLVED at
-  engine level, but the rediscovery credit belongs to the static scanner, not the LLM alone).
-  Oracle signals: LEAK-4 strong/stable (t=-901); LEAK-2 significant ~4/5 runs (t -6 to -31,
-  misprediction oracle noisy on macOS); LEAK-5 strong (t=+141..+235).
-  CAVEAT: the standalone oracle is NOT hypothesis-specific (it confirms any hypothesis for a
-  leaky target — PROMOTED ≠ correct rediscovery; judge by category/location vs ground truth).
-- 2026-06-17 [B→A] CARRYOVER (ML-DSA REPS=100 fix) — CHECKED, does NOT work on macOS/arm64. The repo
-  harness had no REPS loop, so Track B built one (track-b-engine/oracle_reps_check/harness_oracle_reps.c,
-  inner loop repeating the memcmp REPS× per timed sample) and ran it: REPS=100 -> t=0.91, REPS=1000 ->
-  t=-0.81 (sign flipped), REPS=5000 -> t=0.75; ALL significant=false. Root cause: at -O2 on arm64 a
-  32-byte memcmp is a fixed couple of NEON compares with no real early-exit saving — the signal Track A
-  sees at t=116.97 on WSL2/x86 essentially doesn't exist here. CONCLUSION: REPS is not the macOS fix;
-  ML-DSA oracle confirmation must run on WSL2/x86. (The REPS harness may still help robustness on x86.)
-- 2026-06-17 [B→A] HOUSEKEEPING: track-a-target/targets/mldsa44_leak1/DamsDen/ — RESOLVED. Track A
-  confirmed the directory was never committed to the repo (only Makefile + harness_oracle.c +
-  harness_oracle binary are in mldsa44_leak1/). If DamsDen/ appears locally on Track B's machine,
-  it's a local artifact; Track B did not stage it. No action needed on Track A's side.
+  LEAK-5 ⚠️  scanner-directed — model missed the memcmp; MANDATORY FINDINGS directive from static
+    scan steered it (ablation result — see docs/03_DECISIONS.md).
+  LEAK-3 ✅ autonomous — codellama:7b found secret_dependent_branch @ basemul() line 25, oracle
+    t=-2421.91 significant (macOS arm64 with gcc -O0 -fno-inline; confirms signal visible on M-series).
+  CAVEAT: standalone oracle not hypothesis-specific — PROMOTED ≠ correct; judge by category/location.
+- 2026-06-17 [B→A] ML-DSA REPS harness — NOT working on macOS/arm64 (architecture limitation).
+  REPS=100 -> t=0.91, REPS=1000 -> t=-0.81, REPS=5000 -> t=0.75; ALL non-significant, sign unstable.
+  Root cause confirmed independently by Track B harness: -O2 arm64 memcmp is a fixed NEON sequence,
+  no early-exit saving exists. Signal Track A sees on WSL2/x86 (byte-loop memcmp) is absent here.
+  CONCLUSION: ML-DSA oracle confirmation must run on WSL2/x86. REPS harness: oracle_reps_check/.
+- 2026-06-17 [A→B] ROOT CAUSE for three "missing/unchanged" reports from prior session:
+  Track B's fork was behind main. Specifics now confirmed on both sides:
+  1. mldsa44_leak1/harness_oracle.c REPS=100 fix was on main (commit 1c7fb88) before Track B checked.
+     Track B's "no REPS loop" report was from a stale checkout. Track B's macOS/arm64 non-significance
+     result stands independently (tested via local harness_oracle_reps.c, not the stale file).
+     Track A additionally fixed integer-division quantization → reconfirmed WSL2 t=-226.85.
+  2. kyber512_leak1/ and kyber512_leak3/ were already on main (harness_oracle.c + Makefile).
+     Ground truth in shared/feedback/: LEAK1-CMOV t=74.74, LEAK3-ARM-GRAVITON2 t=-3956.26.
+     Injection is in standalone harness_oracle.c (not a separate patched kem.c/ntt.c).
+  3. DamsDen/ was NEVER committed — purely local to Track B machine. Not staged, not an issue.
+  Track B response: focused targets now corrected to match harness injections (not discarded —
+  they are valid adversary-loop inputs). LEAK-3 adversary loop complete (autonomous). LEAK-1 running.
+- 2026-06-17 [B→A] HOUSEKEEPING: DamsDen/ RESOLVED — never committed, not staged by Track B.
