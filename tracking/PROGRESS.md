@@ -37,14 +37,15 @@ Tag entries [A] (Track A) or [B] (Track B). Use ISO dates.
   alone did not. See docs/03_DECISIONS.md for full methodological framing.
   Snapshots: shared/findings/loop_state_kyber512_leak{2,4,5}.json. CAVEAT for paper: the oracle is NOT
   hypothesis-specific (PROMOTED ≠ correct rediscovery; judge by category/location vs ground truth).
-- [B] PRIORITY 2 — Real AFL++ baseline: Linux-ready harness PREPARED (track-b-engine/fuzzing/harness_kyber.c
-  + build_weakened.sh + run_baseline_weakened.sh + README), fuzzes the WEAKENED reference Kyber per target.
+- [B] PRIORITY 2 — Real AFL++ baseline: Linux-ready harness PREPARED and extended to all 5 leaks.
+  track-b-engine/fuzzing/harness_kyber.c + build_weakened.sh (leak1|2|3|4|5|clean) +
+  run_baseline_weakened.sh + summarize_afl.py. Fuzzes the WEAKENED reference Kyber per target.
   NOT run here — this macOS/arm64 host has no AFL++/Docker/liboqs (ISSUE B-005); build+run on WSL2.
-- [B] Carryover (ML-DSA REPS check): DONE — REPS=100/1000/5000 all NON-significant on macOS/arm64 (|t|<1,
-  sign unstable). At -O2 on arm64 the 32-byte memcmp has no real early-exit saving. ML-DSA oracle
-  confirmation requires WSL2/x86. Track-B copy: track-b-engine/oracle_reps_check/harness_oracle_reps.c.
-- [B] Phase B2: AFL++ fuzzing baseline — harness.c (stub OQS_KEM_decaps), Dockerfile, build/run/summarize scripts ready. Superseded by Priority 2 above (real liboqs link).
-- [B] Phase B5: ML-DSA-44 (Dilithium) extension. stage1_analysis.txt extended with 4 ML-DSA/Dilithium patterns; synthetic verify target created; harness_oracle built. Live loop run on mldsa44_synthetic.c: engine REDISCOVERED the planted leak — H006 category=nonconstant_comparison at mld_sign_verify_internal() memcmp (hypothesis-stage milestone ACHIEVED). BUT oracle on THIS hardware (macOS) gave t=0.27, significant=false (32-byte memcmp signal below timer noise floor; Track A's WSL2 measured t=116.97) → qwen3 INVALIDATED H006, loop early-stopped. Rediscovery succeeded; oracle confirmation is hardware-dependent. Next: re-run oracle on Linux/WSL2 for significance; tighten stage1 enum mapping (7B invented non-enum categories for H007-H009).
+- [B] Phase B5 — PROMPT FIX APPLIED: stage1_analysis.txt ML-DSA enum mapping tightened. Patterns
+  6-9 now lead with "category=<value>" and have a "CATEGORY TO USE:" line at the end. Added an
+  explicit FORBIDDEN list naming the exact wrong strings the 7B model invented (rejection_sampling_leaks,
+  signature_validity_branches, nonce_reuse). Oracle WSL2 re-run still pending (macOS arm64 cannot
+  confirm 32-byte memcmp signal — architecture limitation, not amplification issue).
 
 ## Blocked
 (none — B4 unblocked: Track A delivered A2 harness + A3/A4/A5 targets + harness_oracle; B-003 RESOLVED)
