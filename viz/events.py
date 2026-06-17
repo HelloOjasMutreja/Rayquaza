@@ -49,7 +49,7 @@ class HypState:
 class TargetRunState:
     target_id: str
     active_hyp: Optional[str] = None
-    hyps: dict = field(default_factory=dict)  # hyp_id -> HypState
+    hyps: dict[str, HypState] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -63,7 +63,7 @@ class TargetRunState:
 class RunState:
     run_id: str
     model_label: str = ""
-    targets: dict = field(default_factory=dict)  # target_id -> TargetRunState
+    targets: dict[str, TargetRunState] = field(default_factory=dict)
     started_at: float = field(default_factory=time.time)
     finished: bool = False
 
