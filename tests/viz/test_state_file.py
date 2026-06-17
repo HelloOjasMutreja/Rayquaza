@@ -53,3 +53,10 @@ class TestTargetIdFromState:
     def test_derives_id_for_leak2(self, loop_state_leak2):
         data = load_loop_state(loop_state_leak2)
         assert target_id_from_state(data) == "kyber512_leak2"
+
+    def test_derives_id_for_mldsa44_synthetic(self):
+        # mldsa44_synthetic.c must resolve to mldsa44_leak1 via registry lookup,
+        # not the heuristic (which would wrongly return 'mldsa44_synthetic')
+        data = {"target_file": "track-b-engine/ingestion/test_targets/mldsa44_synthetic.c"}
+        result = target_id_from_state(data)
+        assert result == "mldsa44_leak1", f"Expected 'mldsa44_leak1', got '{result}'"
