@@ -96,3 +96,18 @@ or needs something from the other. This is how the two halves stay coupled.
   ML-DSA oracle portable, consider rdtsc/rdtscp with serialization, or amplify the signal
   (compare a larger buffer, or loop the memcmp N× per measurement). Kyber's 768-byte FO compare
   is more detectable than ML-DSA's 32-byte challenge for the same reason.
+- 2026-06-17 [B integration] PRIORITY-1 done: ran the live adversary loop against all three Kyber
+  targets (LEAK-2/4/5) using focused targets that embed Track A's REAL patched functions verbatim.
+  Result: 2/3 correct rediscoveries (LEAK-2, LEAK-4); LEAK-5 memcmp missed by 7B (see ISSUE B-004).
+  On macOS the LEAK-4 oracle is strong/stable (t=-901); LEAK-2 misprediction oracle is significant
+  ~4/5 runs (t -6 to -31) with occasional noisy outliers; LEAK-5 oracle strong (t=+212..+235).
+- 2026-06-17 [B→A] CARRYOVER (ML-DSA REPS=100 fix): I was asked to rebuild mldsa44_leak1/harness_oracle
+  with "Track A's REPS=100 fix" and re-run, expecting significant on macOS. But the harness_oracle.c
+  in the repo has NO REPS / inner-repeat loop (still single memcmp per measurement, DEFAULT_RUNS=50000).
+  The fix is NOT in the repo. Track A: please commit the REPS=100 version (an inner loop repeating the
+  memcmp ~100× per timed sample amplifies the 32-byte signal above the macOS noise floor). Until then
+  the ML-DSA oracle stays non-significant on macOS (re-confirmed; not re-run as no new harness exists).
+- 2026-06-17 [B→A] HOUSEKEEPING: track-a-target/targets/mldsa44_leak1/DamsDen/ is an unrelated Next.js
+  web app (node_modules, .next, its own .git) sitting inside the crypto target dir — looks accidentally
+  committed/dropped. It's in Track A's area so Track B left it untouched and did NOT stage it. Please
+  remove it from the target directory (and consider .gitignore'ing node_modules) if it's not intentional.

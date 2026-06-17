@@ -17,8 +17,19 @@ Tag entries [A] (Track A) or [B] (Track B). Use ISO dates.
 
 ## In Progress
 - [A] LEAK-3 (Kyber512 basemul branch) — optional extension, lower priority.
-- [A] Integration: run B's adversary loop against all three confirmed targets (LEAK-2/4/5).
-- [B] Phase B2: AFL++ fuzzing baseline — harness.c (stub OQS_KEM_decaps), Dockerfile, build/run/summarize scripts ready. Next: build container, replace stub with real liboqs, run 24h baseline.
+- [B] PRIORITY 1 — Live adversary loop vs all three Kyber targets: DONE 2026-06-17 (headline result).
+  Method: focused targets holding the REAL patched functions verbatim (kyber512_leak{2,4,5}_focused.c),
+  because codellama:7b fails on full Kyber TUs (prose/miss/timeout); full-file analysis deferred to the
+  B6 multi-LLM phase (Claude/GPT-4o). Engine hardened: format:json on stage1+stage2, dict→list parser
+  normalize, refine() no longer crashes on bad qwen3 JSON. RESULTS (rediscovery by category/location match):
+  LEAK-2 ✅ correct (secret_dependent_branch @ poly_tomsg rounding); LEAK-4 ✅ correct (secret_dependent_branch
+  @ indcpa_dec normalization, oracle t=-901 PROMOTED); LEAK-5 ❌ MISSED the memcmp (flagged sk-indexing instead;
+  oracle PROMOTED it anyway since the oracle is not hypothesis-specific → false rediscovery, see B-004).
+  Net: 2/3 correct rediscoveries. Snapshots: shared/findings/loop_state_kyber512_leak{2,4,5}.json.
+- [B] PRIORITY 2 — Real AFL++ baseline (replace stub OQS_KEM_decaps with real liboqs, 24h run vs the
+  weakened targets): NOT YET STARTED this session. Next: confirm A0 liboqs flags still current with Track A,
+  build liboqs, relink fuzzing/harness.c, run 24h per target, log coverage+crashes.
+- [B] Phase B2: AFL++ fuzzing baseline — harness.c (stub OQS_KEM_decaps), Dockerfile, build/run/summarize scripts ready. Superseded by Priority 2 above (real liboqs link).
 - [B] Phase B5: ML-DSA-44 (Dilithium) extension. stage1_analysis.txt extended with 4 ML-DSA/Dilithium patterns; synthetic verify target created; harness_oracle built. Live loop run on mldsa44_synthetic.c: engine REDISCOVERED the planted leak — H006 category=nonconstant_comparison at mld_sign_verify_internal() memcmp (hypothesis-stage milestone ACHIEVED). BUT oracle on THIS hardware (macOS) gave t=0.27, significant=false (32-byte memcmp signal below timer noise floor; Track A's WSL2 measured t=116.97) → qwen3 INVALIDATED H006, loop early-stopped. Rediscovery succeeded; oracle confirmation is hardware-dependent. Next: re-run oracle on Linux/WSL2 for significance; tighten stage1 enum mapping (7B invented non-enum categories for H007-H009).
 
 ## Blocked

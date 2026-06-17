@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-06-17T13:13:30.326999",
+  "model": "codellama:7b",
+  "count": 1,
+  "hypotheses": [
+    {
+      "id": "H006",
+      "category": "secret_dependent_branch",
+      "location": "poly_tomsg() line 10",
+      "hypothesis": "Branch on t>=KYBER_Q creates measurable timing difference between two possible values of t.",
+      "trigger_condition": "Any two different values of a->coeffs[i]",
+      "confidence": "HIGH",
+      "test_vector_hint": "Run 10000 calls with a->coeffs[i] = 0x0 vs a->coeffs[i] = 0xFF, measure delta."
+    }
+  ]
+}

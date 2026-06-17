@@ -1,0 +1,25 @@
+{
+  "generated_at": "2026-06-17T11:01:14.676368",
+  "model": "codellama:7b",
+  "count": 2,
+  "hypotheses": [
+    {
+      "id": "H001",
+      "category": "secret_dependent_branch",
+      "location": "crypto_kem_keypair() line 9",
+      "hypothesis": "Branch on sk+KYBER_INDCPA_SECRETKEYBYTES creates measurable timing difference between zero and nonzero first byte.",
+      "trigger_condition": "sk[KYBER_INDCPA_SECRETKEYBYTES] == 0x00 vs sk[KYBER_INDCPA_SECRETKEYBYTES] != 0x00",
+      "confidence": "HIGH",
+      "test_vector_hint": "Run 10000 calls with sk[KYBER_INDCPA_SECRETKEYBYTES]=0x00 (class A) vs sk[KYBER_INDCPA_SECRETKEYBYTES]=0xFF (class B), measure delta."
+    },
+    {
+      "id": "H002",
+      "category": "variable_time_access",
+      "location": "crypto_kem_keypair() line 13",
+      "hypothesis": "Cache-line access pattern leaks sk+KYBER_INDCPA_SECRETKEYBYTES value via pk.",
+      "trigger_condition": "Any two different values of sk+KYBER_INDCPA_SECRETKEYBYTES",
+      "confidence": "HIGH",
+      "test_vector_hint": "Sweep sk+KYBER_INDCPA_SECRETKEYBYTES from 0 to 255 and measure cache-timing variance across 10000 runs."
+    }
+  ]
+}

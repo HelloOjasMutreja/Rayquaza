@@ -1,0 +1,45 @@
+{
+  "target_file": "track-b-engine/ingestion/test_targets/kyber512_leak4_focused.c",
+  "current_cycle": 1,
+  "total_cycles": 3,
+  "hypotheses": [
+    {
+      "id": "H001",
+      "category": "secret_dependent_branch",
+      "location": "indcpa_dec() line 28",
+      "hypothesis": "Branch on mp.coeffs[k] < 0 creates measurable timing difference between two different values of mp.coeffs[k].",
+      "trigger_condition": "Any two different values of mp.coeffs[k]",
+      "confidence": "HIGH",
+      "test_vector_hint": "Sweep mp.coeffs[k] from 0 to 255 and measure timing-difference variance across 10000 runs.",
+      "status": "PROMOTED",
+      "revised_confidence": "MEDIUM",
+      "evidence": "Refiner JSON unusable; status derived from oracle: t=-901.4075, significant=True.",
+      "next_test_hint": "Re-run refine; qwen3 returned a non-object JSON shape.",
+      "t_statistic": -901.4075,
+      "significant": true,
+      "vector_file": "/Users/vedanthdama/Rayquaza/shared/vectors/vec_H001_20260617_133152.c",
+      "feedback": {
+        "hypothesis_id": "H001",
+        "run_count": 50000,
+        "mean_A": 278.185,
+        "mean_B": 385.746,
+        "variance_A": 379.908,
+        "variance_B": 332.02,
+        "t_statistic": -901.4075,
+        "significant": true,
+        "generated_by": "harness",
+        "note": "LEAK-4 indcpa_dec normalization oracle. Cond-A: all coeffs=+100 (positive, branch not-taken, 0 additions). Cond-B: all coeffs=-100 (negative, branch taken, 256 x +=KYBER_Q). Signal: 256 conditional additions on secret-derived NTT polynomial mp=s^T*b."
+      },
+      "exploitation_path": null
+    }
+  ],
+  "last_updated": "2026-06-17T13:34:45.619789",
+  "completed_ids": [
+    "H001"
+  ],
+  "promoted_ids": [
+    "H001"
+  ],
+  "demoted_ids": [],
+  "invalidated_ids": []
+}

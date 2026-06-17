@@ -138,23 +138,24 @@ class CodeIngester:
 
         flagged_functions = [f for f in functions if f.flagged]
 
-        # Secondary scan: re-examine functions NOT flagged by secret tokens,
-        # looking for leak-shaped code patterns (memcmp/strcmp, secret-looking
-        # branches, fixed/variable loops). This catches cases like Kyber's
-        # poly_tomsg() or dummy.c's compare(), whose params carry no secret
-        # token but still contain a side-channel-relevant construct.
+        # Secondary scan: look for leak-shaped code patterns (memcmp/strcmp,
+        # secret-looking branches, fixed/variable loops) in EVERY function body.
+        # - Unflagged functions that match are pulled into the analysis (catches
+        #   poly_tomsg() / dummy.c's compare(), whose params carry no secret token).
+        # - Flagged functions that match keep the hint too, so a memcmp buried in
+        #   a function flagged on 'sk' (e.g. Kyber's crypto_kem_dec) is still
+        #   surfaced to the model rather than lost behind the secret-token label.
         secondary_functions = []
         for f in functions:
-            if f.flagged:
-                continue
             hits = []
             for label, pat in SECONDARY_PATTERNS:
                 if pat.search(f.body):
                     hits.append(label)
             if hits:
-                f.secondary_scan = True
                 f.secondary_matches = sorted(set(hits))
-                secondary_functions.append(f)
+                if not f.flagged:
+                    f.secondary_scan = True
+                    secondary_functions.append(f)
 
         # Functions actually sent to the analyzer: token-flagged + secondary.
         analyzed_functions = flagged_functions + secondary_functions
@@ -176,6 +177,9 @@ class CodeIngester:
         payload = {
             "model": MODEL,
             "stream": False,
+            # format:json constrains codellama to emit valid JSON — kills the
+            # "prose instead of array" failure seen on real Kyber source files.
+            "format": "json",
             "messages": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": user_content},
@@ -186,21 +190,40 @@ class CodeIngester:
         return resp.json().get("message", {}).get("content", "")
 
     @staticmethod
-    def _parse_json_array(text: str):
-        """Parse a JSON array, tolerating stray text or code fences around it."""
+    def _normalize_to_list(obj):
+        """Coerce a parsed JSON value into a list of finding dicts.
+
+        With format:json, codellama may return a bare object instead of an
+        array — either a single finding, or a wrapper like {"findings": [...]}
+        or {"hypotheses": [...]}. Normalize all of these to a list.
+        """
+        if isinstance(obj, list):
+            return obj
+        if isinstance(obj, dict):
+            # A wrapper object whose only/first list value holds the findings.
+            for v in obj.values():
+                if isinstance(v, list):
+                    return v
+            # Otherwise treat the object itself as a single finding.
+            return [obj]
+        return []
+
+    @classmethod
+    def _parse_json_array(cls, text: str):
+        """Parse a JSON array, tolerating stray text, code fences, or a dict."""
         text = text.strip()
         # Strip markdown fences if the model added them despite instructions.
         text = re.sub(r"^```(?:json)?\s*", "", text)
         text = re.sub(r"\s*```$", "", text)
         try:
-            return json.loads(text)
+            return cls._normalize_to_list(json.loads(text))
         except json.JSONDecodeError:
             pass
         # Fall back to extracting the outermost [...] span.
         start = text.find("[")
         end = text.rfind("]")
         if start != -1 and end != -1 and end > start:
-            return json.loads(text[start : end + 1])
+            return cls._normalize_to_list(json.loads(text[start : end + 1]))
         raise json.JSONDecodeError("no JSON array found", text, 0)
 
     def analyze(self, context_dict: dict) -> list:
@@ -226,6 +249,10 @@ class CodeIngester:
             for f in analyzed:
                 if f.flagged:
                     why = f"flagged on secret token: {', '.join(f.matched_tokens)}"
+                    # Surface any leak-shaped construct found in the body so a
+                    # memcmp/branch/loop isn't overshadowed by the secret-token label.
+                    if f.secondary_matches:
+                        why += f"; also contains: {', '.join(f.secondary_matches)}"
                 else:
                     why = f"secondary scan: {', '.join(f.secondary_matches)}"
                 blocks.append(f"// function: {f.name}  ({why})\n{f.signature} {f.body}")

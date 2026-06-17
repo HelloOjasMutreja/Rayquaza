@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-06-17T13:13:53.065568",
+  "model": "codellama:7b",
+  "count": 1,
+  "hypotheses": [
+    {
+      "id": "H001",
+      "category": "secret_dependent_branch",
+      "location": "crypto_kem_dec() line 48",
+      "hypothesis": "Branch on secret token sk[KYBER_SECRETKEYBYTES-2*KYBER_SYMBYTES+i] creates measurable timing difference between different values of i.",
+      "trigger_condition": "Any two different values of i",
+      "confidence": "HIGH",
+      "test_vector_hint": "Sweep i from 0 to 255 and measure delta."
+    }
+  ]
+}
