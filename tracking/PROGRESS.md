@@ -14,9 +14,12 @@ Tag entries [A] (Track A) or [B] (Track B). Use ISO dates.
 - 2026-06-16 [A] Phase A4: LEAK-2 (poly_tomsg branch) and LEAK-4 (indcpa_dec normalization) injected and confirmed. Oracles: LEAK-2 t=-139.91, LEAK-4 t=-318.58 (both n=50000, significant=true). Three weakened targets now available in track-a-target/targets/. JSON saved to shared/feedback/.
 - 2026-06-16 [A] Phase A5: MLDSA-LEAK-1 (memcmp challenge comparison in ML-DSA-44 verify) injected and confirmed. Oracle: t=116.97, significant=true (n=50000). Target: track-a-target/targets/mldsa44_leak1/. Fourth target now available.
 - 2026-06-16 [B] Phase B4: secondary-scan fix in ingest.py (memcmp/strcmp/strncmp + secret-branch + fixed/variable-loop re-scan of unflagged functions) verified on dummy.c (compare() now caught). Targets delivered by Track A; B-003 RESOLVED. DONE.
+- 2026-06-16 [A] LEAK-1 (cmov clangover class): target kyber512_leak1/ created. Clang 18/x86-64 assessment: barrier survives LTO; compiler emits cmoveq even without barrier. Manual if-branch injection represents downstream/ARM scenario. Oracle: t=74.74, significant=true (n=50000, REPS=100).
+- 2026-06-16 [A] Task 3 equivalence check (LEAK-5 in liboqs): patched both ref and AVX2 kem.c in liboqs, rebuilt, ran full OQS_KEM_decaps timing. Result: t=2.52 at n=50k, t=1.84 at n=200k — NOT significant. Full-API detection below threshold; oracle isolation required. Finding: same code modification in library, but noise floor masking prevents direct detection through the full API. liboqs reverted to clean state.
+- 2026-06-16 [A] Phase A6: LEAK-3 (basemul ARM branch on secret NTT coefficient sign) confirmed. Oracle on AWS t4g.micro Graviton2: mean_A=13.202ns, mean_B=15.341ns, t=-3956.26, significant=true (n=50000). Target: track-a-target/targets/kyber512_leak3/. All five Kyber leaks now confirmed.
 
 ## In Progress
-- [A] LEAK-3 (Kyber512 basemul branch) — optional extension, lower priority.
+- [A] Integration: run B's adversary loop against all confirmed targets (LEAK-1/2/3/4/5 + MLDSA-LEAK-1). All five Kyber leaks and MLDSA-LEAK-1 are now oracle-confirmed; extend B's focused targets to cover LEAK-1 and LEAK-3.
 - [B] PRIORITY 1 — Live adversary loop vs all three Kyber targets: DONE 2026-06-17 (headline result).
   Method: focused targets holding the REAL patched functions verbatim (kyber512_leak{2,4,5}_focused.c),
   because codellama:7b fails on full Kyber TUs (prose/miss/timeout); full-file analysis deferred to the

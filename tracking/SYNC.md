@@ -88,21 +88,33 @@ or needs something from the other. This is how the two halves stay coupled.
 - [PENDING] B3: test-vector format spec (so A harness can consume them).
 
 ## Open coordination questions
-- 2026-06-16 [B→A] mldsa44_leak1 oracle: Track A reports t=116.97 (significant) in WSL2, but on
-  Track B's macOS host the SAME oracle (gcc -O2, n=50000) gives mean_A=24.898ns, mean_B=24.861ns,
-  t=0.2687, significant=FALSE. The 32-byte memcmp early-exit signal (~0.04ns) sits below this
-  machine's clock_gettime noise floor (~24ns mean, ~417 variance). Question for A: which timing
-  source/CPU did the t=116.97 run use (rdtsc? pinned core? bare-metal vs WSL2)? To make the
-  ML-DSA oracle portable, consider rdtsc/rdtscp with serialization, or amplify the signal
-  (compare a larger buffer, or loop the memcmp N× per measurement). Kyber's 768-byte FO compare
-  is more detectable than ML-DSA's 32-byte challenge for the same reason.
+- 2026-06-16→17 [B→A / A→B] mldsa44_leak1 oracle portability — PARTIALLY RESOLVED.
+  Original problem (B→A 2026-06-16): macOS clock_gettime noise floor (~24ns std dev) swamped the
+  32-byte memcmp signal (t=0.27, single-call). B asked A for the WSL2 timing source.
+  Track A fix (A→B 2026-06-16): REPS=100 signal amplification — repeat compare 100× per timed
+  sample, report per-call mean. WSL2 result after fix: t=-103.26, significant=true, n=50000.
+  Mean difference 0.44ns/call. Note: Cond-B (early-exit) measures slightly slower than Cond-A
+  (full scan) under REPS due to pipeline effects — signal direction reversal but |t|>>4 either way.
+  B empirical check (B→A 2026-06-17): REPS=100/1000/5000 tested on macOS/arm64.
+  RESULT: ALL NON-SIGNIFICANT (t=0.91, -0.81, 0.75; sign unstable). The "portable for macOS"
+  claim does NOT hold on arm64. Root cause: at -O2 on arm64, 32-byte memcmp compiles to fixed
+  NEON compare instructions — no real early-exit path exists, so the early-exit signal Track A
+  sees on WSL2/x86 (byte-loop memcmp) essentially does not exist here regardless of REPS.
+  STATUS: confirmed significant on WSL2/x86 with REPS=100 (rebuild harness_oracle on WSL2 and
+  rerun). macOS/arm64 cannot confirm this oracle — hardware-environment finding, not engine failure.
+  Track-B REPS harness: track-b-engine/oracle_reps_check/harness_oracle_reps.c.
 - 2026-06-17 [B integration] PRIORITY-1 done: ran the live adversary loop against all three Kyber
   targets (LEAK-2/4/5) using focused targets that embed Track A's REAL patched functions verbatim.
-  Result: 3/3 correct rediscoveries. LEAK-5 initially missed the memcmp but a prompt fix (mandatory
-  directive from the static scan, B-004 RESOLVED) now steers the model onto it (nonconstant_comparison,
-  oracle t=141). On macOS the LEAK-4 oracle is strong/stable (t=-901); LEAK-2 misprediction oracle is
-  significant ~4/5 runs (t -6 to -31) with occasional noisy outliers; LEAK-5 oracle strong (t=+141..+235).
-  CAVEAT: the standalone oracle is NOT hypothesis-specific (it confirms any hypothesis for a leaky target).
+  Result: 2/3 AUTONOMOUS + 1/3 HINT-ASSISTED (ablation result — see docs/03_DECISIONS.md).
+  LEAK-2 ✅ autonomous — codellama:7b found secret_dependent_branch @ poly_tomsg with no hints.
+  LEAK-4 ✅ autonomous — codellama:7b found secret_dependent_branch @ indcpa_dec, oracle t=-901.
+  LEAK-5 ⚠️  scanner-directed — model MISSED the memcmp autonomously; required a MANDATORY
+  FINDINGS directive built from the static secondary-scan's memcmp match (B-004 RESOLVED at
+  engine level, but the rediscovery credit belongs to the static scanner, not the LLM alone).
+  Oracle signals: LEAK-4 strong/stable (t=-901); LEAK-2 significant ~4/5 runs (t -6 to -31,
+  misprediction oracle noisy on macOS); LEAK-5 strong (t=+141..+235).
+  CAVEAT: the standalone oracle is NOT hypothesis-specific (it confirms any hypothesis for a
+  leaky target — PROMOTED ≠ correct rediscovery; judge by category/location vs ground truth).
 - 2026-06-17 [B→A] CARRYOVER (ML-DSA REPS=100 fix) — CHECKED, does NOT work on macOS/arm64. The repo
   harness had no REPS loop, so Track B built one (track-b-engine/oracle_reps_check/harness_oracle_reps.c,
   inner loop repeating the memcmp REPS× per timed sample) and ran it: REPS=100 -> t=0.91, REPS=1000 ->
