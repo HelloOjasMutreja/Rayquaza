@@ -1,0 +1,80 @@
+[
+  {
+    "id": "kyber512_leak5",
+    "name": "FO comparison (memcmp)",
+    "primitive": "ML-KEM (Kyber512)",
+    "difficulty_tier": "obvious",
+    "focused_target": "track-b-engine/ingestion/test_targets/kyber512_leak5_focused.c",
+    "oracle_dir": "kyber512_leak5",
+    "ground_truth": {
+      "category": "nonconstant_comparison",
+      "location": "crypto_kem_dec",
+      "expected_significant": true
+    }
+  },
+  {
+    "id": "kyber512_leak4",
+    "name": "Conditional normalization loop",
+    "primitive": "ML-KEM (Kyber512)",
+    "difficulty_tier": "obvious",
+    "focused_target": "track-b-engine/ingestion/test_targets/kyber512_leak4_focused.c",
+    "oracle_dir": "kyber512_leak4",
+    "ground_truth": {
+      "category": "secret_dependent_branch",
+      "location": "indcpa_dec",
+      "expected_significant": true
+    }
+  },
+  {
+    "id": "kyber512_leak2",
+    "name": "poly_tomsg branch misprediction",
+    "primitive": "ML-KEM (Kyber512)",
+    "difficulty_tier": "microarch",
+    "focused_target": "track-b-engine/ingestion/test_targets/kyber512_leak2_focused.c",
+    "oracle_dir": "kyber512_leak2",
+    "ground_truth": {
+      "category": "secret_dependent_branch",
+      "location": "poly_tomsg",
+      "expected_significant": true
+    }
+  },
+  {
+    "id": "kyber512_leak1",
+    "name": "cmov clangover (asm barrier)",
+    "primitive": "ML-KEM (Kyber512)",
+    "difficulty_tier": "compiler",
+    "focused_target": null,
+    "oracle_dir": "kyber512_leak1",
+    "ground_truth": {
+      "category": "nonconstant_comparison",
+      "location": "crypto_kem_dec",
+      "expected_significant": true
+    }
+  },
+  {
+    "id": "kyber512_leak3",
+    "name": "basemul sign branch (ARM only)",
+    "primitive": "ML-KEM (Kyber512)",
+    "difficulty_tier": "microarch",
+    "focused_target": null,
+    "oracle_dir": "kyber512_leak3",
+    "ground_truth": {
+      "category": "secret_dependent_branch",
+      "location": "basemul",
+      "expected_significant": true
+    }
+  },
+  {
+    "id": "mldsa44_leak1",
+    "name": "Challenge comparison (memcmp)",
+    "primitive": "ML-DSA-44",
+    "difficulty_tier": "obvious",
+    "focused_target": "track-b-engine/ingestion/test_targets/mldsa44_synthetic.c",
+    "oracle_dir": "mldsa44_leak1",
+    "ground_truth": {
+      "category": "nonconstant_comparison",
+      "location": "mld_sign_verify_internal",
+      "expected_significant": true
+    }
+  }
+]
