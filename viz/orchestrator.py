@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from .events import RunState, fold_event
+from .sources.base import RunSource
 from .sources.replay import ReplaySource
 from .sources import state_file
 
@@ -19,7 +20,7 @@ class Orchestrator:
 
     def __init__(self, on_state: Callable[[dict], None]):
         self._on_state = on_state
-        self._source: Optional[ReplaySource] = None
+        self._source: Optional[RunSource] = None
         self._thread: Optional[threading.Thread] = None
 
     def start_replay(self, loop_state_path: Path, step_delay: float = 0.6) -> None:
