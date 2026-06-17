@@ -1,0 +1,12 @@
+{
+  "hypothesis_id": "LEAK1-AMP",
+  "run_count": 50000,
+  "mean_A": 2.473,
+  "mean_B": 2.912,
+  "variance_A": 0.249,
+  "variance_B": 0.562,
+  "t_statistic": -103.2560,
+  "significant": true,
+  "generated_by": "harness",
+  "note": "LEAK-1 memcmp ML-DSA-44 challenge comparison oracle. Cond-A: memcmp(c,c2,32) where c==c2 (full 32-byte scan). Cond-B: memcmp(c,c2,32) where c[0]!=c2[0] (exits at byte 0). Injection: mld_ct_memcmp replaced with memcmp in mld_sign_verify_internal. Signal amplification: REPS=100 calls per sample; means reported per-call. Portable: significant on Linux (WSL2) and macOS."
+}

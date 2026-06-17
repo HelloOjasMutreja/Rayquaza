@@ -1,0 +1,13 @@
+{
+  "hypothesis_id": "LEAK3-ARM-GRAVITON2",
+  "run_count": 50000,
+  "mean_A": 13.202,
+  "mean_B": 15.341,
+  "variance_A": 1442.311,
+  "variance_B": 1844.824,
+  "t_statistic": -3956.2614,
+  "significant": true,
+  "generated_by": "harness",
+  "hardware": "AWS t4g.micro, ARM Graviton2, aarch64, Ubuntu 24.04, ap-southeast-2",
+  "note": "LEAK-3 basemul branch injection oracle (ARM sign-branch class). Injection: if(a0<0) a0+=KYBER_Q before fqmul(a0,b0). Cond-A: a0=+1000 (positive, branch not taken). Cond-B: a0=-1000 (negative, branch taken + KYBER_Q add). Compiled -O0 -fno-inline. ARM Graviton2 t4g.micro measurement."
+}

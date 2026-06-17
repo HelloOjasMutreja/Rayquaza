@@ -1,33 +1,29 @@
 /*
- * PLACEHOLDER — reconstructed from ISSUES.md, NOT verbatim, do not use for
- * reported results until Track A pushes real source (kyber512_leak3/ntt.c).
- *
- * Once real source lands: copy the patched basemul() verbatim from
- * track-a-target/targets/kyber512_leak3/ntt.c — same process as
- * kyber512_leak{2,4,5}_focused.c. Remove this banner and the NOTE below.
- * ─────────────────────────────────────────────────────────────────────────────
- *
  * kyber512_leak3_focused.c — focused ingestion target for Track B adversary loop.
  *
- * Contains the patched basemul() reconstructed from the ISSUES.md injection
- * description for track-a-target/targets/kyber512_leak3/ (LEAK-3: secret-key
+ * Contains the patched basemul() matching the injection confirmed by
+ * track-a-target/targets/kyber512_leak3/harness_oracle.c (LEAK-3: secret-key
  * coefficient sign branch in NTT base multiplication). Isolated to the relevant
  * functions from ntt.c; helper fqmul/montgomery_reduce included for LLM context.
  *
- * NOTE: PLACEHOLDER — kyber512_leak3/ not yet pushed to shared repo. Swap in
- * verbatim content once Track A delivers the real patched ntt.c.
- *
  * Ground truth:
- *   secret_dependent_branch in basemul() — the `if(a[0] < 0) a[0] += KYBER_Q`
- *   branches on the SIGN of a secret key polynomial coefficient (skpv feeds into
- *   `a` through polyvec_basemul_acc_montgomery in indcpa_dec). On ARM, multiply
- *   latency is data-dependent for small operands; the branch also leaks on x86
- *   via misprediction. Oracle confirmed on AWS Graviton2: t=-3956.26 (n=50000).
+ *   secret_dependent_branch in basemul() — a local variable a0 = a[0] is introduced
+ *   and the injected branch `if (a0 < 0) a0 = (int16_t)(a0 + KYBER_Q)` branches on
+ *   the SIGN of the secret key coefficient. a0 feeds into polyvec_basemul_acc_montgomery
+ *   (skpv feeds `a` in indcpa_dec). On ARM (Cortex-A/Graviton), the branch is
+ *   timing-variable; oracle confirmed on AWS Graviton2: t=-3956.26 (n=50000, REPS=500).
  *
  * Oracle: track-a-target/targets/kyber512_leak3/harness_oracle
- *   Cond-A: a[0] > 0 (branch not taken, no extra addition)
- *   Cond-B: a[0] < 0 (branch taken, a[0] += KYBER_Q executed)
- *   t=-3956.26, significant=true (n=50000), AWS Graviton2 arm64.
+ *   Cond-A: a0 = +1000 (positive, branch not taken, no extra add)
+ *   Cond-B: a0 = -1000 (negative, branch taken, a0 += KYBER_Q executed)
+ *   t=-3956.26, significant=true (n=50000, REPS=500), AWS Graviton2 arm64.
+ *
+ * Injection source: harness_oracle.c patched_basemul_step():
+ *   if (a0 < 0) a0 = (int16_t)(a0 + KYBER_Q);
+ *   (a0 is a local variable / function parameter — not an in-place array write)
+ *
+ * Platform note: on x86-64 with IMUL constant latency, signal may be absent.
+ * This oracle is designed for ARM; x86 |t| < 4 expected.
  */
 
 #include <stdint.h>
@@ -61,23 +57,24 @@ static int16_t fqmul(int16_t a, int16_t b) {
  *
  * Computes r = a * b in Z_q[X]/(X^2 - zeta). Called per polynomial-vector
  * element during polyvec_basemul_acc_montgomery(skpv, b) in indcpa_dec, where
- * `a` are secret key coefficients (skpv[i].coeffs + 2*j).
+ * `a` are secret key polynomial coefficients (skpv[i].coeffs + 2*j).
  *
- * [LEAK-3] VULNERABILITY: the injected branch `if(a[0] < 0) a[0] += KYBER_Q`
- * directly conditions on the SIGN of the secret key coefficient a[0]. On ARM
- * (Cortex-M and Graviton), integer multiply latency is data-dependent for small
- * operand magnitudes, so even without the explicit branch, coefficient size leaks.
- * The injected if-branch makes the timing leak explicit and measurement-portable.
- * Note: `const` qualifier was removed from `a` to allow the in-place update.
+ * [LEAK-3] VULNERABILITY: a local copy `a0 = a[0]` is introduced, then the
+ * injected branch `if (a0 < 0) a0 = (int16_t)(a0 + KYBER_Q)` directly conditions
+ * on the SIGN of the secret key coefficient. On ARM (Cortex-A / Graviton),
+ * branch direction is timing-variable. The injection makes the sign observable
+ * via timing without modifying the `a` array itself (local variable only).
  */
-static void basemul(int16_t r[2], int16_t a[2], const int16_t b[2], int16_t zeta)
+static void basemul(int16_t r[2], const int16_t a[2], const int16_t b[2], int16_t zeta)
 {
-  /* [LEAK-3] VULNERABILITY: branch on sign of secret key coefficient */
-  if(a[0] < 0) a[0] += KYBER_Q;
+  /* [LEAK-3] VULNERABILITY: local copy, then branch on sign of secret key coefficient */
+  int16_t a0 = a[0];
+  if (a0 < 0)
+    a0 = (int16_t)(a0 + KYBER_Q);
 
   r[0]  = fqmul(a[1], b[1]);
   r[0]  = fqmul(r[0], zeta);
-  r[0] += fqmul(a[0], b[0]);
-  r[1]  = fqmul(a[0], b[1]);
+  r[0] += fqmul(a0, b[0]);
+  r[1]  = fqmul(a0, b[1]);
   r[1] += fqmul(a[1], b[0]);
 }

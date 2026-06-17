@@ -53,7 +53,9 @@ Makefile
 !CMakeLists.txt
 # Keep handwritten Makefiles in source directories
 !track-a-target/harness/Makefile
+!track-a-target/targets/kyber512_leak1/Makefile
 !track-a-target/targets/kyber512_leak2/Makefile
+!track-a-target/targets/kyber512_leak3/Makefile
 !track-a-target/targets/kyber512_leak4/Makefile
 !track-a-target/targets/kyber512_leak5/Makefile
 !track-a-target/targets/mldsa44_leak1/Makefile
@@ -115,6 +117,7 @@ desktop.ini
 logs/
 track-a-target/targets/*/harness_oracle
 track-a-target/targets/*/harness_leak*
+track-a-target/harness/harness
 
 # --- kyber512_leak5 ref files (copied by setup.sh from liboqs, not ours to track) ---
 track-a-target/targets/kyber512_leak5/api.h

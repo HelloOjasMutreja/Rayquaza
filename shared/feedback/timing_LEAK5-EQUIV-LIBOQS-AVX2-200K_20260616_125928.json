@@ -1,0 +1,11 @@
+{
+  "hypothesis_id": "LEAK5-EQUIV-LIBOQS-AVX2-200K",
+  "run_count": 200000,
+  "mean_A": 7052.729,
+  "mean_B": 7050.338,
+  "variance_A": 151397.876,
+  "variance_B": 152700.820,
+  "t_statistic": 1.8397,
+  "significant": false,
+  "generated_by": "harness"
+}

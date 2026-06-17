@@ -86,12 +86,10 @@ or needs something from the other. This is how the two halves stay coupled.
   the schema. Once real files land there, drop the --use-mock flag to close the loop
   (the loop polls shared/feedback/ every 30s, 600s timeout per hypothesis).
 - [PENDING] B3: test-vector format spec (so A harness can consume them).
-- [PENDING] B→A: push kyber512_leak1/ and kyber512_leak3/ target directories to shared repo.
-  Track B has created focused ingestion targets (kyber512_leak1_focused.c, kyber512_leak3_focused.c)
-  in track-b-engine/ingestion/test_targets/ based on the ISSUES.md injection descriptions (LEAK-1:
-  if-branch cmov in verify.c; LEAK-3: if(a[0]<0) a[0]+=KYBER_Q in ntt.c basemul). These need to be
-  verified verbatim once Track A pushes the actual patched files. Also needed: harness_oracle binaries
-  for those targets so run_focused.sh can wire up the oracle integration loop.
+- [RESOLVED] 2026-06-17 B→A: kyber512_leak1/ and kyber512_leak3/ target directories confirmed
+  present on main (harness_oracle.c verified readable in both). Track B focused targets updated:
+  kyber512_leak1_focused.c corrected to if(b) memcpy(r,x,len); kyber512_leak3_focused.c corrected
+  to local a0 variable pattern. PLACEHOLDER banners removed. Adversary loop against LEAK-1/3 pending.
 
 ## Open coordination questions
 - 2026-06-16→17 [B→A / A→B] mldsa44_leak1 oracle portability — PARTIALLY RESOLVED.
@@ -128,7 +126,7 @@ or needs something from the other. This is how the two halves stay coupled.
   32-byte memcmp is a fixed couple of NEON compares with no real early-exit saving — the signal Track A
   sees at t=116.97 on WSL2/x86 essentially doesn't exist here. CONCLUSION: REPS is not the macOS fix;
   ML-DSA oracle confirmation must run on WSL2/x86. (The REPS harness may still help robustness on x86.)
-- 2026-06-17 [B→A] HOUSEKEEPING: track-a-target/targets/mldsa44_leak1/DamsDen/ is an unrelated Next.js
-  web app (node_modules, .next, its own .git) sitting inside the crypto target dir — looks accidentally
-  committed/dropped. It's in Track A's area so Track B left it untouched and did NOT stage it. Please
-  remove it from the target directory (and consider .gitignore'ing node_modules) if it's not intentional.
+- 2026-06-17 [B→A] HOUSEKEEPING: track-a-target/targets/mldsa44_leak1/DamsDen/ — RESOLVED. Track A
+  confirmed the directory was never committed to the repo (only Makefile + harness_oracle.c +
+  harness_oracle binary are in mldsa44_leak1/). If DamsDen/ appears locally on Track B's machine,
+  it's a local artifact; Track B did not stage it. No action needed on Track A's side.
