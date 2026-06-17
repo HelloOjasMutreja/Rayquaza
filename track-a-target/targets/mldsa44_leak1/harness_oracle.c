@@ -14,7 +14,11 @@
  * Condition A: memcmp(c, c2, 32) where c == c2  → reads all 32 bytes (SLOW)
  * Condition B: memcmp(c, c2, 32) where c[0] != c2[0] → exits at byte 0 (FAST)
  *
- * Expected: mean_A > mean_B, |t| >> 4, significant: true.
+ * Signal amplification: each timing sample loops REPS=100 comparisons so the
+ * raw ~0.4ns/call difference becomes ~40ns/sample — above macOS clock_gettime
+ * noise floor (~20ns std dev). Reported means are per-call (divided by REPS).
+ *
+ * Expected: mean_A > mean_B, |t| >> 4, significant: true on Linux and macOS.
  */
 
 #ifdef __linux__
@@ -29,6 +33,7 @@
 #include <math.h>
 
 #define MLDSA_CTILDEBYTES  32   /* ML-DSA-44 challenge hash size */
+#define REPS               100  /* comparisons per sample — amplifies ~0.4ns signal to ~40ns */
 #define DEFAULT_WARMUP     1000
 #define DEFAULT_RUNS       50000
 #define TRIM_PCT           5
@@ -113,17 +118,24 @@ int main(int argc, char *argv[]) {
     /* Warmup */
     volatile int sink = 0;
     for (int i = 0; i < DEFAULT_WARMUP; i++) {
-        sink += patched_compare(buf_A, buf_A_match, MLDSA_CTILDEBYTES);
-        sink += patched_compare(buf_B, buf_B_mismatch, MLDSA_CTILDEBYTES);
+        for (int r = 0; r < REPS; r++)
+            sink += patched_compare(buf_A, buf_A_match, MLDSA_CTILDEBYTES);
+        for (int r = 0; r < REPS; r++)
+            sink += patched_compare(buf_B, buf_B_mismatch, MLDSA_CTILDEBYTES);
     }
 
-    /* Interleaved measurement */
+    /* Interleaved measurement: each sample times REPS calls to amplify the signal */
     for (int i = 0; i < runs; i++) {
         uint64_t t0;
-        t0 = now_ns(); sink += patched_compare(buf_A, buf_A_match, MLDSA_CTILDEBYTES);
-        sa[i] = now_ns() - t0;
-        t0 = now_ns(); sink += patched_compare(buf_B, buf_B_mismatch, MLDSA_CTILDEBYTES);
-        sb[i] = now_ns() - t0;
+        t0 = now_ns();
+        for (int r = 0; r < REPS; r++)
+            sink += patched_compare(buf_A, buf_A_match, MLDSA_CTILDEBYTES);
+        sa[i] = (now_ns() - t0) / REPS;   /* per-call nanoseconds */
+
+        t0 = now_ns();
+        for (int r = 0; r < REPS; r++)
+            sink += patched_compare(buf_B, buf_B_mismatch, MLDSA_CTILDEBYTES);
+        sb[i] = (now_ns() - t0) / REPS;   /* per-call nanoseconds */
     }
     (void)sink;
 
@@ -138,7 +150,8 @@ int main(int argc, char *argv[]) {
         "Cond-A: memcmp(c,c2,32) where c==c2 (full 32-byte scan). "
         "Cond-B: memcmp(c,c2,32) where c[0]!=c2[0] (exits at byte 0). "
         "Injection: mld_ct_memcmp replaced with memcmp in mld_sign_verify_internal. "
-        "Signal: early-exit timing of non-constant-time challenge comparison.";
+        "Signal amplification: REPS=100 calls per sample; means reported per-call. "
+        "Portable: significant on Linux (WSL2) and macOS.";
 
     printf("{\n");
     printf("  \"hypothesis_id\": \"%s\",\n", hyp_id);

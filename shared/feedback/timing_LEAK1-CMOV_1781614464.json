@@ -1,0 +1,12 @@
+{
+  "hypothesis_id": "LEAK1-CMOV",
+  "run_count": 50000,
+  "mean_A": 0.989,
+  "mean_B": 1.000,
+  "variance_A": 0.011,
+  "variance_B": 0.000,
+  "t_statistic": -22.4857,
+  "significant": true,
+  "generated_by": "harness",
+  "note": "LEAK-1 cmov branch injection oracle (clangover class). Cond-A: patched_cmov(r,x,32,0) — branch not taken, r unchanged. Cond-B: patched_cmov(r,x,32,1) — branch taken, 32-byte memcpy. Clang18/x86-64 finding: barrier survives LTO; compiler emits cmoveq even without barrier — no natural clangover on this platform. Injection is manual (if-branch) representing ARM/embedded scenario. Signal amplification: REPS=100 calls per sample."
+}

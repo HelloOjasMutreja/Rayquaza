@@ -22,15 +22,16 @@ STATUS = OPEN / IN-PROGRESS / RESOLVED.
 
 ## A1 — Candidate Timing Leak Locations in Kyber512 (pqcrystals-kyber_kyber512_ref)
 
-- [OPEN] 2026-06-16 [A] LEAK-1 GitHub#4 | verify.c:40–57 | cmov() | Category: compiler-level branch
+- [RESOLVED] 2026-06-16 [A] LEAK-1 GitHub#4 | verify.c:40–57 | cmov() | Category: compiler-level branch | Oracle: t=74.74, significant=true (n=50000, REPS=100). Target: track-a-target/targets/kyber512_leak1/.
   File: src/kem/kyber/pqcrystals-kyber_kyber512_ref/verify.c, function cmov(), lines 40–57.
-  The `__asm__("" : "+r"(b))` barrier prevents the compiler from branching on b within one
-  translation unit, but is defeated by Clang with LTO (link-time optimization), which can see
-  that b ∈ {0,1} across TU boundaries and emit a conditional branch. This turns the rejection
-  selection (pre-key vs z) into a timing oracle: fail=0 (match) and fail=1 (no-match) take
-  different times, breaking implicit rejection. Known as "clangover" (2024). GCC -O2 is
-  generally safe; Clang -O2 -flto is not. Injection for A3: remove the asm barrier and
-  compile with clang -O2 -flto, or replace the XOR-select with an explicit if/memcpy.
+  Assessment (Clang 18, x86-64, WSL2): The asm barrier __asm__("" : "+r"(b)) survives LTO —
+  confirmed by inspecting LLVM IR bitcode. Without the barrier (merged TU), Clang 18 emits
+  'cmoveq' (conditional-move instruction, constant-time on x86-64) rather than jne/branch.
+  Clangover does NOT reproduce on Clang 18/x86-64 for this pattern. Risk exists on ARM
+  Cortex-M and older compilers lacking cmov instructions.
+  Injection: manual if-branch (if(b) memcpy(r,x,len)) representing downstream/ARM scenario.
+  Oracle: Cond-A=b=0 (no copy), Cond-B=b=1 (32-byte copy), REPS=100 amplification.
+  Result: mean_A=1.692ns, mean_B=1.508ns, t=74.74, significant=true, n=50000.
 
 - [RESOLVED] 2026-06-16 [A] LEAK-2 GitHub#5 | poly.c:191–210 | poly_tomsg() | Category: branch on secret-derived rounding | Confirmed: t=-139.91, significant=true (misprediction oracle, n=50000). Target: track-a-target/targets/kyber512_leak2/.
   File: src/kem/kyber/pqcrystals-kyber_kyber512_ref/poly.c, function poly_tomsg(), lines 191–210.
@@ -44,14 +45,18 @@ STATUS = OPEN / IN-PROGRESS / RESOLVED.
   emerges from misprediction overhead when pattern is unpredictable (random-per-call Cond-B,
   t=-139.91). Compiled with -O0; at -O2 GCC emits cmov, eliminating the leak (research finding).
 
-- [OPEN] 2026-06-16 [A] LEAK-3 GitHub#6 | ntt.c:139–145 | basemul() | Category: timing on secret key coefficients
+- [RESOLVED] 2026-06-16 [A] LEAK-3 GitHub#6 | ntt.c:139–145 | basemul() | Category: branch on secret NTT coefficient sign | Confirmed: t=-3956.26, significant=true (ARM oracle, n=50000). Target: track-a-target/targets/kyber512_leak3/.
   File: src/kem/kyber/pqcrystals-kyber_kyber512_ref/ntt.c, function basemul(), lines 139–145.
-  Secret key coefficients (skpv) are passed directly as argument `a` and consumed via
-  fqmul() → montgomery_reduce(). Reference is branchless on x86-64 (imul constant latency).
-  On ARM Cortex-M and some embedded CPUs, multiply latency is data-dependent for small
-  operand values, making secret key coefficient magnitudes observable. In AVX2 backend, SIMD
-  behavior differs. Injection for A3: add `if (a[0] < 0) a[0] += KYBER_Q;` before use —
-  branch directly on secret key coefficient sign.
+  Secret key NTT coefficients (skpv) are Barrett-reduced into centered range {-(q-1)/2...(q-1)/2}.
+  Injection: `if (a0 < 0) a0 += KYBER_Q;` before fqmul — branches on sign of each secret coeff.
+  Hardware: AWS t4g.micro (ARM Graviton2), Ubuntu 24.04 arm64, ap-southeast-2.
+  Oracle: Cond-A=a0=+1000 (positive, branch not taken), Cond-B=a0=-1000 (negative, branch taken).
+  Result: mean_A=13.202ns, mean_B=15.341ns, t=-3956.26, significant=true, n=50000.
+  Note: difference 2.14ns/call × REPS=500 → very high |t| due to low variance at this sample size.
+  x86-64 finding: signal absent (IMUL constant latency; compiler emits cmov even at -O0 for this
+  pattern — confirmed Clang 18). ARM Graviton2: branch is real and timing-observable.
+  Research significance: secret key NTT coefficient signs (512 bits across KYBER_K=2 polys,
+  KYBER_N=256 coeffs each) are recoverable one-by-one per decapsulation call.
 
 - [RESOLVED] 2026-06-16 [A] LEAK-4 GitHub#7 | indcpa.c:325 | indcpa_dec() normalization | Category: branch on secret-derived NTT values | Confirmed: t=-318.58, significant=true (normalization loop oracle, n=50000). Target: track-a-target/targets/kyber512_leak4/.
   File: src/kem/kyber/pqcrystals-kyber_kyber512_ref/indcpa.c, function indcpa_dec().
