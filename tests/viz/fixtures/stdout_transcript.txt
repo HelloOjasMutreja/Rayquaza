@@ -1,0 +1,15 @@
+PQ-REAPER Track B — LLM Adversary Engine
+Target: kyber512_leak5_focused.c
+Models: codellama:7b (analysis) / qwen3:8b (refinement)
+Mode: live
+Starting cycle 1 of 3...
+
+    ...waiting for feedback file containing 'H001' in /home/user/Rayquaza/shared/feedback (poll every 30s)
+[Cycle 1] Hypothesis H001 → PROMOTED (t=141.091, sig=True)
+    ...waiting for feedback file containing 'H002' in /home/user/Rayquaza/shared/feedback (poll every 30s)
+[Cycle 2] Hypothesis H002 → INVALIDATED (t=-0.167, sig=False)
+=== LOOP COMPLETE ===
+Promoted: ['H001']
+Demoted: []
+Invalidated: ['H002']
+Full results: shared/findings/loop_state.json
