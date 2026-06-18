@@ -71,6 +71,13 @@ or needs something from the other. This is how the two halves stay coupled.
     the oracle gave t=0.27, significant=FALSE at n=50000 — NOT reproducing Track A's WSL2 t=116.97.
     See Open coordination questions. B5 hypothesis-stage rediscovery complete; oracle confirmation
     pending a higher-resolution timing environment.
+  [RESOLVED by A, 2026-06-18] MLDSA-LEAK-1 oracle RECONFIRMED on WSL2/x86 (the environment Track B
+    could not reach). Track A rebuilt harness_oracle (gcc -O2) and ran MLDSA1-ORACLE n=50000 on
+    WSL2/Ubuntu 24.04, x86-64: mean_A=2.482ns, mean_B=2.193ns, t=164.30, significant=true.
+    Ground truth: shared/feedback/timing_MLDSA1-ORACLE_1781763721.json. This closes the B5 oracle
+    blocker — the ML-DSA memcmp leak is timing-observable on x86 exactly as the Kyber leaks are.
+    (Per-call means are small because the 32-byte challenge window is short; REPS=100 amplifies the
+    sample, t is scale-invariant. macOS/arm64 remains architecturally unsuitable — see open questions.)
 
 ## Track B -> Track A (deliverables A depends on)
 - [DELIVERED] 2026-06-14 B0: Mock feedback format defined. Track A harness (A2) must output
