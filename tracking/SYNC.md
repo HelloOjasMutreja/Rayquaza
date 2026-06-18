@@ -78,6 +78,10 @@ or needs something from the other. This is how the two halves stay coupled.
     blocker — the ML-DSA memcmp leak is timing-observable on x86 exactly as the Kyber leaks are.
     (Per-call means are small because the 32-byte challenge window is short; REPS=100 amplifies the
     sample, t is scale-invariant. macOS/arm64 remains architecturally unsuitable — see open questions.)
+- [DELIVERED] 2026-06-18 A->B (Phase B): adversary_loop.py + ingest.py now read model/URL from
+  env (RAYQ_OLLAMA_URL / RAYQ_CODE_MODEL / RAYQ_REASON_MODEL), defaulting to the previous
+  hardcoded values. Additive, no behaviour change when unset. Lets the Phase B sandbox point the
+  engine at the model gateway and swap models without editing engine code.
 
 ## Track B -> Track A (deliverables A depends on)
 - [DELIVERED] 2026-06-14 B0: Mock feedback format defined. Track A harness (A2) must output

@@ -10,14 +10,15 @@ Usage: python3 track-b-engine/ingestion/ingest.py <path_to_c_file>
 """
 
 import json
+import os
 import re
 import sys
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from pathlib import Path
 
-OLLAMA_URL = "http://localhost:11434/api/chat"
-MODEL = "codellama:7b"
+OLLAMA_URL = os.environ.get("RAYQ_OLLAMA_URL", "http://localhost:11434/api/chat")
+MODEL = os.environ.get("RAYQ_CODE_MODEL", "codellama:7b")
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 PROMPT_FILE = REPO_ROOT / "track-b-engine" / "prompts" / "stage1_analysis.txt"
