@@ -71,6 +71,10 @@ or needs something from the other. This is how the two halves stay coupled.
     the oracle gave t=0.27, significant=FALSE at n=50000 — NOT reproducing Track A's WSL2 t=116.97.
     See Open coordination questions. B5 hypothesis-stage rediscovery complete; oracle confirmation
     pending a higher-resolution timing environment.
+- [DELIVERED] 2026-06-18 A->B (Phase B): adversary_loop.py + ingest.py now read model/URL from
+  env (RAYQ_OLLAMA_URL / RAYQ_CODE_MODEL / RAYQ_REASON_MODEL), defaulting to the previous
+  hardcoded values. Additive, no behaviour change when unset. Lets the Phase B sandbox point the
+  engine at the model gateway and swap models without editing engine code.
 
 ## Track B -> Track A (deliverables A depends on)
 - [DELIVERED] 2026-06-14 B0: Mock feedback format defined. Track A harness (A2) must output

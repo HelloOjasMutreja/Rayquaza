@@ -16,6 +16,7 @@ This module is driven by track-b-engine/main.py.
 """
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -45,9 +46,9 @@ if str(INGESTION_DIR) not in sys.path:
 from ingest import CodeIngester, Hypothesis  # noqa: E402
 
 # --- Engine config -----------------------------------------------------------
-OLLAMA_URL = "http://localhost:11434/api/chat"
-CODE_MODEL = "codellama:7b"
-REASON_MODEL = "qwen3:8b"
+OLLAMA_URL = os.environ.get("RAYQ_OLLAMA_URL", "http://localhost:11434/api/chat")
+CODE_MODEL = os.environ.get("RAYQ_CODE_MODEL", "codellama:7b")
+REASON_MODEL = os.environ.get("RAYQ_REASON_MODEL", "qwen3:8b")
 TEMPERATURE = 0.2
 
 POLL_INTERVAL_S = 30
