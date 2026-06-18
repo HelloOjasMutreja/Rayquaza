@@ -10,6 +10,26 @@ Format:
 
 ---
 
+## 2026-06-18 [A] Task 4b — AFL++ 24h baseline relaunched in tmux (resume from 83-min checkpoint)
+- What: Relaunched all 4 AFL++ fuzz runs (leak2, leak4, leak5, clean) inside a persistent tmux
+  session (`fuzz`) using AFL_AUTORESUME=1. Processes resume from existing queue (83 min of
+  prior fuzzing already captured). Previous session died at ~83 min when WSL was terminated
+  by a connection drop. Fix: setsid inside tmux so the WSL VM stays alive overnight.
+  relaunch_fuzz.sh added to track-b-engine/fuzzing/ for repeatable relaunch.
+  Prior run results (already collected from fuzzer_stats):
+    leak2: 7.1M execs, 15 corpus paths, 0 crashes (83 min)
+    leak4: 7.1M execs,  9 corpus paths, 0 crashes (83 min)
+    leak5: 7.1M execs,  2 corpus paths, 0 crashes (83 min — same as clean, confirms AFL
+           cannot detect timing-only leaks via coverage)
+    clean: 6.9M execs,  2 corpus paths, 0 crashes (83 min, baseline)
+- Settings: AFL_AUTORESUME=1, FUZZ_DURATION=86400, AFL_NO_UI=1, AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1,
+  tmux session 'fuzz' on WSL2/Ubuntu 24.04. Exec rate at relaunch: ~1116 exec/s (leak2).
+- Result: 4 afl-fuzz processes confirmed running (pgrep -c = 4) at ~1116 exec/s. Expected to
+  complete ~2026-06-19 morning. Final stats in ~/fuzz/<target>/findings/default/fuzzer_stats.
+- Takeaway: Use tmux for overnight WSL runs — setsid alone can't survive WSL VM restarts.
+  Key finding from 83-min data already clear: leak5 corpus = clean corpus (2 each); AFL++
+  cannot distinguish timing-only memcmp leak from constant-time baseline via coverage alone.
+
 ## 2026-06-18 [A] Task 4 — AFL++ 24h baseline fuzz runs launched (all 5 Kyber512 targets)
 - What: Installed AFL++ 4.09c in WSL2; built 4 weakened Kyber512 fuzz targets (leak2, leak4,
   leak5, clean) with afl-clang-fast -O0 -fsanitize=address -DKYBER_K=2; launched 24h nohup
