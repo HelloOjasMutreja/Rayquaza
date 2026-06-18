@@ -115,25 +115,31 @@ class Orchestrator:
         self._thread.start()
 
     def run_oracle(self, target_id: str, hyp_id: str) -> None:
-        """Run the oracle binary for a target/hypothesis pair.
+        """Run the oracle binary for a target/hypothesis pair (delegates to invoke_oracle)."""
+        invoke_oracle(target_id, hyp_id)
 
-        On Windows: invokes via wsl.exe. On Linux: runs the binary natively.
-        """
-        import platform
-        import subprocess as _sp
-        oracle_bin = (REPO_ROOT / "track-a-target" / "targets" /
-                      target_id / "harness_oracle")
 
-        def _invoke():
-            try:
-                if platform.system() == "Windows":
-                    wsl_path = str(oracle_bin).replace("\\", "/").replace("D:", "/mnt/d")
-                    cmd = ["wsl", "bash", "-c",
-                           f"cd $(dirname '{wsl_path}') && ./harness_oracle {hyp_id} 50000"]
-                else:
-                    cmd = [str(oracle_bin), hyp_id, "50000"]
-                _sp.run(cmd, timeout=700, check=False)
-            except Exception:
-                pass
+def invoke_oracle(target_id: str, hyp_id: str) -> None:
+    """Run a target's harness_oracle in a background thread to produce timing feedback.
 
-        threading.Thread(target=_invoke, daemon=True).start()
+    Writes shared/feedback/timing_<hyp_id>_*.json, which the engine polls for.
+    On Windows: invokes via wsl.exe (the harness is a Linux binary). On Linux: runs natively.
+    Shared by the Phase A live orchestrator and the Phase B run_session.
+    """
+    import platform
+    import subprocess as _sp
+    oracle_bin = REPO_ROOT / "track-a-target" / "targets" / target_id / "harness_oracle"
+
+    def _invoke():
+        try:
+            if platform.system() == "Windows":
+                wsl_path = str(oracle_bin).replace("\\", "/").replace("D:", "/mnt/d")
+                cmd = ["wsl", "bash", "-c",
+                       f"cd $(dirname '{wsl_path}') && ./harness_oracle {hyp_id} 50000"]
+            else:
+                cmd = [str(oracle_bin), hyp_id, "50000"]
+            _sp.run(cmd, timeout=700, check=False)
+        except Exception:
+            pass
+
+    threading.Thread(target=_invoke, daemon=True).start()

@@ -10,6 +10,7 @@ from sandbox.runstore import Run, TargetResult, save_run
 from viz.sources.state_file import load_loop_state
 from viz.sources.live import LiveSource
 from viz.events import RunState, fold_event
+from viz.orchestrator import invoke_oracle
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 FINDINGS = REPO_ROOT / "shared" / "findings"
@@ -47,7 +48,15 @@ class RunSession:
         }
         started = time.time()
         state = RunState(run_id=self._run_id, model_label=f"{self._model} (live)")
-        source = LiveSource(self._target_c, cycles=3, env_overrides=env)
+
+        # When the engine reaches the oracle WAIT stage, run the target's harness to
+        # produce the timing feedback JSON the engine polls for. Without this the run
+        # stalls at WAIT (the engine never receives feedback).
+        def on_wait(hyp_id: str):
+            invoke_oracle(self._target_id, hyp_id)
+
+        source = LiveSource(self._target_c, cycles=3, on_wait_for_oracle=on_wait,
+                            env_overrides=env)
         for event in source.start():
             if not event.target_id:
                 event.target_id = self._target_id
