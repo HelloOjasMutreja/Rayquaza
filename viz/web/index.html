@@ -27,6 +27,7 @@
       <div id="controls">
         <button id="btn-replay-all" onclick="startReplayAll()">▶ Replay</button>
         <button id="btn-stop" onclick="stopRun()" disabled>■ Stop</button>
+        <button id="btn-compare" onclick="toggleCompare()">⇄ Compare</button>
         <label id="speed-label">
           <input id="speed-slider" type="range" min="0" max="4" step="1" value="2" oninput="updateSpeedLabel(this.value)">
           <span id="speed-val" class="mono">1x</span>
@@ -60,6 +61,12 @@
         </div>
       </aside>
     </main>
+
+    <section id="compare-view" style="display:none;">
+      <div class="compare-head">Saved runs — pick 2+ to compare</div>
+      <div id="compare-runs"></div>
+      <div id="compare-table"></div>
+    </section>
 
     <footer id="ticker">
       <div id="ticker-track" class="mono"></div>

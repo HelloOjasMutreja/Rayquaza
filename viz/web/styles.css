@@ -286,6 +286,17 @@ body {
 .afl-body { font-size: 10px; color: var(--mut); }
 .afl-sub { font-size: 9px; color: var(--dim); margin-top: 2px; }
 
+/* ── Comparison view (B-ii) ── */
+#compare-view { flex: 1; padding: 16px 20px; overflow-y: auto; min-height: 0; }
+.compare-head { font-family: var(--mono); font-size: 11px; letter-spacing: .6px; color: var(--mut); margin-bottom: 12px; }
+#compare-runs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+.run-chip { font-size: 12px; color: var(--tx2); display: flex; align-items: center; gap: 5px; }
+.run-chip .mono { color: var(--dim); font-size: 10px; }
+table.cmp { border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
+table.cmp th, table.cmp td { border: 1px solid var(--ln); padding: 6px 12px; text-align: left; }
+table.cmp th { color: var(--mut); font-weight: 500; }
+table.cmp td:first-child { color: var(--mut); }
+
 /* ── Ticker ── */
 #ticker {
   flex-shrink: 0; background: var(--bg); border-top: 1px solid var(--ln);

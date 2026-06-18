@@ -73,6 +73,24 @@ class API:
 
         threading.Thread(target=_go, daemon=True).start()
 
+    def list_runs(self) -> None:
+        from dataclasses import asdict
+        from sandbox.runstore import list_runs
+        runs = [asdict(r) for r in list_runs()]
+        self._window.evaluate_js(f"window.onRuns({json.dumps(runs)})")
+
+    def build_comparison(self, run_ids: list) -> None:
+        import time as _time
+        from sandbox.runstore import list_runs, RUNS_DIR
+        from sandbox.comparison import build_comparison, to_markdown
+        chosen = [r for r in list_runs() if r.run_id in run_ids]
+        comp = build_comparison(chosen)
+        md = to_markdown(comp)
+        RUNS_DIR.mkdir(parents=True, exist_ok=True)
+        stamp = _time.strftime("%Y%m%d_%H%M%S")
+        (RUNS_DIR / f"comparison_{stamp}.md").write_text(md, encoding="utf-8")
+        self._window.evaluate_js(f"window.onComparison({json.dumps(comp)})")
+
 
 def start_app(autostart_replay: bool = False) -> None:
     """Create the pywebview window and enter the main loop."""

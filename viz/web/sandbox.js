@@ -57,3 +57,48 @@ window.runModel = function () {
   document.getElementById("model-status").textContent = "running " + selectedModel + "…";
   window.pywebview.api.start_sandbox_run(selectedModel, target);
 };
+
+// ── B-ii: comparison view ────────────────────────────────────────────────────
+const chosenRuns = new Set();
+
+window.onRuns = function (runs) {
+  chosenRuns.clear();
+  const box = document.getElementById("compare-runs");
+  box.innerHTML = runs.map((r) =>
+    `<label class="run-chip"><input type="checkbox" value="${r.run_id}"
+      onchange="toggleRun('${r.run_id}', this.checked)"> ${r.model_code}
+      <span class="mono">${r.run_id}</span></label>`).join("") ||
+    '<span class="mono" style="color:var(--dim)">no saved runs yet</span>';
+  document.getElementById("compare-table").innerHTML = "";
+};
+
+window.toggleRun = function (id, on) {
+  if (on) chosenRuns.add(id); else chosenRuns.delete(id);
+  if (chosenRuns.size >= 2) window.pywebview.api.build_comparison([...chosenRuns]);
+};
+
+window.onComparison = function (comp) {
+  let html = "<table class='cmp'><tr><th>Target</th>" +
+    comp.models.map((m) => `<th>${m}</th>`).join("") + "</tr>";
+  comp.targets.forEach((tid) => {
+    html += `<tr><td>${tid}</td>` + comp.detection[tid].map((c) => {
+      const mark = c.confirmed ? "✓" : (c.located ? "·loc" : "✗");
+      const ts = c.t_stat == null ? "" : ` t=${c.t_stat.toFixed(1)}`;
+      return `<td>${mark}${ts}</td>`;
+    }).join("") + "</tr>";
+  });
+  html += "<tr><td>cost $</td>" + comp.efficiency.cost_usd.map((x) => `<td>${x}</td>`).join("") + "</tr>";
+  html += "<tr><td>wall s</td>" + comp.efficiency.wall_seconds.map((x) => `<td>${x}</td>`).join("") + "</tr>";
+  html += "<tr><td>fp-rate</td>" + comp.robustness.fp_rate.map((x) => `<td>${x}</td>`).join("") + "</tr>";
+  html += "</table>";
+  document.getElementById("compare-table").innerHTML = html;
+};
+
+window.toggleCompare = function () {
+  const cv = document.getElementById("compare-view");
+  const stage = document.getElementById("stage");
+  const show = cv.style.display === "none";
+  cv.style.display = show ? "" : "none";
+  stage.style.display = show ? "none" : "grid";
+  if (show && window.pywebview) window.pywebview.api.list_runs();
+};
