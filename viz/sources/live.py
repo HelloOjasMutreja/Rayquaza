@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 import threading
@@ -30,10 +31,12 @@ class LiveSource(RunSource):
         target_c: Path,
         cycles: int = 3,
         on_wait_for_oracle=None,   # callable(hyp_id: str) -> None
+        env_overrides: dict | None = None,
     ):
         self._target_c = Path(target_c)
         self._cycles = cycles
         self._on_wait = on_wait_for_oracle
+        self._env = env_overrides or {}
         self._run_id = uuid.uuid4().hex[:8]
         self._stopped = False
         self._proc = None
@@ -47,12 +50,14 @@ class LiveSource(RunSource):
             "--target", str(self._target_c),
             "--cycles", str(self._cycles),
         ]
+        full_env = {**os.environ, **self._env}
         self._proc = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
             bufsize=1,
+            env=full_env,
         )
 
         for line in self._proc.stdout:
