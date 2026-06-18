@@ -9,7 +9,7 @@ from sandbox.gateway.server import Gateway
 from sandbox.runstore import Run, TargetResult, save_run
 from viz.sources.state_file import load_loop_state
 from viz.sources.live import LiveSource
-from viz.events import RunState, fold_event
+from viz.events import RunState, StageEvent, fold_event
 from viz.orchestrator import invoke_oracle
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -48,6 +48,14 @@ class RunSession:
         }
         started = time.time()
         state = RunState(run_id=self._run_id, model_label=f"{self._model} (live)")
+
+        # Immediate feedback: light up the target in READ before the (slow) first LLM
+        # call returns, so the console leaves Idle the moment the run starts.
+        fold_event(state, StageEvent(
+            run_id=self._run_id, target_id=self._target_id, hyp_id="H000",
+            stage="ingest", status="active", ts=time.time(),
+            data={"hypothesis_text": f"{self._model} loading + reading the target source…"}))
+        self._on_state(state.to_dict())
 
         # When the engine reaches the oracle WAIT stage, run the target's harness to
         # produce the timing feedback JSON the engine polls for. Without this the run

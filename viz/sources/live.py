@@ -44,13 +44,17 @@ class LiveSource(RunSource):
         self._after_ingest = False
 
     def start(self) -> Iterator[StageEvent]:
+        # -u + PYTHONUNBUFFERED force the engine's stdout to flush per line; without
+        # this, Python block-buffers stdout when piped and the UI sees no stage events
+        # until the buffer fills or the process exits.
         cmd = [
             sys.executable,
+            "-u",
             str(REPO_ROOT / "track-b-engine" / "main.py"),
             "--target", str(self._target_c),
             "--cycles", str(self._cycles),
         ]
-        full_env = {**os.environ, **self._env}
+        full_env = {**os.environ, **self._env, "PYTHONUNBUFFERED": "1"}
         self._proc = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
