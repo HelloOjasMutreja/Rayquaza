@@ -11,8 +11,11 @@ BIN="$OUT/kyber_fuzz"
 
 [ -x "$BIN" ] || { echo "missing $BIN — run build_weakened.sh $LEAK first"; exit 1; }
 
-CORPUS="$OUT/corpus"
-FINDINGS="$OUT/findings"
+# AFL++ findings go to WSL ext4 home (not /mnt/d NTFS) to avoid severe I/O slowdown.
+# After the run, summarize_afl.py copies the summary JSON back to shared/findings/.
+FUZZ_HOME="${HOME}/fuzz"
+CORPUS="$FUZZ_HOME/$LEAK/corpus"
+FINDINGS="$FUZZ_HOME/$LEAK/findings"
 mkdir -p "$CORPUS" "$FINDINGS"
 
 # Seed: a zeroed 768-byte Kyber512 ciphertext (valid length, invalid content —

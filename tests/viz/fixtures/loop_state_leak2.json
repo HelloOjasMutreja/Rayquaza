@@ -1,0 +1,45 @@
+{
+  "target_file": "track-b-engine/ingestion/test_targets/kyber512_leak2_focused.c",
+  "current_cycle": 1,
+  "total_cycles": 3,
+  "hypotheses": [
+    {
+      "id": "H001",
+      "category": "secret_dependent_branch",
+      "location": "poly_tomsg() line 9",
+      "hypothesis": "Branch on a->coeffs[8*i+j] >= KYBER_Q creates measurable timing difference between two different values of the variable.",
+      "trigger_condition": "2*a->coeffs[8*i+j] >= KYBER_Q",
+      "confidence": "HIGH",
+      "test_vector_hint": "Test with two different values for a->coeffs[8*i+j]",
+      "status": "INVALIDATED",
+      "revised_confidence": "NONE",
+      "evidence": "mean_A=546.452ns vs mean_B=546.532ns, t_statistic=-0.167, significant=false across 50000 runs.",
+      "next_test_hint": "Retest with cache-flushing (clflush) between calls and 100000 samples to reduce noise floor.",
+      "t_statistic": -0.167,
+      "significant": false,
+      "vector_file": "/Users/vedanthdama/Rayquaza/shared/vectors/vec_H001_20260617_132155.c",
+      "feedback": {
+        "hypothesis_id": "H001",
+        "run_count": 50000,
+        "mean_A": 546.452,
+        "mean_B": 546.532,
+        "variance_A": 5891.458,
+        "variance_B": 5599.509,
+        "t_statistic": -0.167,
+        "significant": false,
+        "generated_by": "harness",
+        "note": "LEAK-2 poly_tomsg misprediction oracle. Cond-A: all coeffs=2500 (>q/2, predictor learns not-taken, 0 mispredicts). Cond-B: random-per-call mix of 100/2500 (predictor cannot learn, ~128 mispredicts). Signal: branch misprediction overhead from secret-derived unpredictable bit pattern. Compiled -O0 to prevent cmov optimization of if-branch."
+      },
+      "exploitation_path": null
+    }
+  ],
+  "last_updated": "2026-06-17T13:23:01.868557",
+  "completed_ids": [
+    "H001"
+  ],
+  "promoted_ids": [],
+  "demoted_ids": [],
+  "invalidated_ids": [
+    "H001"
+  ]
+}

@@ -26,6 +26,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 
 /* Reference Kyber API + parameters. KYBER_REF must be on the include path and
  * built for KYBER_K=2 (Kyber512). See build_weakened.sh. */
