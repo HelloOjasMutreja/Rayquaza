@@ -1,4 +1,4 @@
-from viz.sources.feedback import load_timing, result_from_timing
+from viz.sources.feedback import load_timing, result_from_timing, measurement_from_timing
 
 
 class TestLoadTiming:
@@ -35,3 +35,17 @@ class TestResultFromTiming:
         data = load_timing(timing_leak5)
         result = result_from_timing(data, status="PROMOTED")
         json.dumps(result)  # must not raise
+
+
+class TestMeasurementFromTiming:
+    def test_carries_means_and_variances(self, timing_leak5):
+        data = load_timing(timing_leak5)
+        m = measurement_from_timing(data)
+        for key in ("mean_A", "mean_B", "variance_A", "variance_B", "t_stat", "run_count"):
+            assert key in m, f"missing key: {key}"
+        assert m["mean_A"] == data["mean_A"]
+        assert m["variance_B"] == data["variance_B"]
+
+    def test_is_json_serializable(self, timing_leak5):
+        import json
+        json.dumps(measurement_from_timing(load_timing(timing_leak5)))

@@ -10,6 +10,21 @@
       "category": "nonconstant_comparison",
       "location": "crypto_kem_dec",
       "expected_significant": true
+    },
+    "evidence": {
+      "file": "kem.c",
+      "highlight_line": 116,
+      "suspect_label": "non-constant-time compare",
+      "condition_a": "valid ct · full 768-byte read",
+      "condition_b": "invalid ct · early exit",
+      "code": [
+        {"n": 110, "text": "indcpa_dec(buf, c, sk);", "kind": "call"},
+        {"n": 111, "text": "hash_g(kr, buf, 2*KYBER_SYMBYTES);", "kind": "call"},
+        {"n": 112, "text": "indcpa_enc(cmp, buf, pk, kr + 32);", "kind": "call"},
+        {"n": 113, "text": "// FO re-encryption check", "kind": "comment"},
+        {"n": 116, "text": "fail = memcmp(c, cmp, KYBER_CIPHERTEXTBYTES);", "kind": "suspect"},
+        {"n": 117, "text": "cmov(ss, kr, KYBER_SYMBYTES, !fail);", "kind": "call"}
+      ]
     }
   },
   {
@@ -23,6 +38,20 @@
       "category": "secret_dependent_branch",
       "location": "indcpa_dec",
       "expected_significant": true
+    },
+    "evidence": {
+      "file": "indcpa.c",
+      "highlight_line": 71,
+      "suspect_label": "secret-dependent branch x256",
+      "condition_a": "all-positive coeffs · 0 additions",
+      "condition_b": "all-negative coeffs · 256 additions",
+      "code": [
+        {"n": 68, "text": "poly_invntt_tomont(&mp);", "kind": "call"},
+        {"n": 69, "text": "// normalize coefficients", "kind": "comment"},
+        {"n": 70, "text": "for (k = 0; k < KYBER_N; k++)", "kind": "normal"},
+        {"n": 71, "text": "  if (mp.coeffs[k] < 0) mp.coeffs[k] += KYBER_Q;", "kind": "suspect"},
+        {"n": 73, "text": "poly_sub(&mp, &mp, &v);", "kind": "call"}
+      ]
     }
   },
   {
@@ -36,6 +65,20 @@
       "category": "secret_dependent_branch",
       "location": "poly_tomsg",
       "expected_significant": true
+    },
+    "evidence": {
+      "file": "poly.c",
+      "highlight_line": 44,
+      "suspect_label": "data-dependent branch",
+      "condition_a": "predictable input · 0 mispredicts",
+      "condition_b": "random input · ~128 mispredicts",
+      "code": [
+        {"n": 40, "text": "for (i = 0; i < KYBER_N/8; i++) {", "kind": "normal"},
+        {"n": 41, "text": "  for (j = 0; j < 8; j++) {", "kind": "normal"},
+        {"n": 42, "text": "    t = msg->coeffs[8*i+j];", "kind": "normal"},
+        {"n": 44, "text": "    if (2*t >= KYBER_Q) t = 1; else t = 0;", "kind": "suspect"},
+        {"n": 46, "text": "    m[i] |= t << j;", "kind": "normal"}
+      ]
     }
   },
   {
@@ -49,6 +92,19 @@
       "category": "nonconstant_comparison",
       "location": "crypto_kem_dec",
       "expected_significant": true
+    },
+    "evidence": {
+      "file": "verify.c",
+      "highlight_line": 40,
+      "suspect_label": "branch the compiler must not introduce",
+      "condition_a": "b = 0 · no copy",
+      "condition_b": "b = 1 · memcpy",
+      "code": [
+        {"n": 36, "text": "// conditional move, must stay constant-time", "kind": "comment"},
+        {"n": 38, "text": "b = -b;", "kind": "normal"},
+        {"n": 40, "text": "if (b) memcpy(r, x, len);", "kind": "suspect"},
+        {"n": 41, "text": "__asm__ volatile(\"\" ::: \"memory\");", "kind": "normal"}
+      ]
     }
   },
   {
@@ -62,6 +118,19 @@
       "category": "secret_dependent_branch",
       "location": "basemul",
       "expected_significant": true
+    },
+    "evidence": {
+      "file": "ntt.c",
+      "highlight_line": 152,
+      "suspect_label": "sign branch · ARM-only leak",
+      "condition_a": "positive coeff · branch not taken",
+      "condition_b": "negative coeff · + KYBER_Q",
+      "code": [
+        {"n": 148, "text": "// basemul reduction step", "kind": "comment"},
+        {"n": 150, "text": "a0 = a->coeffs[2*i];", "kind": "normal"},
+        {"n": 152, "text": "if (a0 < 0) a0 += KYBER_Q;", "kind": "suspect"},
+        {"n": 153, "text": "r->coeffs[2*i] = fqmul(a0, b0);", "kind": "call"}
+      ]
     }
   },
   {
@@ -75,6 +144,19 @@
       "category": "nonconstant_comparison",
       "location": "mld_sign_verify_internal",
       "expected_significant": true
+    },
+    "evidence": {
+      "file": "sign.c",
+      "highlight_line": 1197,
+      "suspect_label": "non-constant-time compare",
+      "condition_a": "matching hash · full 32-byte read",
+      "condition_b": "differ at byte 0 · early exit",
+      "code": [
+        {"n": 1194, "text": "// recompute challenge hash c2", "kind": "comment"},
+        {"n": 1195, "text": "poly_challenge(&cp, c2);", "kind": "call"},
+        {"n": 1197, "text": "if (memcmp(c, c2, CTILDEBYTES))", "kind": "suspect"},
+        {"n": 1199, "text": "  return -1;", "kind": "normal"}
+      ]
     }
   }
 ]

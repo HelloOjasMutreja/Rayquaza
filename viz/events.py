@@ -34,6 +34,10 @@ class HypState:
     hyp_id: str
     stage: Stage = "ingest"
     stage_status: Status = "start"
+    hypothesis_text: str = ""
+    location: str = ""
+    category: str = ""
+    measurement: Optional[dict] = None
     result: Optional[dict] = None
 
     def to_dict(self) -> dict:
@@ -41,6 +45,10 @@ class HypState:
             "hyp_id": self.hyp_id,
             "stage": self.stage,
             "stage_status": self.stage_status,
+            "hypothesis_text": self.hypothesis_text,
+            "location": self.location,
+            "category": self.category,
+            "measurement": self.measurement,
             "result": self.result,
         }
 
@@ -90,6 +98,19 @@ def fold_event(state: RunState, event: StageEvent) -> RunState:
     hyp_state.stage = event.stage
     hyp_state.stage_status = event.status
     target_state.active_hyp = event.hyp_id
+
+    # Capture hypothesis metadata whenever the source supplies it (any stage).
+    data = event.data or {}
+    if data.get("hypothesis_text"):
+        hyp_state.hypothesis_text = data["hypothesis_text"]
+    if data.get("location"):
+        hyp_state.location = data["location"]
+    if data.get("category"):
+        hyp_state.category = data["category"]
+
+    # Oracle measurement lands when the wait stage completes.
+    if event.stage == "wait" and event.status == "done" and data.get("mean_A") is not None:
+        hyp_state.measurement = data
 
     if event.stage == "save" and event.status == "done" and event.data:
         hyp_state.result = event.data

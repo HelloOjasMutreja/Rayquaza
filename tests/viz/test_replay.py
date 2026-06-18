@@ -68,3 +68,29 @@ class TestReplaySource:
         events = list(src.start())
         run_ids = {e.run_id for e in events}
         assert len(run_ids) == 1
+
+    def test_ingest_start_carries_hypothesis_text(self, loop_state_leak5):
+        src = ReplaySource(loop_state_leak5, step_delay=0.0)
+        ingest_start = [e for e in src.start()
+                        if e.stage == "ingest" and e.status == "start"]
+        assert len(ingest_start) == 1
+        assert ingest_start[0].data.get("hypothesis_text")
+
+    def test_wait_done_carries_measurement(self, loop_state_leak5):
+        src = ReplaySource(loop_state_leak5, step_delay=0.0)
+        wait_done = [e for e in src.start()
+                     if e.stage == "wait" and e.status == "done"]
+        assert len(wait_done) == 1
+        m = wait_done[0].data
+        assert m.get("mean_A") is not None
+        assert m.get("variance_A") is not None
+
+    def test_measurement_and_metadata_fold(self, loop_state_leak5):
+        src = ReplaySource(loop_state_leak5, step_delay=0.0)
+        state = RunState(run_id="test")
+        for event in src.start():
+            fold_event(state, event)
+        hyp = list(state.targets["kyber512_leak5"].hyps.values())[-1]
+        assert hyp.hypothesis_text
+        assert hyp.measurement is not None
+        assert hyp.measurement["mean_A"] is not None

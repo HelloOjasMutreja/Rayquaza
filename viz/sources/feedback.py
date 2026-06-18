@@ -16,3 +16,19 @@ def result_from_timing(timing: dict, status: str) -> dict:
         "mean_B": timing.get("mean_B"),
         "verdict": status,
     }
+
+
+def measurement_from_timing(timing: dict) -> dict:
+    """Convert a timing dict into the oracle-measurement payload (means, spreads, t).
+
+    Carries the variances so the UI can reconstruct the timing distribution and
+    scope trace from summary statistics (replay has no raw 50k samples)."""
+    return {
+        "mean_A": timing.get("mean_A"),
+        "mean_B": timing.get("mean_B"),
+        "variance_A": timing.get("variance_A"),
+        "variance_B": timing.get("variance_B"),
+        "t_stat": timing.get("t_statistic"),
+        "significant": timing.get("significant"),
+        "run_count": timing.get("run_count"),
+    }

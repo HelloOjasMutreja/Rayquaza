@@ -5,7 +5,7 @@ from typing import Iterator
 
 from .base import RunSource
 from .state_file import load_loop_state, hypotheses_from_state, target_id_from_state
-from .feedback import result_from_timing
+from .feedback import result_from_timing, measurement_from_timing
 from ..events import StageEvent
 
 STAGES = ["ingest", "vectorize", "wait", "refine", "save"]
@@ -39,11 +39,21 @@ class ReplaySource(RunSource):
     def _replay_hyp(self, target_id: str, hyp: dict) -> Iterator[StageEvent]:
         hyp_id = hyp["id"]
         status = hyp.get("status", "UNCHANGED")
+        timing = hyp.get("feedback") or {}
+
+        # Hypothesis metadata travels on the first event so the UI can show the
+        # model's reasoning from the moment the investigation starts.
+        meta = {
+            "hypothesis_text": hyp.get("hypothesis", ""),
+            "location": hyp.get("location", ""),
+            "category": hyp.get("category", ""),
+        }
 
         for stage in STAGES:
             if self._stopped:
                 return
 
+            start_data = meta if stage == "ingest" else {}
             yield StageEvent(
                 run_id=self._run_id,
                 target_id=target_id,
@@ -51,19 +61,22 @@ class ReplaySource(RunSource):
                 stage=stage,
                 status="start",
                 ts=time.time(),
+                data=start_data,
             )
 
             # wait stage gets a longer pause to simulate oracle running
             pause = self._step_delay * 3 if stage == "wait" else self._step_delay
             time.sleep(pause)
 
-            result_data = {}
-            if stage == "save":
-                timing = hyp.get("feedback") or {}
+            done_data = {}
+            if stage == "wait" and timing:
+                # Oracle finished — surface the measured distribution statistics.
+                done_data = measurement_from_timing(timing)
+            elif stage == "save":
                 if timing:
-                    result_data = result_from_timing(timing, status)
+                    done_data = result_from_timing(timing, status)
                 else:
-                    result_data = {
+                    done_data = {
                         "verdict": status,
                         "significant": hyp.get("significant"),
                         "t_stat": hyp.get("t_statistic"),
@@ -76,6 +89,6 @@ class ReplaySource(RunSource):
                 stage=stage,
                 status="done",
                 ts=time.time(),
-                data=result_data,
+                data=done_data,
             )
             time.sleep(self._step_delay)

@@ -3,31 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rayquaza — Pipeline Visualizer</title>
+  <title>Rayquaza — Side-Channel Analysis Console</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div id="header">
-    <h1>Rayquaza</h1>
-    <div id="model-label">—</div>
-    <div id="controls">
-      <button id="btn-replay-all" onclick="startReplayAll()">▶ Replay All</button>
-      <button id="btn-stop" onclick="stopRun()" disabled>■ Stop</button>
-      <label id="speed-label">
-        Speed
-        <input id="speed-slider" type="range" min="0" max="4" step="1" value="2"
-               oninput="updateSpeedLabel(this.value)">
-        <span id="speed-val">1×</span>
-      </label>
-    </div>
+  <div id="app">
+
+    <header id="hud">
+      <span class="hud-dots"><i class="d d-r"></i><i class="d d-a"></i><i class="d d-g"></i></span>
+      <span id="brand">RAYQUAZA</span>
+      <span id="hud-sub">side-channel analysis console</span>
+      <span class="hud-spacer"></span>
+      <span id="hud-stats" class="mono">
+        target <b id="stat-progress">0</b>/6 · confirmed <b id="stat-confirmed" class="ok">0</b> · run <b id="run-clock">00:00</b>
+      </span>
+      <span id="hud-model" class="mono"></span>
+      <div id="controls">
+        <button id="btn-replay-all" onclick="startReplayAll()">▶ Run</button>
+        <button id="btn-stop" onclick="stopRun()" disabled>■ Stop</button>
+        <label id="speed-label">
+          <input id="speed-slider" type="range" min="0" max="4" step="1" value="2" oninput="updateSpeedLabel(this.value)">
+          <span id="speed-val" class="mono">1x</span>
+        </label>
+      </div>
+    </header>
+
+    <main id="stage">
+      <aside id="dock">
+        <div class="dock-head">SPECIMENS</div>
+        <div id="dock-list"></div>
+      </aside>
+
+      <section id="chamber">
+        <div id="chamber-empty" class="chamber-empty">
+          <div class="radar-ring"></div>
+          <p>Idle — press <b>Run</b> to begin the hunt.</p>
+        </div>
+        <div id="chamber-body" style="display:none;"></div>
+      </section>
+
+      <aside id="rail">
+        <div class="rail-head">EVENT LOG</div>
+        <div id="event-log" class="mono"></div>
+        <div class="rail-head" style="margin-top:14px;">FINDINGS · <span id="findings-count">0</span></div>
+        <div id="findings"></div>
+        <div id="afl-note">
+          <div class="afl-head">vs AFL++ baseline</div>
+          <div class="mono afl-body">leak5 paths <span class="bad">2 = 2</span> clean</div>
+          <div class="afl-sub">coverage fuzzing cannot see timing</div>
+        </div>
+      </aside>
+    </main>
+
+    <footer id="ticker">
+      <div id="ticker-track" class="mono"></div>
+    </footer>
+
   </div>
-
-  <div id="pipeline-container">
-    <!-- Rows injected by pipeline.js based on RunState -->
-  </div>
-
-  <div id="status-bar">Ready</div>
-
   <script src="pipeline.js"></script>
 </body>
 </html>
