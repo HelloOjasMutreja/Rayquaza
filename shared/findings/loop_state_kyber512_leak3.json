@@ -1,0 +1,45 @@
+{
+  "target_file": "track-b-engine/ingestion/test_targets/kyber512_leak3_focused.c",
+  "current_cycle": 1,
+  "total_cycles": 3,
+  "hypotheses": [
+    {
+      "id": "H003",
+      "category": "secret_dependent_branch",
+      "location": "basemul() line 25",
+      "hypothesis": "Branch on secret key coefficient sign leaks secret state.",
+      "trigger_condition": "a[0] < 0 (injected branch)",
+      "confidence": "HIGH",
+      "test_vector_hint": "Sweep a0 from 0 to 255 and measure cache-timing variance across 10000 runs.",
+      "status": "PROMOTED",
+      "revised_confidence": "MEDIUM",
+      "evidence": "Refiner JSON unusable; status derived from oracle: t=-2421.9069, significant=True.",
+      "next_test_hint": "Re-run refine; qwen3 returned a non-object JSON shape.",
+      "t_statistic": -2421.9069,
+      "significant": true,
+      "vector_file": "/Users/vedanthdama/Rayquaza/shared/vectors/vec_H003_20260617_211102.c",
+      "feedback": {
+        "hypothesis_id": "H003",
+        "run_count": 50000,
+        "mean_A": 5.219,
+        "mean_B": 5.851,
+        "variance_A": 474.135,
+        "variance_B": 291.158,
+        "t_statistic": -2421.9069,
+        "significant": true,
+        "generated_by": "harness",
+        "note": "LEAK-3 basemul branch injection oracle (ARM sign-branch class). Injection: if(a0<0) a0+=KYBER_Q before fqmul(a0,b0). Cond-A: a0=+1000 (positive, branch not taken). Cond-B: a0=-1000 (negative, branch taken + KYBER_Q add). Compiled -O0 -fno-inline to prevent cmov optimization. Designed for ARM Graviton2 (t4g.micro); signal may be small on x86-64. Signal amplification: REPS=500 calls per sample."
+      },
+      "exploitation_path": null
+    }
+  ],
+  "last_updated": "2026-06-17T21:13:27.948300",
+  "completed_ids": [
+    "H003"
+  ],
+  "promoted_ids": [
+    "H003"
+  ],
+  "demoted_ids": [],
+  "invalidated_ids": []
+}

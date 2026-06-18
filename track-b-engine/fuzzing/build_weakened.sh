@@ -7,7 +7,7 @@
 #
 # Usage:
 #   KYBER_REF=/path/to/pqcrystals-kyber/ref ./build_weakened.sh <leak>
-#     <leak> = leak2 | leak4 | leak5 | clean
+#     <leak> = leak1 | leak2 | leak3 | leak4 | leak5 | clean
 #
 #   KYBER_REF must point to a full Kyber REFERENCE source tree (ref/) containing
 #   kem.c indcpa.c poly.c polyvec.c ntt.c reduce.c cbd.c verify.c fips202.c
@@ -34,11 +34,13 @@ cp "$KYBER_REF"/*.c "$KYBER_REF"/*.h "$OUT"/ 2>/dev/null || true
 
 # Overlay Track A's patched file(s) for the chosen leak (skip for clean baseline).
 case "$LEAK" in
+  leak1) cp "$TARGETS/kyber512_leak1/verify.c" "$OUT/verify.c" ;;
   leak2) cp "$TARGETS/kyber512_leak2/poly.c"   "$OUT/poly.c" ;;
+  leak3) cp "$TARGETS/kyber512_leak3/ntt.c"    "$OUT/ntt.c" ;;
   leak4) cp "$TARGETS/kyber512_leak4/indcpa.c" "$OUT/indcpa.c" ;;
   leak5) cp "$TARGETS/kyber512_leak5/kem.c"    "$OUT/kem.c" ;;
   clean) echo "clean baseline — no patch overlaid" ;;
-  *) echo "unknown leak '$LEAK' (use leak2|leak4|leak5|clean)"; exit 1 ;;
+  *) echo "unknown leak '$LEAK' (use leak1|leak2|leak3|leak4|leak5|clean)"; exit 1 ;;
 esac
 
 cd "$OUT"

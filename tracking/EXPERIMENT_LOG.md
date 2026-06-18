@@ -150,6 +150,55 @@ Format:
   Category: nonconstant_comparison — directly analogous to LEAK-5 (Kyber FO comparison).
   Target available for Track B B5 multi-algorithm experiments. JSON saved to shared/feedback/.
 
+## 2026-06-17 [B] B-LEAK1 — Adversary loop vs LEAK-1 (cmov if-branch): AUTONOMOUS rediscovery
+- What: Ran run_focused.sh against kyber512_leak1_focused.c (corrected from PLACEHOLDER:
+  if(b) memcpy(r,x,len) matching harness_oracle injection). Live loop, 3 cycles.
+  Stage1: codellama:7b full-source analysis (keyword scanner found no memcmp/strcmp matches).
+  Stage2: qwen3:8b refiner (returned non-object JSON — shape error, revision skipped again).
+  Oracle: harness_oracle compiled cc -O2 on macOS arm64 (REPS=100, 32-byte memcpy signal).
+  Note: first two runs contaminated by stale timing_H001_*.json from prior LEAK-5 session;
+  fixed by renaming stale file to ARCHIVED_LEAK5_stale_* (removing H001 from filename).
+- Settings: main.py --cycles 3, live mode. codellama:7b stage1/3, qwen3:8b stage2 (partial).
+  Oracle: n=50000, Cond-A b=0 (branch not taken, r unchanged), Cond-B b=1 (branch taken, 32-byte memcpy).
+  Harness: cc -O2 from kyber512_leak1/harness_oracle.c. REPS=100 signal amplification.
+- Result: H001 → PROMOTED.
+  category: secret_dependent_branch ✅ (matches ground truth).
+  location: cmov() line 9 ✅ (correct function — the if(b) branch on FO comparison result).
+  Oracle: t=213.4791, significant=true. mean_A=2.042ns (b=0, no copy), mean_B=1.603ns (b=1, copy).
+  Mode: AUTONOMOUS — no keyword scanner match; full-source analysis; no MANDATORY hint fired.
+  Loop state snapshot: shared/findings/loop_state_kyber512_leak1.json.
+  Note: macOS arm64 with cc -O2 detects the signal (t=213.48 vs WSL2 clang-18 t=74.74 from A6).
+  The if(b) branch survives -O2 compilation due to noinline + memcpy being a library call.
+  qwen3 refiner JSON shape error (same as LEAK-3): confidence MEDIUM from oracle, not refiner.
+- Takeaway: LEAK-1 AUTONOMOUS rediscovery confirmed. UPDATED HEADLINE: 4/5 Kyber leaks
+  autonomously rediscovered (LEAK-1/2/3/4 = secret_dependent_branch class). LEAK-5 alone
+  required a static-scanner hint (nonconstant_comparison class — different pattern family).
+  Stale-feedback bug documented: poll_feedback matches by hypothesis_id substring in filename;
+  archived files must have the hypothesis_id substring removed from their name.
+
+## 2026-06-17 [B] B-LEAK3 — Adversary loop vs LEAK-3 (basemul sign-branch): AUTONOMOUS rediscovery
+- What: Ran run_focused.sh against kyber512_leak3_focused.c (corrected from PLACEHOLDER:
+  local a0 variable pattern matching harness_oracle injection). Engine ran 3-cycle live loop.
+  Stage1: codellama:7b full-source analysis (keyword scanner found no memcmp/strcmp matches).
+  Stage2: qwen3:8b refiner (returned non-object JSON — shape error noted, revision skipped).
+  Oracle: harness_oracle compiled gcc -O0 -fno-inline on macOS arm64 (M-series, REPS=500).
+- Settings: main.py --cycles 3, live mode. codellama:7b stage1/3, qwen3:8b stage2 (partial).
+  Oracle: n=50000, Cond-A a0=+1000 (positive, no branch), Cond-B a0=-1000 (negative, branch+add).
+  Hypothesis counter started at H003 (continuing from prior session state).
+- Result: H003 → PROMOTED.
+  category: secret_dependent_branch ✅ (matches ground truth).
+  location: basemul() line 25 ✅ (correct function).
+  Oracle: t=-2421.9069, significant=true. mean_A=5.219ns, mean_B=5.851ns (REPS=500 amplified).
+  Mode: AUTONOMOUS — no keyword scanner match; full-source analysis; no MANDATORY hint fired.
+  Loop state snapshot: shared/findings/loop_state_kyber512_leak3.json.
+  Note: macOS arm64 CAN detect this signal (unlike ML-DSA memcmp NEON case) because the
+  leak is a genuine conditional branch (if a0<0) that survives -O0 compilation, not a
+  NEON-optimized memcmp. t=-2421 vs Graviton2 t=-3956 — both highly significant.
+  qwen3 refiner JSON shape error: confidence downgraded to MEDIUM at refine stage, but
+  oracle promotion is definitive. Noted for B6 (multi-LLM): fix qwen3 output parsing.
+- Takeaway: LEAK-3 AUTONOMOUS rediscovery confirmed. Updated headline: 3/4 Kyber targets
+  run → 3 autonomous (LEAK-2/3/4), 1 hint-assisted (LEAK-5). LEAK-1 pending.
+
 ## 2026-06-16 [A] A3 — LEAK-5 timing oracle confirmed (memcmp FO comparison)
 - What: Injected LEAK-5 into Kyber512 FO transform (kem.c line 116): replaced constant-time
   verify() with memcmp(). Built standalone harness from pqcrystals ref C source with custom

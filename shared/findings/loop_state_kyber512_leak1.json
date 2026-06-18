@@ -1,0 +1,45 @@
+{
+  "target_file": "track-b-engine/ingestion/test_targets/kyber512_leak1_focused.c",
+  "current_cycle": 1,
+  "total_cycles": 3,
+  "hypotheses": [
+    {
+      "id": "H001",
+      "category": "secret_dependent_branch",
+      "location": "cmov() line 9",
+      "hypothesis": "The conditional branch 'if (b)' in the cmov function leaks the FO comparison result, allowing an attacker to distinguish valid from invalid ciphertexts by timing.",
+      "trigger_condition": "The value of b is derived from a secret-dependent comparison between the ciphertext and a constant. The branch creates a measurable timing difference between zero and nonzero first byte.",
+      "confidence": "HIGH",
+      "test_vector_hint": "Sweep secret_key[0] from 0 to 255 and measure cache-timing variance across 10000 runs.",
+      "status": "PROMOTED",
+      "revised_confidence": "MEDIUM",
+      "evidence": "Refiner JSON unusable; status derived from oracle: t=213.4791, significant=True.",
+      "next_test_hint": "Re-run refine; qwen3 returned a non-object JSON shape.",
+      "t_statistic": 213.4791,
+      "significant": true,
+      "vector_file": "/Users/vedanthdama/Rayquaza/shared/vectors/vec_H001_20260617_214851.c",
+      "feedback": {
+        "hypothesis_id": "H001",
+        "run_count": 50000,
+        "mean_A": 2.042,
+        "mean_B": 1.603,
+        "variance_A": 1069.545,
+        "variance_B": 829.859,
+        "t_statistic": 213.4791,
+        "significant": true,
+        "generated_by": "harness",
+        "note": "LEAK-1 cmov branch injection oracle (clangover class). Cond-A: patched_cmov(r,x,32,0) \u2014 branch not taken, r unchanged. Cond-B: patched_cmov(r,x,32,1) \u2014 branch taken, 32-byte memcpy. Clang18/x86-64 finding: barrier survives LTO; compiler emits cmoveq even without barrier \u2014 no natural clangover on this platform. Injection is manual (if-branch) representing ARM/embedded scenario. Signal amplification: REPS=100 calls per sample."
+      },
+      "exploitation_path": null
+    }
+  ],
+  "last_updated": "2026-06-17T21:51:03.095970",
+  "completed_ids": [
+    "H001"
+  ],
+  "promoted_ids": [
+    "H001"
+  ],
+  "demoted_ids": [],
+  "invalidated_ids": []
+}
