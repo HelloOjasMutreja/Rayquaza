@@ -142,3 +142,6 @@ track-a-target/targets/kyber512_leak5/verify.h
 
 # --- stale/early timing feedback files ---
 shared/feedback/timing_LEAK5-001_*.json
+
+# Phase B sandbox local secrets (API keys) — never commit
+sandbox/secrets.local.json
