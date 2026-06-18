@@ -10,6 +10,21 @@ Format:
 
 ---
 
+## 2026-06-18 [A] ML-DSA-44 oracle reconfirmed on WSL2/x86 (closes Track B B5 blocker)
+- What: Rebuilt and ran track-a-target/targets/mldsa44_leak1/harness_oracle on WSL2/x86 to give
+  Track B the oracle confirmation they could not produce on macOS/arm64 (NEON compiles the 32-byte
+  memcmp with no early-exit, so the signal is absent there). Injection: mld_ct_memcmp replaced with
+  memcmp in mld_sign_verify_internal. Cond-A: c==c2 (full 32-byte scan). Cond-B: c[0]!=c2[0]
+  (early exit at byte 0). REPS=100 amplification, means reported per-call.
+- Settings: gcc -O2, n=50000, 5% trim, Welch t-test, CLOCK_MONOTONIC_RAW, CPU pinned core 0,
+  WSL2/Ubuntu 24.04 x86-64. (Ran alongside the 4 AFL++ baseline jobs — minor core contention
+  inflated variance_B but |t| remains overwhelming.)
+- Result: mean_A=2.482ns, mean_B=2.193ns, variance_A=57.9, variance_B=1329.5, t=164.30,
+  significant=true. JSON: shared/feedback/timing_MLDSA1-ORACLE_1781763721.json.
+- Takeaway: B5 oracle blocker CLOSED. ML-DSA memcmp leak is timing-observable on x86 exactly like
+  the Kyber FO-compare leak (LEAK-5 class). Confirms the hardware boundary: x86 byte-loop memcmp
+  leaks; arm64 NEON memcmp does not. Track B can now cite a confirmed ML-DSA oracle for B5/B6.
+
 ## 2026-06-18 [A] Task 4b — AFL++ 24h baseline relaunched in tmux (resume from 83-min checkpoint)
 - What: Relaunched all 4 AFL++ fuzz runs (leak2, leak4, leak5, clean) inside a persistent tmux
   session (`fuzz`) using AFL_AUTORESUME=1. Processes resume from existing queue (83 min of

@@ -37,18 +37,18 @@ Tag entries [A] (Track A) or [B] (Track B). Use ISO dates.
 - 2026-06-17 [B] ML-DSA REPS check complete. REPS=100/1000/5000 all non-significant on macOS/arm64 (|t|<1,
   sign unstable). Root cause: -O2 on arm64 compiles 32-byte memcmp as fixed NEON sequence with no real
   early-exit saving. ML-DSA oracle confirmation must run on WSL2/x86. Harness: track-b-engine/oracle_reps_check/.
+- 2026-06-18 [A] B5 oracle CLOSED: MLDSA-LEAK-1 reconfirmed on WSL2/x86. mean_A=2.482ns, mean_B=2.193ns,
+  t=164.30, significant=true (n=50000). Ground truth: shared/feedback/timing_MLDSA1-ORACLE_1781763721.json.
+  Track B can now cite a confirmed ML-DSA oracle. macOS/arm64 remains architecturally unsuitable.
 
 ## In Progress
 - [A] Integration: LEAK-1/2/3/4/5 adversary loop complete. FINAL RESULT: 4/5 Kyber autonomous
   (LEAK-1/2/3/4 secret_dependent_branch class), 1/5 hint-assisted (LEAK-5 nonconstant_comparison).
-  MLDSA-LEAK-1 rediscovery done at hypothesis stage; oracle confirmation needs WSL2 (macOS arm64 limitation).
-- [B] PRIORITY 2 — Real AFL++ 24h baseline: BLOCKED on WSL2 environment (ISSUE B-005). Harness
-  fully prepared for all 5 leaks: track-b-engine/fuzzing/harness_kyber.c + build_weakened.sh
-  (leak1|2|3|4|5|clean) + run_baseline_weakened.sh + summarize_afl.py. Run on WSL2:
-    ./build_weakened.sh <leak> && ./run_baseline_weakened.sh <leak>  (for each of leak1..leak5 + clean)
-- [B] Phase B5 oracle reconfirmation: ML-DSA oracle needs WSL2/x86 re-run.
-    cd track-a-target/targets/mldsa44_leak1 && ./harness_oracle MLDSA1-ORACLE 50000
-  Expected: t≈-103 (Track A's REPS=100 harness, significant on WSL2/x86).
+  MLDSA-LEAK-1 oracle now CONFIRMED on WSL2/x86 (t=164.30) — see Done.
+- [A→B] PRIORITY 2 — Real AFL++ 24h baseline: Track A is RUNNING it on WSL2 (was BLOCKED on B side,
+  ISSUE B-005). 4 instances (leak2/leak4/leak5/clean) in tmux, AFL_AUTORESUME, -V 86400, ~1200 exec/s.
+  83-min partial already shows leak5 corpus = clean corpus (timing leak invisible to coverage).
+  Full results ~2026-06-19; comparison data will land in shared/findings/ for the B6 paper.
 
 ## Blocked
 (none)
