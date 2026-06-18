@@ -18,8 +18,14 @@
         target <b id="stat-progress">0</b>/6 · confirmed <b id="stat-confirmed" class="ok">0</b> · run <b id="run-clock">00:00</b>
       </span>
       <span id="hud-model" class="mono"></span>
+      <span id="import-panel">
+        <select id="model-select"><option value="">— model —</option></select>
+        <select id="target-select"><option value="">— target —</option></select>
+        <button id="btn-run-model" onclick="runModel()" disabled>▶ Run model</button>
+        <span id="model-status" class="mono"></span>
+      </span>
       <div id="controls">
-        <button id="btn-replay-all" onclick="startReplayAll()">▶ Run</button>
+        <button id="btn-replay-all" onclick="startReplayAll()">▶ Replay</button>
         <button id="btn-stop" onclick="stopRun()" disabled>■ Stop</button>
         <label id="speed-label">
           <input id="speed-slider" type="range" min="0" max="4" step="1" value="2" oninput="updateSpeedLabel(this.value)">
@@ -61,5 +67,6 @@
 
   </div>
   <script src="pipeline.js"></script>
+  <script src="sandbox.js"></script>
 </body>
 </html>

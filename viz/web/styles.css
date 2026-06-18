@@ -65,6 +65,20 @@ body {
 }
 #controls button:hover:not(:disabled) { border-color: var(--cy); color: var(--cy); }
 #controls button:disabled { opacity: .35; cursor: default; }
+#import-panel { display: flex; align-items: center; gap: 6px; margin-left: 8px; }
+#import-panel select {
+  background: var(--p2); color: var(--tx); border: 1px solid var(--ln);
+  border-radius: 6px; padding: 4px 8px; font-family: var(--mono); font-size: 11px;
+  max-width: 150px;
+}
+#btn-run-model {
+  padding: 5px 10px; border-radius: 7px; border: 1px solid #1c3b3a;
+  background: #0c1a1d; color: var(--cy); cursor: pointer; font-size: 11px;
+  font-family: var(--mono);
+}
+#btn-run-model:disabled { opacity: .35; cursor: default; }
+#model-status { font-size: 11px; }
+
 #speed-label { display: flex; align-items: center; gap: 7px; margin-left: 4px; }
 #speed-slider { width: 78px; accent-color: var(--cy); cursor: pointer; }
 #speed-val { color: var(--tx); font-size: 11px; min-width: 22px; }
