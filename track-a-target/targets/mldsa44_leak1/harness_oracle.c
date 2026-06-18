@@ -130,12 +130,12 @@ int main(int argc, char *argv[]) {
         t0 = now_ns();
         for (int r = 0; r < REPS; r++)
             sink += patched_compare(buf_A, buf_A_match, MLDSA_CTILDEBYTES);
-        sa[i] = (now_ns() - t0) / REPS;   /* per-call nanoseconds */
+        sa[i] = now_ns() - t0;   /* raw total for REPS calls; divided by REPS at display */
 
         t0 = now_ns();
         for (int r = 0; r < REPS; r++)
             sink += patched_compare(buf_B, buf_B_mismatch, MLDSA_CTILDEBYTES);
-        sb[i] = (now_ns() - t0) / REPS;   /* per-call nanoseconds */
+        sb[i] = now_ns() - t0;   /* raw total for REPS calls; divided by REPS at display */
     }
     (void)sink;
 
@@ -156,8 +156,8 @@ int main(int argc, char *argv[]) {
     printf("{\n");
     printf("  \"hypothesis_id\": \"%s\",\n", hyp_id);
     printf("  \"run_count\": %d,\n", runs);
-    printf("  \"mean_A\": %.3f,\n", ma);
-    printf("  \"mean_B\": %.3f,\n", mb);
+    printf("  \"mean_A\": %.3f,\n", ma / REPS);
+    printf("  \"mean_B\": %.3f,\n", mb / REPS);
     printf("  \"variance_A\": %.3f,\n", va);
     printf("  \"variance_B\": %.3f,\n", vb);
     printf("  \"t_statistic\": %.4f,\n", t);
@@ -176,8 +176,8 @@ int main(int argc, char *argv[]) {
         fprintf(f, "{\n");
         fprintf(f, "  \"hypothesis_id\": \"%s\",\n", hyp_id);
         fprintf(f, "  \"run_count\": %d,\n", runs);
-        fprintf(f, "  \"mean_A\": %.3f,\n", ma);
-        fprintf(f, "  \"mean_B\": %.3f,\n", mb);
+        fprintf(f, "  \"mean_A\": %.3f,\n", ma / REPS);
+        fprintf(f, "  \"mean_B\": %.3f,\n", mb / REPS);
         fprintf(f, "  \"variance_A\": %.3f,\n", va);
         fprintf(f, "  \"variance_B\": %.3f,\n", vb);
         fprintf(f, "  \"t_statistic\": %.4f,\n", t);

@@ -10,6 +10,35 @@ Format:
 
 ---
 
+## 2026-06-17 [A] Task 1 — ML-DSA REPS discrepancy investigated + quantization fixed
+- What: Investigated Track B's report that mldsa44_leak1/harness_oracle.c "has NO REPS loop —
+  unchanged." Checked git log/blame on the file.
+- Settings: git log on the file; rebuild + run on WSL2/x86 (gcc -O2, n=50000).
+- Result: NO real discrepancy. The REPS=100 loop IS present and WAS committed —
+  commit 1c7fb88 "[A] fix mldsa44_leak1 oracle portability: REPS=100 signal amplification",
+  on origin/main. Track B's report reflects a STALE checkout (fork behind main).
+  Separately found a latent quality bug: per-sample timing used integer division
+  `(now_ns()-t0)/REPS`, quantizing the sub-ns signal to integers (means showed 1.000/1.142).
+  Fixed to store the raw total and divide by REPS only at display (same approach as the
+  Kyber LEAK-1 oracle); t-statistic is scale-invariant so significance is unaffected, only
+  resolution improves. Reconfirmed on WSL2/x86: mean_A=1.688ns, mean_B=1.993ns,
+  variance_A=411.4, variance_B=400.9, t=-226.85, significant=true (was t=-86.31 quantized).
+- Takeaway: Fix present + committed; reported discrepancy was a stale fork. Quantization
+  improved for honest per-call means. Root action for Track B: pull latest main.
+
+## 2026-06-17 [A] Tasks 2 & 3 — verified leak1/leak3 present; DamsDen never in repo
+- What: Verified Track B reports that kyber512_leak1/ + kyber512_leak3/ were "missing" and that
+  a DamsDen Next.js app sat inside mldsa44_leak1/.
+- Settings: git ls-files; git log --all --diff-filter=A for DamsDen.
+- Result: Task 2 — both targets ARE tracked on main (harness_oracle.c + Makefile each) with
+  ground-truth JSON in shared/feedback/ (timing_LEAK1-CMOV_* t=74.74; timing_LEAK3-ARM-
+  GRAVITON2_* t=-3956.26). For leak1/leak3 the injection lives inside the standalone
+  harness_oracle.c (not a separate kem.c like leak2/4/5), which is why a file-pattern search
+  missed them. Task 3 — DamsDen is NOT tracked and NEVER appears in git history; it is purely
+  a local artifact on Track B's machine. Nothing to remove from the repo.
+- Takeaway: Both reports are stale-fork / local-only artifacts, not repo problems. Track B:
+  pull latest main; delete the local DamsDen dir manually.
+
 ## 2026-06-16 [A] A6 — LEAK-3 basemul ARM oracle confirmed (AWS t4g.micro Graviton2)
 - What: Built and ran LEAK-3 oracle on AWS t4g.micro (ARM Graviton2, aarch64, Ubuntu 24.04).
   Injection: `if (a0 < 0) a0 += KYBER_Q;` before fqmul(a0, b0) in basemul() step.
