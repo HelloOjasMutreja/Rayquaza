@@ -1,45 +1,32 @@
 {
-  "target_file": "track-b-engine/ingestion/test_targets/kyber512_leak5_focused.c",
+  "target_file": "D:\\Code\\Rayquaza\\track-b-engine\\ingestion\\test_targets\\kyber512_leak5_focused.c",
   "current_cycle": 1,
   "total_cycles": 3,
   "hypotheses": [
     {
-      "id": "H001",
+      "id": "H003",
       "category": "nonconstant_comparison",
-      "location": "crypto_kem_dec() line 36",
-      "hypothesis": "The comparison of the ciphertext with the decryption output creates a measurable timing difference between equal and non-equal values.",
-      "trigger_condition": "Any two different values of ct and cmp[KYBER_CIPHERTEXTBYTES]",
+      "location": "crypto_kem_dec() line 15",
+      "hypothesis": "Branch on memcmp() result creates measurable timing difference between different ciphertexts.",
+      "trigger_condition": "Different ciphertexts are compared for equality using a non-constant time comparison function.",
       "confidence": "HIGH",
-      "test_vector_hint": "Sweep ct from 0 to 255, measure delta.",
-      "status": "PROMOTED",
-      "revised_confidence": "MEDIUM",
-      "evidence": "Refiner JSON unusable; status derived from oracle: t=141.0911, significant=True.",
-      "next_test_hint": "Re-run refine; qwen3 returned a non-object JSON shape.",
-      "t_statistic": 141.0911,
-      "significant": true,
-      "vector_file": "/Users/vedanthdama/Rayquaza/shared/vectors/vec_H001_20260617_140127.c",
-      "feedback": {
-        "hypothesis_id": "H001",
-        "run_count": 50000,
-        "mean_A": 45.375,
-        "mean_B": 30.975,
-        "variance_A": 138.153,
-        "variance_B": 330.61,
-        "t_statistic": 141.0911,
-        "significant": true,
-        "generated_by": "harness",
-        "note": "LEAK-5 memcmp FO comparison oracle. Cond-A: memcmp(ct,cmp,768) where ct==cmp (full 768-byte scan). Cond-B: memcmp(ct,cmp,768) where ct[0]!=cmp[0] (exits at byte 0). Signal: early-exit timing of non-constant-time FO comparison."
-      },
+      "test_vector_hint": "Generate two random ciphertexts and compare them using memcmp().",
+      "status": "UNCHANGED",
+      "revised_confidence": "HIGH",
+      "evidence": "",
+      "next_test_hint": "Re-run; no feedback received.",
+      "t_statistic": null,
+      "significant": null,
+      "vector_file": "D:\\Code\\Rayquaza\\shared\\vectors\\vec_H003_20260619_005808.c",
+      "feedback": null,
       "exploitation_path": null
     }
   ],
-  "last_updated": "2026-06-17T14:02:33.346256",
+  "last_updated": "2026-06-19T01:08:08.706390",
   "completed_ids": [
-    "H001"
+    "H003"
   ],
-  "promoted_ids": [
-    "H001"
-  ],
+  "promoted_ids": [],
   "demoted_ids": [],
   "invalidated_ids": []
 }
