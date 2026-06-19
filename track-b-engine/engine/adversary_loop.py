@@ -142,6 +142,100 @@ def looks_like_c(src: str) -> bool:
     return "#include" in src and "main" in src
 
 
+def _parse_c_params(sig: str) -> list:
+    """Parse parameter list from a C function signature into a list of dicts."""
+    m = re.search(r'\(([^)]*)\)', sig)
+    if not m:
+        return []
+    params_str = m.group(1).strip()
+    if not params_str or params_str == 'void':
+        return []
+    params = []
+    for raw in params_str.split(','):
+        raw = raw.strip()
+        if not raw:
+            continue
+        cleaned = re.sub(r'\b(?:const|static|restrict|volatile)\b', '', raw).strip()
+        arr_m = re.search(r'\[(\d+)\]', cleaned)
+        is_array = bool(arr_m)
+        array_size = int(arr_m.group(1)) if arr_m else None
+        if is_array:
+            cleaned = re.sub(r'\[\d+\]', '', cleaned).strip()
+        is_ptr = '*' in cleaned
+        cleaned = cleaned.replace('*', '').strip()
+        parts = cleaned.split()
+        if len(parts) >= 2:
+            name, base_type = parts[-1], ' '.join(parts[:-1])
+        elif len(parts) == 1:
+            name, base_type = parts[0], 'int'
+        else:
+            continue
+        params.append({'type': base_type, 'name': name,
+                       'is_ptr': is_ptr, 'is_array': is_array, 'array_size': array_size})
+    return params
+
+
+# Template for the deterministic fallback harness (used when LLM output won't compile).
+# All placeholders are ALL_CAPS tokens replaced via str.replace(), not Python format().
+_FALLBACK_TMPL = r"""#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <stdint.h>
+#include <math.h>
+
+/* fallback: LLM vector did not compile; harness generated from hypothesis metadata */
+
+STUB_SIG {
+    /* stub */
+}
+
+#define N_REPS 10000
+
+int main(void) {
+    struct timespec t0, t1;
+    double ns_A[N_REPS], ns_B[N_REPS];
+DECLS
+    int i;
+
+    for (i = 0; i < N_REPS; i++) {
+INIT_A
+        clock_gettime(CLOCK_MONOTONIC, &t0);
+        CALL_A;
+        clock_gettime(CLOCK_MONOTONIC, &t1);
+        ns_A[i] = (double)(t1.tv_sec - t0.tv_sec) * 1e9
+                + (double)(t1.tv_nsec - t0.tv_nsec);
+    }
+    for (i = 0; i < N_REPS; i++) {
+INIT_B
+        clock_gettime(CLOCK_MONOTONIC, &t0);
+        CALL_B;
+        clock_gettime(CLOCK_MONOTONIC, &t1);
+        ns_B[i] = (double)(t1.tv_sec - t0.tv_sec) * 1e9
+                + (double)(t1.tv_nsec - t0.tv_nsec);
+    }
+
+    double mean_A = 0.0, mean_B = 0.0;
+    for (i = 0; i < N_REPS; i++) { mean_A += ns_A[i]; mean_B += ns_B[i]; }
+    mean_A /= N_REPS; mean_B /= N_REPS;
+    double var_A = 0.0, var_B = 0.0;
+    for (i = 0; i < N_REPS; i++) {
+        var_A += (ns_A[i] - mean_A) * (ns_A[i] - mean_A);
+        var_B += (ns_B[i] - mean_B) * (ns_B[i] - mean_B);
+    }
+    var_A /= N_REPS; var_B /= N_REPS;
+    double se_A = sqrt(var_A / N_REPS), se_B = sqrt(var_B / N_REPS);
+    double pooled = sqrt(se_A * se_A + se_B * se_B);
+    double t_stat = (pooled > 1e-12) ? (mean_A - mean_B) / pooled : 0.0;
+    int sig = (t_stat > 2.0 || t_stat < -2.0) ? 1 : 0;
+
+    printf("{\"hypothesis_id\":\"HYPID\",\"mean_A\":%.1f,\"mean_B\":%.1f,\"variance_A\":%.1f,\"variance_B\":%.1f,\"t_statistic\":%.4f,\"significant\":%s}\n",
+           mean_A, mean_B, var_A, var_B, t_stat, sig ? "true" : "false");
+    return 0;
+}
+"""
+
+
 # --- The loop ----------------------------------------------------------------
 class AdversaryLoop:
     def __init__(self, target: str, cycles: int = 3, use_mock: bool = False,
@@ -182,6 +276,66 @@ class AdversaryLoop:
             return self.context["flagged_functions"][0].signature
         return "int target_function(unsigned char *secret)"
 
+    # -- COMPILE CHECK --------------------------------------------------------
+    def _compile_check(self, src: str) -> tuple:
+        """Try compiling C source. Returns (ok: bool, error_text: str)."""
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix=".c", mode="w", delete=False) as f:
+            f.write(src)
+            tmp = Path(f.name)
+        try:
+            r = subprocess.run(
+                ["cc", "-O0", "-x", "c", str(tmp), "-lm", "-o", "/dev/null"],
+                capture_output=True, text=True, timeout=15,
+            )
+            return r.returncode == 0, (r.stderr or r.stdout)
+        except Exception as exc:
+            return False, str(exc)
+        finally:
+            tmp.unlink(missing_ok=True)
+
+    # -- FALLBACK VECTOR ------------------------------------------------------
+    def _fallback_vector(self, hyp: Hypothesis, sig: str) -> str:
+        """Generate a guaranteed-compilable harness without LLM involvement."""
+        params = _parse_c_params(sig)
+        fn_m = re.search(r'\b([A-Za-z_]\w*)\s*\(', sig)
+        fn_name = fn_m.group(1) if fn_m else "target_function"
+        stub_sig = re.sub(r'\bstatic\b', '', sig.split('{')[0]).strip().rstrip('{').strip()
+
+        BUF = 64
+        decls, init_A, init_B, args_A, args_B = [], [], [], [], []
+        for p in params:
+            n, t = p['name'], p['type']
+            if p['is_array']:
+                sz = p['array_size'] or BUF
+                decls.append(f"    {t} {n}_A[{sz}], {n}_B[{sz}];")
+                init_A.append(f"        memset({n}_A, 0x00, sizeof({n}_A));")
+                init_B.append(f"        memset({n}_B, 0x7f, sizeof({n}_B));")
+                args_A.append(f"{n}_A"); args_B.append(f"{n}_B")
+            elif p['is_ptr']:
+                decls.append(f"    {t} {n}_buf_A[{BUF}], {n}_buf_B[{BUF}];")
+                init_A.append(f"        memset({n}_buf_A, 0x00, {BUF});")
+                init_B.append(f"        memset({n}_buf_B, 0x7f, {BUF});")
+                args_A.append(f"{n}_buf_A"); args_B.append(f"{n}_buf_B")
+            else:
+                decls.append(f"    {t} {n}_A = ({t})0, {n}_B = ({t})1;")
+                args_A.append(f"{n}_A"); args_B.append(f"{n}_B")
+
+        decls_str = '\n'.join(decls) if decls else '    /* no params */'
+        call_A = f"{fn_name}({', '.join(args_A)})"
+        call_B = f"{fn_name}({', '.join(args_B)})"
+
+        return (
+            _FALLBACK_TMPL
+            .replace("STUB_SIG", stub_sig)
+            .replace("DECLS", decls_str)
+            .replace("INIT_A", '\n'.join(init_A))
+            .replace("INIT_B", '\n'.join(init_B))
+            .replace("CALL_A", call_A)
+            .replace("CALL_B", call_B)
+            .replace("HYPID", hyp.id)
+        )
+
     # -- VECTORIZE ------------------------------------------------------------
     def vectorize(self, hyp: Hypothesis) -> str:
         prompt = STAGE3_PROMPT.read_text()
@@ -189,7 +343,8 @@ class AdversaryLoop:
         sig = self._signature_for(hyp)
         system = (
             prompt.replace("{hypothesis_json}", hyp_json)
-            .replace("{function_signature}", sig)
+                  .replace("{function_signature}", sig)
+                  .replace("{hypothesis_id}", hyp.id)
         )
         user = (
             f"Generate the C timing test for hypothesis {hyp.id}.\n"
@@ -199,8 +354,8 @@ class AdversaryLoop:
 
         raw = call_ollama(CODE_MODEL, system, user)
         src = extract_c_source(raw)
+
         if not looks_like_c(src):
-            # retry once with a sterner instruction
             retry_system = system + (
                 "\n\nYour previous response was invalid. "
                 "Return ONLY C source code starting with #include"
@@ -208,7 +363,23 @@ class AdversaryLoop:
             raw = call_ollama(CODE_MODEL, retry_system, user)
             src = extract_c_source(raw)
 
-        out = VECTORS_DIR / f"vec_{hyp.id}_{_ts()}.c"
+        ok, err = self._compile_check(src)
+        if not ok:
+            retry_system = (
+                system
+                + f"\n\nYour previous response did not compile:\n{err[:400]}\n"
+                "Fix all errors. Return ONLY compilable C source starting with #include."
+            )
+            raw = call_ollama(CODE_MODEL, retry_system, user)
+            src = extract_c_source(raw)
+            ok, _ = self._compile_check(src)
+            if not ok:
+                print(f"    WARNING: {hyp.id}: LLM vector did not compile after retry "
+                      "— using deterministic fallback.")
+                src = self._fallback_vector(hyp, sig)
+
+        suffix = "_fallback" if "fallback: LLM vector" in src else ""
+        out = VECTORS_DIR / f"vec_{hyp.id}_{_ts()}{suffix}.c"
         out.write_text(src)
         return str(out)
 
