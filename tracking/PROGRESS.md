@@ -46,6 +46,12 @@ Tag entries [A] (Track A) or [B] (Track B). Use ISO dates.
   20/18) but AFL cannot identify them as timing leaks. LLM found + oracle-confirmed LEAK-5 (t=141)
   where AFL is blind. Comparison data: shared/findings/comparison_llm_vs_afl_20260619.{json,md}.
   B-001 (stub harness) CLOSED — harness_kyber.c links real pqcrystals crypto_kem_dec.
+- 2026-06-19 [B] Engine bugs CLOSED — _poll_feedback and qwen3 refiner:
+  (1) _poll_feedback stale-file bug: glob was `if hyp.id in p.name` (matched ARCHIVED_* files).
+      Fixed to `glob(f"timing_{hyp.id}_*.json")` — only matches live feedback, not archives.
+  (2) qwen3 refiner MEDIUM confidence regression: qwen3 returns ["PROMOTED"] (string list)
+      ~50% of runs. Added string-salvage path; oracle-only fallback now returns HIGH (not MEDIUM)
+      because the oracle measurement is the ground truth. stage2 prompt adds WRONG/RIGHT examples.
 - 2026-06-19 [B] B-002 CLOSED — codellama:7b vector compile-rate fix. Root cause: stage3 prompt was
   a narrative spec; 7B cannot reliably generate valid C from scratch. Fix: (1) stage3_vector.txt
   rewritten as a fill-in-the-blank skeleton with all boilerplate pre-written; (2) _compile_check()

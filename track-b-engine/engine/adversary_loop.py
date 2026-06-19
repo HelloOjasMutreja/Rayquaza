@@ -407,14 +407,14 @@ class AdversaryLoop:
     def _poll_feedback(self, hyp: Hypothesis):
         deadline = time.time() + FEEDBACK_TIMEOUT_S
         while time.time() < deadline:
-            matches = [
-                p for p in FEEDBACK_DIR.glob("*.json")
-                if hyp.id in p.name
-            ]
+            # Strict glob: only matches timing_HXXX_<timestamp>.json.
+            # Archived files (e.g. ARCHIVED_LEAK5_stale_timing_*.json) won't
+            # match because they don't start with "timing_{hyp.id}_".
+            matches = list(FEEDBACK_DIR.glob(f"timing_{hyp.id}_*.json"))
             if matches:
                 newest = max(matches, key=lambda p: p.stat().st_mtime)
                 return json.loads(newest.read_text())
-            print(f"    ...waiting for feedback file containing '{hyp.id}' "
+            print(f"    ...waiting for feedback file timing_{hyp.id}_*.json "
                   f"in {FEEDBACK_DIR} (poll every {POLL_INTERVAL_S}s)")
             time.sleep(POLL_INTERVAL_S)
         print(f"    WARNING: feedback timeout ({FEEDBACK_TIMEOUT_S}s) for "
@@ -457,9 +457,31 @@ class AdversaryLoop:
         # returns a list of strings or an odd wrapper shape.
         dict_records = [r for r in (records or []) if isinstance(r, dict)]
 
+        _STATUS_VALS = {"PROMOTED", "DEMOTED", "INVALIDATED", "UNCHANGED"}
+
+        if not dict_records and records:
+            # Salvage path: qwen3 sometimes emits ["PROMOTED"] (list of strings).
+            # Extract the first recognisable status string and build a minimal record.
+            for item in records:
+                if isinstance(item, str) and item.strip().upper() in _STATUS_VALS:
+                    salvaged = item.strip().upper()
+                    sig = bool(timing.get("significant"))
+                    return {
+                        "id": hyp.id,
+                        "original_hypothesis": hyp.hypothesis,
+                        "status": salvaged,
+                        "evidence": (f"Status salvaged from refiner string list; "
+                                     f"oracle t={timing.get('t_statistic')}, significant={sig}."),
+                        "revised_confidence": (
+                            "HIGH" if (salvaged == "PROMOTED" and sig) else
+                            "MEDIUM" if salvaged in ("PROMOTED", "DEMOTED") else "NONE"
+                        ),
+                        "next_test_hint": "Refiner returned string list instead of object array; retry for full evidence.",
+                    }
+
         if not dict_records:
-            # Refiner gave nothing usable. Don't crash the loop — derive a status
-            # directly from the measured timing so the cycle still completes/logs.
+            # Oracle-only fallback — refiner gave nothing usable at all.
+            # The oracle measurement IS the ground truth, so use HIGH when significant.
             sig = bool(timing.get("significant"))
             return {
                 "id": hyp.id,
@@ -467,7 +489,7 @@ class AdversaryLoop:
                 "status": "PROMOTED" if sig else "INVALIDATED",
                 "evidence": (f"Refiner JSON unusable; status derived from oracle: "
                              f"t={timing.get('t_statistic')}, significant={sig}."),
-                "revised_confidence": "MEDIUM" if sig else "NONE",
+                "revised_confidence": "HIGH" if sig else "NONE",
                 "next_test_hint": "Re-run refine; qwen3 returned a non-object JSON shape.",
             }
 

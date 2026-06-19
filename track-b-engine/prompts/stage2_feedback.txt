@@ -31,6 +31,9 @@ CRITICAL OUTPUT RULES:
 - End your response with ]
 - No text before [ and no text after ]
 - No markdown, no explanation, no code fences
+- Every array element MUST be a JSON object ({"key":"value"...}) — NOT a string
+- WRONG: ["PROMOTED"]  WRONG: "PROMOTED"  WRONG: {"status":"PROMOTED"} (bare object, not in array)
+- RIGHT: [{"id":"H001","status":"PROMOTED",...}]
 
 Each element must be a JSON object with EXACTLY these fields:
   "id"                 : string — the original hypothesis id (e.g., H001)
