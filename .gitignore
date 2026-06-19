@@ -145,3 +145,9 @@ shared/feedback/timing_LEAK5-001_*.json
 
 # Phase B sandbox local secrets (API keys) — never commit
 sandbox/secrets.local.json
+
+# Engine / Phase B transient run outputs (regenerated each run; the curated
+# ground-truth + comparison files are committed explicitly)
+shared/findings/afl_baseline_*.json
+shared/vectors/vec_*.c
+shared/feedback/timing_H*.json
