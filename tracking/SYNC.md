@@ -105,6 +105,13 @@ or needs something from the other. This is how the two halves stay coupled.
   the schema. Once real files land there, drop the --use-mock flag to close the loop
   (the loop polls shared/feedback/ every 30s, 600s timeout per hypothesis).
 - [PENDING] B3: test-vector format spec (so A harness can consume them).
+- [RESOLVED] 2026-06-19 B engine — two bugs fixed:
+  (1) _poll_feedback: was `if hyp.id in p.name` (substring match, picked up ARCHIVED_* files).
+      Fixed to `glob(f"timing_{hyp.id}_*.json")` — strict prefix pattern, immune to archives.
+  (2) qwen3 refiner JSON shape: model returns ["PROMOTED"] (string list) ~50% of runs.
+      Fixed: added string-salvage path in refine() + promoted oracle-only fallback confidence
+      from MEDIUM → HIGH (oracle IS the ground truth). stage2_feedback.txt updated with
+      explicit WRONG/RIGHT examples to reduce frequency of the malformed responses.
 - [RESOLVED] 2026-06-17 B→A: kyber512_leak1/ and kyber512_leak3/ target directories confirmed
   present on main (harness_oracle.c verified readable in both). Track B focused targets updated:
   kyber512_leak1_focused.c corrected to if(b) memcpy(r,x,len); kyber512_leak3_focused.c corrected
