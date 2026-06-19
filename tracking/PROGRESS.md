@@ -40,15 +40,23 @@ Tag entries [A] (Track A) or [B] (Track B). Use ISO dates.
 - 2026-06-18 [A] B5 oracle CLOSED: MLDSA-LEAK-1 reconfirmed on WSL2/x86. mean_A=2.482ns, mean_B=2.193ns,
   t=164.30, significant=true (n=50000). Ground truth: shared/feedback/timing_MLDSA1-ORACLE_1781763721.json.
   Track B can now cite a confirmed ML-DSA oracle. macOS/arm64 remains architecturally unsuitable.
+- 2026-06-19 [A] PRIORITY-2 DONE — LLM-vs-AFL++ comparison delivered. 24h baseline complete
+  (~120M execs/target, 0 crashes). Headline: LEAK-5 (memcmp) corpus identical to clean (2 paths each)
+  — coverage fuzzing structurally blind to the timing leak. Branch leaks LEAK-2/4 add edges (corpus
+  20/18) but AFL cannot identify them as timing leaks. LLM found + oracle-confirmed LEAK-5 (t=141)
+  where AFL is blind. Comparison data: shared/findings/comparison_llm_vs_afl_20260619.{json,md}.
+  B-001 (stub harness) CLOSED — harness_kyber.c links real pqcrystals crypto_kem_dec.
+- 2026-06-19 [B] B-002 CLOSED — codellama:7b vector compile-rate fix. Root cause: stage3 prompt was
+  a narrative spec; 7B cannot reliably generate valid C from scratch. Fix: (1) stage3_vector.txt
+  rewritten as a fill-in-the-blank skeleton with all boilerplate pre-written; (2) _compile_check()
+  added after each LLM call in vectorize(); (3) on second compile failure, _fallback_vector()
+  generates a guaranteed-compilable harness deterministically from the function signature
+  (no LLM). Fallback files tagged _fallback in filename.
 
 ## In Progress
 - [A] Integration: LEAK-1/2/3/4/5 adversary loop complete. FINAL RESULT: 4/5 Kyber autonomous
   (LEAK-1/2/3/4 secret_dependent_branch class), 1/5 hint-assisted (LEAK-5 nonconstant_comparison).
   MLDSA-LEAK-1 oracle now CONFIRMED on WSL2/x86 (t=164.30) — see Done.
-- [A→B] PRIORITY 2 — Real AFL++ 24h baseline: Track A is RUNNING it on WSL2 (was BLOCKED on B side,
-  ISSUE B-005). 4 instances (leak2/leak4/leak5/clean) in tmux, AFL_AUTORESUME, -V 86400, ~1200 exec/s.
-  83-min partial already shows leak5 corpus = clean corpus (timing leak invisible to coverage).
-  Full results ~2026-06-19; comparison data will land in shared/findings/ for the B6 paper.
 
 ## Blocked
 (none)
