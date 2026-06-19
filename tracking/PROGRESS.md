@@ -59,10 +59,14 @@ Tag entries [A] (Track A) or [B] (Track B). Use ISO dates.
   generates a guaranteed-compilable harness deterministically from the function signature
   (no LLM). Fallback files tagged _fallback in filename.
 
+- 2026-06-19 [A] Integration COMPLETE: LEAK-1/2/3/4/5 adversary loop done. FINAL RESULT: 4/5 Kyber
+  autonomous (LEAK-1/2/3/4 secret_dependent_branch), 1/5 hint-assisted (LEAK-5 nonconstant_comparison).
+  MLDSA-LEAK-1 oracle CONFIRMED on WSL2/x86 (t=164.30). All 6 targets have confirmed oracles; the
+  LLM-vs-AFL comparison is delivered. Core experiment is complete.
+
 ## In Progress
-- [A] Integration: LEAK-1/2/3/4/5 adversary loop complete. FINAL RESULT: 4/5 Kyber autonomous
-  (LEAK-1/2/3/4 secret_dependent_branch class), 1/5 hint-assisted (LEAK-5 nonconstant_comparison).
-  MLDSA-LEAK-1 oracle now CONFIRMED on WSL2/x86 (t=164.30) — see Done.
+- [A] Tooling (alongside core experiment): Phase A live visualizer + Phase B multi-LLM sandbox SHIPPED
+  to main; Phase C (cloud/SSH connector) in design. These wrap the engine; they do not change its logic.
 
 ## Blocked
 (none)
