@@ -82,6 +82,14 @@ or needs something from the other. This is how the two halves stay coupled.
   env (RAYQ_OLLAMA_URL / RAYQ_CODE_MODEL / RAYQ_REASON_MODEL), defaulting to the previous
   hardcoded values. Additive, no behaviour change when unset. Lets the Phase B sandbox point the
   engine at the model gateway and swap models without editing engine code.
+- [DELIVERED] 2026-06-19 A->B (Priority-2): LLM-vs-AFL++ comparison complete. The 24h AFL++
+  coverage baseline finished (~120M execs/target, 0 crashes on all). leak5 (memcmp) corpus is
+  IDENTICAL to clean (2=2) — coverage fuzzing is structurally blind to the timing leak the LLM
+  located AND oracle-confirmed (t=141). Branch leaks leak2/leak4 add edges (corpus 20/18) but AFL
+  still cannot tell they are timing leaks. Output: shared/findings/comparison_llm_vs_afl_20260619.{json,md};
+  regenerate any time with track-a-target/analysis/compare_llm_vs_afl.py. This closes B's Priority-2
+  and resolves issue B-001 (harness links real crypto_kem_dec, not a stub; ran a full 24h). Ready
+  for the B6 paper's LLM-vs-fuzzer figure.
 
 ## Track B -> Track A (deliverables A depends on)
 - [DELIVERED] 2026-06-14 B0: Mock feedback format defined. Track A harness (A2) must output
