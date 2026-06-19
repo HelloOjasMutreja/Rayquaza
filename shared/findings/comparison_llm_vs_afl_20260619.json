@@ -1,0 +1,82 @@
+{
+  "generated": "2026-06-19T03:53:32",
+  "fuzz_root": "/home/ojas/fuzz",
+  "baseline_clean": {
+    "status": "complete",
+    "execs_done": 119488221,
+    "corpus_count": 2,
+    "saved_crashes": 0,
+    "run_time": 89488
+  },
+  "targets": [
+    {
+      "target": "leak2",
+      "ground_truth": {
+        "category": "secret_dependent_branch",
+        "location": "poly_tomsg"
+      },
+      "afl": {
+        "status": "complete",
+        "execs_done": 120494544,
+        "corpus_count": 20,
+        "saved_crashes": 0,
+        "run_time": 89490
+      },
+      "afl_distinguishes_from_clean": true,
+      "llm": {
+        "status": "INVALIDATED",
+        "located": true,
+        "confirmed": false,
+        "t_stat": -0.167,
+        "category": "secret_dependent_branch",
+        "location": "poly_tomsg() line 9"
+      }
+    },
+    {
+      "target": "leak4",
+      "ground_truth": {
+        "category": "secret_dependent_branch",
+        "location": "indcpa_dec"
+      },
+      "afl": {
+        "status": "complete",
+        "execs_done": 120158729,
+        "corpus_count": 18,
+        "saved_crashes": 0,
+        "run_time": 89490
+      },
+      "afl_distinguishes_from_clean": true,
+      "llm": {
+        "status": "PROMOTED",
+        "located": true,
+        "confirmed": true,
+        "t_stat": -901.4075,
+        "category": "secret_dependent_branch",
+        "location": "indcpa_dec() line 28"
+      }
+    },
+    {
+      "target": "leak5",
+      "ground_truth": {
+        "category": "nonconstant_comparison",
+        "location": "crypto_kem_dec"
+      },
+      "afl": {
+        "status": "complete",
+        "execs_done": 120548452,
+        "corpus_count": 2,
+        "saved_crashes": 0,
+        "run_time": 89489
+      },
+      "afl_distinguishes_from_clean": false,
+      "llm": {
+        "status": "PROMOTED",
+        "located": true,
+        "confirmed": true,
+        "t_stat": 141.0911,
+        "category": "nonconstant_comparison",
+        "location": "crypto_kem_dec() line 36"
+      }
+    }
+  ]
+}

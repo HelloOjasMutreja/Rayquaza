@@ -10,6 +10,25 @@ Format:
 
 ---
 
+## 2026-06-19 [A] AFL++ 24h baseline COMPLETE + LLM-vs-AFL++ comparison (closes Track B Priority-2)
+- What: The 24h AFL++ coverage-fuzzing baseline finished (~24.9h actual, run_time 89490s) across
+  the four targets leak2/leak4/leak5/clean. Ran track-a-target/analysis/compare_llm_vs_afl.py to
+  produce the LLM-adversary-loop vs AFL++ comparison.
+- Settings: AFL++ 4.09c, persistent mode + ASAN, afl-clang-fast -O0 -DKYBER_K=2, -V 86400 with
+  AFL_AUTORESUME across overnight sleeps. ~120M executions per target.
+- Result: 0 crashes on ALL targets (expected — a timing leak is not a memory-safety bug).
+  Corpus paths: leak2=20, leak4=18, leak5=2, clean=2. leak5 (memcmp) corpus is IDENTICAL to the
+  clean baseline. execs: leak2=120.5M, leak4=120.2M, leak5=120.5M, clean=119.5M.
+  Comparison written to shared/findings/comparison_llm_vs_afl_20260619.{json,md}. Per-target LLM
+  outcome (from loop_state snapshots): leak2 located / not-confirmed-this-vector (t=-0.17),
+  leak4 located+confirmed (t=-901), leak5 located+confirmed (t=141).
+- Takeaway: HEADLINE RESULT. AFL++ detected ZERO timing leaks (0 crashes, by construction). At
+  120M executions the leak5 memcmp corpus is indistinguishable from clean (2=2) — coverage
+  fuzzing is structurally blind to the timing channel the LLM located AND oracle-confirmed.
+  The branch leaks (leak2/leak4) add reachable edges so their corpora differ, but AFL still
+  cannot tell they are timing leaks. Closes Track B Priority-2 and resolves B-001 (the harness
+  is no longer a stub — it links the real pqcrystals crypto_kem_dec and ran a full 24h).
+
 ## 2026-06-18 [A] ML-DSA-44 oracle reconfirmed on WSL2/x86 (closes Track B B5 blocker)
 - What: Rebuilt and ran track-a-target/targets/mldsa44_leak1/harness_oracle on WSL2/x86 to give
   Track B the oracle confirmation they could not produce on macOS/arm64 (NEON compiles the 32-byte
