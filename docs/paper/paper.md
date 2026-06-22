@@ -1,4 +1,4 @@
-# PQ-REAPER: LLM-Guided Timing Side-Channel Rediscovery in Post-Quantum Cryptography Implementations
+# Rayquaza: LLM-Guided Timing Side-Channel Rediscovery in Post-Quantum Cryptography Implementations
 
 **Vedanth Dama, Ojas Mutroja**
 Defence Research and Development Organisation — Scientific Analysis Group (DRDO SAG)
@@ -8,9 +8,9 @@ Defence Research and Development Organisation — Scientific Analysis Group (DRD
 
 ## Abstract
 
-Post-quantum cryptographic (PQC) standards are being deployed worldwide, yet their software implementations remain susceptible to classical timing side-channel attacks that the underlying mathematical hardness assumptions do not protect against. Manual auditing of PQC code is slow, expertise-intensive, and cannot scale with the breadth of the ongoing migration. We present **PQ-REAPER** (Post-Quantum Reasoning-Enhanced Adversarial Pipeline for Exploitability and Rediscovery), a three-stage LLM-guided closed-loop pipeline that autonomously identifies, hypothesises, and confirms timing side-channels in PQC source code. The pipeline combines a code-ingestion LLM (codellama:7b) for hypothesis generation, a static secondary scanner for non-constant-time API detection, a reasoning LLM (qwen3:8b) for evidence-based refinement, and a calibrated Welch t-test timing oracle for ground-truth confirmation.
+Post-quantum cryptographic (PQC) standards are being deployed worldwide, yet their software implementations remain susceptible to classical timing side-channel attacks that the underlying mathematical hardness assumptions do not protect against. Manual auditing of PQC code is slow, expertise-intensive, and cannot scale with the breadth of the ongoing migration. We present **Rayquaza**, a three-stage LLM-guided closed-loop pipeline that autonomously identifies, hypothesises, and confirms timing side-channels in PQC source code. The pipeline combines a code-ingestion LLM (codellama:7b) for hypothesis generation, a static secondary scanner for non-constant-time API detection, a reasoning LLM (qwen3:8b) for evidence-based refinement, and a calibrated Welch t-test timing oracle for ground-truth confirmation.
 
-We evaluate PQ-REAPER against six deliberately-weakened implementations drawn from CRYSTALS-Kyber (five targets, Kyber512) and ML-DSA-44 (one target), spanning three vulnerability classes. The pipeline autonomously rediscovered **4 of 5** Kyber512 leaks — all belonging to the `secret_dependent_branch` class — without human guidance. The fifth leak (`nonconstant_comparison`, memcmp Fujisaki-Okamoto comparison) required static-scan direction, confirming a known scaling limitation of 7B-parameter models on constant-time API contract reasoning. As a direct comparison, AFL++ coverage fuzzing ran for 24 hours (~120M executions per target) and achieved **zero** detections: it is structurally incapable of observing timing leaks, not merely slower. For the memcmp-class leak, the AFL++ corpus was identical to the clean baseline, confirming categorical blindness rather than inadequate depth. Cross-scheme transfer to ML-DSA-44 confirmed a 32-byte memcmp challenge-comparison leak (t=164.30, n=50,000, WSL2/x86-64) and uncovered an ISA-level portability boundary: the same oracle is non-detectable on macOS/AArch64 because -O2 compiles short `memcmp` to fixed-width NEON instructions with no per-byte early-exit path. PQ-REAPER operates entirely on open-weight models running locally, without network access to external APIs, making it suitable for air-gapped security research environments.
+We evaluate Rayquaza against six deliberately-weakened implementations drawn from CRYSTALS-Kyber (five targets, Kyber512) and ML-DSA-44 (one target), spanning three vulnerability classes. The pipeline autonomously rediscovered **4 of 5** Kyber512 leaks — all belonging to the `secret_dependent_branch` class — without human guidance. The fifth leak (`nonconstant_comparison`, memcmp Fujisaki-Okamoto comparison) required static-scan direction, confirming a known scaling limitation of 7B-parameter models on constant-time API contract reasoning. As a direct comparison, AFL++ coverage fuzzing ran for 24 hours (~120M executions per target) and achieved **zero** detections: it is structurally incapable of observing timing leaks, not merely slower. For the memcmp-class leak, the AFL++ corpus was identical to the clean baseline, confirming categorical blindness rather than inadequate depth. Cross-scheme transfer to ML-DSA-44 confirmed a 32-byte memcmp challenge-comparison leak (t=164.30, n=50,000, WSL2/x86-64) and uncovered an ISA-level portability boundary: the same oracle is non-detectable on macOS/AArch64 because -O2 compiles short `memcmp` to fixed-width NEON instructions with no per-byte early-exit path. Rayquaza operates entirely on open-weight models running locally, without network access to external APIs, making it suitable for air-gapped security research environments.
 
 ---
 
@@ -28,9 +28,9 @@ Manual auditing does not scale to the breadth of the PQC migration. Formal stati
 
 We ask: *can a large language model, operating directly on C source code, identify and precisely locate timing side-channels that a state-of-the-art coverage-guided fuzzer is structurally blind to?*
 
-This paper presents **PQ-REAPER**, which answers this question affirmatively for the `secret_dependent_branch` leak class and partially for the `nonconstant_comparison` class via a hybrid static-scan approach. The core insight is that LLMs reason about code semantics — the *meaning* of an `if` on a secret coefficient — while coverage fuzzers reason about path reachability. These are complementary capabilities, and the timing side-channel problem requires the former.
+This paper presents **Rayquaza**, which answers this question affirmatively for the `secret_dependent_branch` leak class and partially for the `nonconstant_comparison` class via a hybrid static-scan approach. The core insight is that LLMs reason about code semantics — the *meaning* of an `if` on a secret coefficient — while coverage fuzzers reason about path reachability. These are complementary capabilities, and the timing side-channel problem requires the former.
 
-PQ-REAPER is a three-stage pipeline: Stage 1 ingests C source code and generates ranked vulnerability hypotheses; Stage 3 synthesises timing test vectors; a hardware oracle confirms the signal; Stage 2 refines the hypothesis against oracle evidence. The pipeline is closed-loop: oracle results flow back into the LLM refinement step, and the loop can be iterated. All computation runs on locally-served open-weight models (Ollama), with no external API calls, suitable for classified research environments.
+Rayquaza is a three-stage pipeline: Stage 1 ingests C source code and generates ranked vulnerability hypotheses; Stage 3 synthesises timing test vectors; a hardware oracle confirms the signal; Stage 2 refines the hypothesis against oracle evidence. The pipeline is closed-loop: oracle results flow back into the LLM refinement step, and the loop can be iterated. All computation runs on locally-served open-weight models (Ollama), with no external API calls, suitable for classified research environments.
 
 ### 1.3 Technical Background
 
@@ -50,7 +50,7 @@ t = (mean_A − mean_B) / sqrt(var_A/n + var_B/n)
 
 This paper makes the following contributions:
 
-1. **A three-stage automated pipeline** (PQ-REAPER) that ingests PQC source code, generates ranked timing-leak hypotheses, synthesises test vectors, confirms leaks against a calibrated timing oracle, and refines the hypothesis — operating without human intervention after launch.
+1. **A three-stage automated pipeline** (Rayquaza) that ingests PQC source code, generates ranked timing-leak hypotheses, synthesises test vectors, confirms leaks against a calibrated timing oracle, and refines the hypothesis — operating without human intervention after launch.
 
 2. **A controlled rediscovery study** against six deliberately-weakened PQC implementations. The pipeline autonomously rediscovered 4/5 planted Kyber512 leaks and demonstrated cross-scheme transfer to ML-DSA-44.
 
@@ -62,7 +62,7 @@ This paper makes the following contributions:
 
 ### 1.5 Paper Organisation
 
-Section 2 reviews related work across four relevant research areas. Section 3 describes the PQ-REAPER methodology, including threat model, architecture, and experimental setup. Section 4 presents empirical results across all six targets. Section 5 discusses key findings, limitations, and future directions. Section 6 concludes.
+Section 2 reviews related work across four relevant research areas. Section 3 describes the Rayquaza methodology, including threat model, architecture, and experimental setup. Section 4 presents empirical results across all six targets. Section 5 discusses key findings, limitations, and future directions. Section 6 concludes.
 
 ---
 
@@ -74,7 +74,7 @@ Timing side-channels in lattice-based PQC have been systematically studied as th
 
 KyberSlash [REF-KYBERSLASH] is the most directly relevant prior work: Kannwischer et al. demonstrated that the `memcmp`-vs-`verify` substitution in the CRYSTALS-Kyber reference implementation introduces a timing channel measurable in practice and allowing full private key recovery via adaptive chosen-ciphertext queries. LEAK-5 in our study directly models this attack; our contribution is automating its *detection* rather than its exploitation. Hermelink et al. [REF-HERMELINK] analysed fault-enabled chosen-ciphertext attacks on Kyber, showing that fault injection and timing channels are often co-occurring attack surfaces in PQC implementations. Their work motivates the multi-class vulnerability taxonomy we adopt (§3.2).
 
-The key distinction between all prior work and PQ-REAPER is that prior work assumes the leak location is *known* — attacks are mounted against a known-vulnerable API call or code location. PQ-REAPER addresses the upstream *identification* problem: given the full source code, locate the leak without prior knowledge.
+The key distinction between all prior work and Rayquaza is that prior work assumes the leak location is *known* — attacks are mounted against a known-vulnerable API call or code location. Rayquaza addresses the upstream *identification* problem: given the full source code, locate the leak without prior knowledge.
 
 ### 2.2 LLMs for Security Vulnerability Discovery
 
@@ -82,7 +82,7 @@ The application of large language models to security vulnerability detection is 
 
 Li et al. [REF-AUTOAUDIT] apply LLMs to cyber-security auditing tasks via domain-specific fine-tuning, demonstrating improved detection rates over general-purpose models on security-relevant prompts. Their work highlights the importance of domain alignment — a principle that motivates our prompt engineering for PQC-specific vulnerability classes (§3.3).
 
-PentestGPT [REF-PENTEST-GPT] (Deng et al., USENIX Security 2024) represents the most sophisticated LLM-guided security tool prior to this work: a three-module agentic framework for penetration testing that coordinates reconnaissance, exploitation, and reporting via interacting LLM instances. PentestGPT operates at the system level (network services, web applications) rather than at the source code level, and does not address timing side-channels. Its architecture partially inspired the three-stage pipeline design of PQ-REAPER.
+PentestGPT [REF-PENTEST-GPT] (Deng et al., USENIX Security 2024) represents the most sophisticated LLM-guided security tool prior to this work: a three-module agentic framework for penetration testing that coordinates reconnaissance, exploitation, and reporting via interacting LLM instances. PentestGPT operates at the system level (network services, web applications) rather than at the source code level, and does not address timing side-channels. Its architecture partially inspired the three-stage pipeline design of Rayquaza.
 
 Closest to our approach, Fuzz4All [REF-HYBRID-FUZZ] (Xia et al., ICSE 2024) uses LLMs as a universal input generation and mutation engine for coverage-guided fuzzing across multiple programming languages, identifying 98 bugs in widely-used compilers and solvers. Fuzz4All demonstrates that LLMs can improve fuzzing by generating more semantically meaningful inputs than random mutation — but coverage-guided fuzzing remains unable to detect timing leaks regardless of input quality, as our empirical comparison (§4.7) establishes.
 
@@ -94,7 +94,7 @@ Two mature formal tools address the constant-time verification problem. ct-verif
 
 Both tools are sound (no false negatives within their model) and have been applied to real cryptographic libraries including NaCl, FourQLib, and OpenSSL. Their practical limitation is the need for manual effort to scope the analysis: the analyst must decide which functions to check, which public/secret data labels to assign, and how to bound the analysis depth. Neither tool can be deployed as a zero-configuration scanner across an unfamiliar codebase.
 
-dudect [REF-DUDECT] (Reparaz et al., DATE 2017) takes a complementary approach: automated black-box timing measurement using the TVLA methodology, requiring only a harness that calls the target function with two input classes. dudect automates the *measurement* step but requires a human to specify *what to measure*. PQ-REAPER fills the gap between these tools: it automates the identification step (which functions, which input classes) that both ct-verif and dudect assume is already done by a human analyst.
+dudect [REF-DUDECT] (Reparaz et al., DATE 2017) takes a complementary approach: automated black-box timing measurement using the TVLA methodology, requiring only a harness that calls the target function with two input classes. dudect automates the *measurement* step but requires a human to specify *what to measure*. Rayquaza fills the gap between these tools: it automates the identification step (which functions, which input classes) that both ct-verif and dudect assume is already done by a human analyst.
 
 ### 2.4 Coverage-Guided Fuzzing for Cryptographic Code
 
@@ -102,9 +102,9 @@ AFL++ and its derivatives are the dominant automated vulnerability discovery too
 
 Our empirical comparison (§4.7) confirms this theoretical expectation: 24 hours of AFL++ on six weakened targets produced zero detections. For the memcmp target (LEAK-5), the AFL++ corpus on the weakened implementation was identical to the clean baseline — not merely a failed detection, but complete structural indistinguishability from the attacker's perspective.
 
-### 2.5 Positioning PQ-REAPER
+### 2.5 Positioning Rayquaza
 
-PQ-REAPER occupies a unique position in the landscape: it is the first system to (a) combine LLM-based semantic reasoning with a closed-loop timing oracle for PQC timing side-channel *identification*, (b) operate entirely on open-weight locally-served models suitable for classified environments, and (c) provide a direct empirical comparison against AFL++ on controlled weakened targets. The work is complementary to formal verification (ct-verif, Binsec/Rel) and dynamic measurement (dudect): PQ-REAPER identifies candidate locations and input classes; formal tools can then verify the absence of leaks in uninspected code; dynamic tools can confirm with higher statistical power.
+Rayquaza occupies a unique position in the landscape: it is the first system to (a) combine LLM-based semantic reasoning with a closed-loop timing oracle for PQC timing side-channel *identification*, (b) operate entirely on open-weight locally-served models suitable for classified environments, and (c) provide a direct empirical comparison against AFL++ on controlled weakened targets. The work is complementary to formal verification (ct-verif, Binsec/Rel) and dynamic measurement (dudect): Rayquaza identifies candidate locations and input classes; formal tools can then verify the absence of leaks in uninspected code; dynamic tools can confirm with higher statistical power.
 
 ---
 
@@ -126,7 +126,7 @@ PQ-REAPER occupies a unique position in the landscape: it is the first system to
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                          PQ-REAPER                               │
+│                          Rayquaza                               │
 │                                                                  │
 │  C Source ──► [Stage 1: Ingestion]  codellama:7b                │
 │               ├── Secret-token flagging                          │
@@ -230,7 +230,7 @@ Compilation flags are chosen to preserve the injected timing signal while reflec
 
 ### 3.10 AFL++ Baseline
 
-AFL++ (version 4.x, default configuration, no sanitizers) ran for 24 hours per target on the same weakened implementations used by PQ-REAPER. The harness (`harness_kyber.c`) calls `crypto_kem_dec` with AFL-supplied ciphertext against a fixed secret key, exercising the decapsulation code path. A clean (unweakened) Kyber512 binary was also fuzzed for 24 hours to establish the corpus baseline.
+AFL++ (version 4.x, default configuration, no sanitizers) ran for 24 hours per target on the same weakened implementations used by Rayquaza. The harness (`harness_kyber.c`) calls `crypto_kem_dec` with AFL-supplied ciphertext against a fixed secret key, exercising the decapsulation code path. A clean (unweakened) Kyber512 binary was also fuzzed for 24 hours to establish the corpus baseline.
 
 ---
 
@@ -238,7 +238,7 @@ AFL++ (version 4.x, default configuration, no sanitizers) ran for 24 hours per t
 
 ### 4.1 Kyber512 Rediscovery Summary
 
-**Table 2: PQ-REAPER results on Kyber512 — all five leaks.**
+**Table 2: Rayquaza results on Kyber512 — all five leaks.**
 
 | Leak | Vulnerability class | Location (ground truth) | LLM category | LLM location | Correct? | Oracle t | Mode |
 |---|---|---|---|---|---|---|---|
@@ -278,7 +278,7 @@ The credit structure is important for honest evaluation: the *vulnerability clas
 
 ### 4.3 ML-DSA-44 Cross-Scheme Transfer
 
-PQ-REAPER was run against a weakened ML-DSA-44 `sign.c` with `memcmp(c, c2, 32)` substituting `mld_ct_memcmp`. The static scanner triggered the MANDATORY directive; the LLM correctly emitted `nonconstant_comparison` at `mld_sign_verify_internal()`.
+Rayquaza was run against a weakened ML-DSA-44 `sign.c` with `memcmp(c, c2, 32)` substituting `mld_ct_memcmp`. The static scanner triggered the MANDATORY directive; the LLM correctly emitted `nonconstant_comparison` at `mld_sign_verify_internal()`.
 
 Oracle results:
 - **WSL2/x86-64** (gcc -O2, REPS=100, n=50,000): mean_A=2.482 ns/call (c==c2, full 32-byte scan), mean_B=2.193 ns/call (c[0]≠c2[0], exits at byte 0). **t=164.30, significant=true.** The 0.289 ns/call delta is amplified by REPS=100 to a clear signal.
@@ -288,7 +288,7 @@ Oracle results:
 
 ### 4.4 LLM vs. AFL++ Comparison
 
-**Table 3: AFL++ 24h baseline vs. PQ-REAPER on three selected targets.**
+**Table 3: AFL++ 24h baseline vs. Rayquaza on three selected targets.**
 
 | Target | AFL execs (~24h) | AFL corpus | vs. clean | AFL detected? | LLM located? | LLM oracle t |
 |---|---|---|---|---|---|---|
@@ -323,7 +323,7 @@ This is consistent with 7B-scale behaviour: the model reasons about structural c
 
 ### 5.1 Ablation: Autonomous vs. Scanner-Directed
 
-We ran PQ-REAPER in two modes on all five Kyber targets:
+We ran Rayquaza in two modes on all five Kyber targets:
 
 - **Mode A (autonomous)**: Stage 1 only, no static secondary scan, no MANDATORY directive.
 - **Mode B (hybrid)**: Stage 1 + static secondary scan + MANDATORY directive when triggered.
@@ -367,7 +367,7 @@ The practical implication is significant: a timing audit conducted on ARM develo
 
 ### 5.5 Future Work: Multi-LLM Comparison
 
-The most directly impactful extension is replacing codellama:7b with a larger-context, instruction-following model — Claude (claude-sonnet-4-6 or claude-opus-4-8) or GPT-4o — and evaluating on full Kyber and Dilithium translation units without single-function extraction. The PQ-REAPER engine supports this substitution via the `RAYQ_CODE_MODEL` and `RAYQ_REASON_MODEL` environment variables; the model swap requires no engine code changes.
+The most directly impactful extension is replacing codellama:7b with a larger-context, instruction-following model — Claude (claude-sonnet-4-6 or claude-opus-4-8) or GPT-4o — and evaluating on full Kyber and Dilithium translation units without single-function extraction. The Rayquaza engine supports this substitution via the `RAYQ_CODE_MODEL` and `RAYQ_REASON_MODEL` environment variables; the model swap requires no engine code changes.
 
 **The central research question for the multi-LLM comparison** is whether the `nonconstant_comparison` blind spot observed in codellama:7b persists at larger model scales. Two hypotheses are plausible:
 
@@ -384,7 +384,7 @@ The sandbox infrastructure delivered by Track A (`sandbox/` directory, model gat
 
 ## 6. Conclusion
 
-We presented PQ-REAPER, a closed-loop LLM-guided pipeline for timing side-channel rediscovery in post-quantum cryptographic implementations. Against six deliberately-weakened implementations of CRYSTALS-Kyber (5 targets) and ML-DSA-44 (1 target), the pipeline demonstrated:
+We presented Rayquaza, a closed-loop LLM-guided pipeline for timing side-channel rediscovery in post-quantum cryptographic implementations. Against six deliberately-weakened implementations of CRYSTALS-Kyber (5 targets) and ML-DSA-44 (1 target), the pipeline demonstrated:
 
 - **4/5 autonomous Kyber rediscoveries** — all `secret_dependent_branch` class, located precisely to function and line number, confirmed by calibrated timing oracles with |t| ranging from 141 to 2421.
 - **1/5 scanner-directed** — the `nonconstant_comparison` class (memcmp FO comparison) requires static-scan direction for the 7B model; the hybrid achieves correct identification in both category and location.
@@ -393,7 +393,7 @@ We presented PQ-REAPER, a closed-loop LLM-guided pipeline for timing side-channe
 
 The principal limitation is the 7B model's `nonconstant_comparison` blind spot, attributable to the difficulty of reasoning about CT API contracts at the 7B parameter scale. This is addressed at minimal cost by the static secondary scanner, achieving practical completeness (5/5) in the hybrid configuration. Future work will evaluate Claude and GPT-4o class models — accessible via the `RAYQ_CODE_MODEL` / `RAYQ_REASON_MODEL` environment variable interface — on full Kyber translation units to determine whether the autonomous detection rate improves at larger parameter scales and whether focused-function pre-processing becomes unnecessary.
 
-PQ-REAPER is implemented entirely with open-weight models, runs without external network access, and is suitable for air-gapped classified security research environments. All target weakening, oracle harnesses, and engine source are documented in the accompanying repository.
+Rayquaza is implemented entirely with open-weight models, runs without external network access, and is suitable for air-gapped classified security research environments. All target weakening, oracle harnesses, and engine source are documented in the accompanying repository.
 
 ---
 
