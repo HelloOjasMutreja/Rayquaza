@@ -122,7 +122,7 @@ shared/feedback/timing_LEAK5-ORACLE_1781600688.json  →  tests/viz/fixtures/tim
 This is a realistic engine stdout transcript for parser tests:
 
 ```
-PQ-REAPER Track B — LLM Adversary Engine
+Rayquaza Track B — LLM Adversary Engine
 Target: kyber512_leak5_focused.c
 Models: codellama:7b (analysis) / qwen3:8b (refinement)
 Mode: live

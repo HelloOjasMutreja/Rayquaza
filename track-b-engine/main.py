@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main.py — PQ-REAPER Track B CLI entry point for the LLM adversary loop (Phase B3).
+main.py — Rayquaza Track B CLI entry point for the LLM adversary loop (Phase B3).
 
 Usage:
   python3 track-b-engine/main.py --target <path.c> --cycles <n> [--use-mock] [--resume]
@@ -19,7 +19,7 @@ from adversary_loop import AdversaryLoop  # noqa: E402
 
 def parse_args():
     p = argparse.ArgumentParser(
-        description="PQ-REAPER Track B — LLM Adversary Engine"
+        description="Rayquaza Track B — LLM Adversary Engine"
     )
     p.add_argument("--target", required=True, help="path to .c file to analyze")
     p.add_argument("--cycles", type=int, default=3,
@@ -35,7 +35,7 @@ def main():
     args = parse_args()
     mode = "mock" if args.use_mock else "live"
 
-    print("PQ-REAPER Track B — LLM Adversary Engine")
+    print("Rayquaza Track B — LLM Adversary Engine")
     print(f"Target: {Path(args.target).name}")
     print("Models: codellama:7b (analysis) / qwen3:8b (refinement)")
     print(f"Mode: {mode}")

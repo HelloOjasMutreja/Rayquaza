@@ -1,4 +1,4 @@
-# Experiment Log — PQ-REAPER (Root)
+# Experiment Log — Rayquaza (Root)
 
 Append-only. One entry per experiment/run. Never edit past entries.
 Format: [YYYY-MM-DD HH:MM] [A/B] Phase: <phase> | Task: <what was run> | Result: <outcome> | Next: <next step>
