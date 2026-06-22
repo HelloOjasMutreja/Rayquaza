@@ -5,20 +5,18 @@ Format: [STATUS] date [track] description.
 STATUS = OPEN / IN-PROGRESS / RESOLVED.
 
 - [RESOLVED] 2026-06-14 [A] Confirm liboqs build flags to share with Track B. → Logged in SYNC.md.
-- [OPEN] 2026-06-14 [B] [B-001] GitHub#2 AFL++ harness (track-b-engine/fuzzing/harness.c) uses a STUB OQS_KEM_decaps returning 0. Replace with real liboqs. NOTE: this is NOT blocked on Track A — A0 build flags are already delivered (see SYNC.md); link -loqs -lssl -lcrypto -lpthread against ~/liboqs-install. Status: OPEN (Track B internal work).
-- [DEFERRED] 2026-06-14→2026-06-16 [B] [B-002] GitHub#3 Stage 3 vector generation: codellama:7b produces C that is structurally close but does NOT compile (untyped global arrays, undeclared identifiers, missing <math.h>). DEFERRED for B4: generated C vectors are documentation artifacts only; real timing measurement runs through Track A's harness_oracle, not by compiling/running these vectors. Candidate fixes: tighten stage3_vector.txt with a full worked example, add gcc compile+auto-retry to looks_like_c() validation. Not blocking B4.
+- [RESOLVED] 2026-06-14→2026-06-19 [B/A] [B-001] GitHub#2 AFL++ harness used a STUB OQS_KEM_decaps. RESOLVED: harness_kyber.c now links the real pqcrystals Kyber512 reference crypto_kem_dec (not a stub); Track A ran the full 24h baseline on WSL2 (~120M execs/target, 0 crashes). GitHub#2 closed 2026-06-19. See comparison_llm_vs_afl_20260619.{json,md}.
+- [RESOLVED] 2026-06-14→2026-06-19 [B] [B-002] GitHub#3 Stage 3 vector generation: codellama:7b produced C that didn't compile. RESOLVED by Track B 2026-06-19: stage3_vector.txt rewritten as a fill-in-the-blank skeleton, _compile_check() added after each LLM call in vectorize(), and _fallback_vector() deterministically generates a guaranteed-compilable harness on repeated failure. (GitHub#3 still to be closed.)
 - [RESOLVED] 2026-06-16 [B] [B-003] B4 real-oracle runs previously blocked: targets assumed for B4 were absent on 2026-06-16. RESOLVED: Track A delivered A2 (timing harness) + A3/A4 (LEAK-2, LEAK-4, LEAK-5 targets + harness_oracle) on 2026-06-16 — see SYNC.md. B4 real runs can now proceed.
 - [RESOLVED] 2026-06-17 [B] [B-004] LEAK-5 rediscovery MISS (then FIXED). codellama:7b initially missed the planted non-constant-time memcmp (KyberSlash1) on kyber512_leak5_focused.c — it returned a single secret_dependent_branch hypothesis on the sk-indexing copy and never surfaced `memcmp(ct, cmp, KYBER_CIPHERTEXTBYTES)`; a passive "; also contains: nonconstant_comparison" label did not help. RESOLVED 2026-06-17 by candidate fix (b): ingest.py analyze() now builds a "MANDATORY FINDINGS" directive from the static secondary-scan matches and PREPENDS it to the prompt ("function X contains a {category} construct, confirmed by static scan; you MUST output a finding with category {category}"). After the fix, two independent runs both surface the memcmp: standalone ingest -> nonconstant_comparison @ crypto_kem_dec; live loop -> H001 nonconstant_comparison @ crypto_kem_dec line 36, oracle t=141.09 significant -> PROMOTED. Kyber rediscovery now 3/3 (LEAK-2/4/5). The directive only fires when the static scan actually matches, so it won't fabricate findings on constant-time code.
 
-- [OPEN] 2026-06-17 [B] [B-005] PRIORITY-2 real AFL++ baseline BLOCKED on environment. This macOS/arm64
-  host has no AFL++ (afl-fuzz/afl-clang-fast absent), no Docker, and no ~/liboqs-install. AFL++ + the
-  project Dockerfile are Linux-oriented; Track A built liboqs on WSL2/Ubuntu. A real 24h coverage-guided
-  fuzz of the weakened Kyber targets must run on the WSL2/Linux box, not here. Nothing was faked. Options:
-  (a) run on the WSL2 box where liboqs already builds (recommended — apples-to-apples with Track A); or
-  (b) Track B prepares a Linux-ready harness (replace the stub OQS_KEM_decaps with real liboqs decaps,
-  retarget run_baseline.sh at kyber512_leak{2,4,5}, capture plot_data + crashes per target) for execution
-  there. Also re-confirm A0 liboqs flags are still current (Track A touched liboqs during LEAK-1/3 work).
-  Status: OPEN (blocked on Linux environment / cross-track).
+- [RESOLVED] 2026-06-17→2026-06-19 [B/A] [B-005] PRIORITY-2 real AFL++ baseline was BLOCKED on the
+  macOS/arm64 host (no AFL++/Docker/liboqs). RESOLVED via option (a): Track A ran the full 24h
+  coverage-guided baseline on WSL2 with AFL++ 4.09c against the weakened Kyber targets
+  (leak2/leak4/leak5 + clean), ~120M execs/target, 0 crashes, with the LLM-vs-AFL comparison
+  delivered (shared/findings/comparison_llm_vs_afl_20260619.{json,md}; regenerate with
+  track-a-target/analysis/compare_llm_vs_afl.py). Headline: leak5 corpus = clean (coverage blind to
+  the memcmp timing leak the LLM confirmed at t=141). Closes Track B Priority-2.
 
 ## A1 — Candidate Timing Leak Locations in Kyber512 (pqcrystals-kyber_kyber512_ref)
 
