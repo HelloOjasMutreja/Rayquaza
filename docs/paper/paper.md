@@ -332,11 +332,11 @@ The practical implication: a timing audit conducted on ARM development hardware 
 
 **Timing side-channels in PQC**: Ravi et al. [REF-RAVI] survey implementation pitfalls in lattice-based schemes. KyberSlash [REF-KYBERSLASH] demonstrated full key recovery from the exact `memcmp` substitution we plant as LEAK-5. Hermelink et al. [REF-HERMELINK] analysed fault and timing attacks on Kyber. Our work is the first to automate the *identification* phase rather than assuming knowledge of the leak location.
 
-**LLMs for vulnerability discovery**: Liang et al. [REF-LLM-VULN] evaluated GPT-4 on CTF challenges. Yang et al. [REF-AUTOAUDIT] use LLMs for smart-contract auditing. PentestGPT [REF-PENTEST-GPT] guides penetration testing at a high level. Closest to our work, automated fuzzing-LLM hybrids [REF-HYBRID-FUZZ] use LLMs to generate seeds for coverage fuzzers, but do not address timing channels. None of these works apply LLM reasoning to PQC timing side-channels or compare against a fuzzing baseline on the same targets.
+**LLMs for vulnerability discovery**: Noever [REF-LLM-VULN] evaluated GPT-4's ability to identify and patch vulnerable software across multiple languages. Yang et al. [REF-AUTOAUDIT] apply LLMs to smart-contract security auditing. PentestGPT [REF-PENTEST-GPT] guides penetration testing at a high level. Closest to our work, automated fuzzing-LLM hybrids [REF-HYBRID-FUZZ] use LLMs to generate seeds for coverage fuzzers, but do not address timing channels. None of these works apply LLM reasoning to PQC timing side-channels or compare against a fuzzing baseline on the same targets.
 
 **Constant-time verification**: ct-verif [REF-CTVERIF] and Binsec/Rel [REF-BINSEC] formally verify constant-time properties, but require manual annotation or model construction and do not generalise across codebases without human effort. dudect [REF-DUDECT] automates timing measurement but requires a human to identify which functions to test. PQ-REAPER addresses the identification step that these tools assume is already done.
 
-**Coverage-guided fuzzing for cryptographic code**: MAZE [REF-MAZE] adds taint tracking to guide AFL++ towards secret-dependent paths. Even with secret-dependent guidance, coverage fuzzing cannot detect timing leaks without an explicit timing oracle: it can reach the leaky code path but cannot observe that it takes different amounts of time. Our comparison (§6.4) establishes this boundary empirically.
+**Coverage-guided fuzzing for cryptographic code**: Taint-guided and differential fuzzing approaches [REF-MAZE] have extended AFL++ to steer coverage towards secret-dependent paths. Even with such guidance, coverage fuzzing cannot detect timing leaks without an explicit timing oracle: it can reach the leaky code path but cannot observe that it takes different amounts of time. Our comparison (§6.4) establishes this boundary empirically. (Note: [REF-MAZE] citation requires replacement — see References.)
 
 ---
 
@@ -357,22 +357,20 @@ PQ-REAPER is implemented entirely with open-weight models, runs without external
 
 ## References
 
-*(Placeholder citations — to be replaced with formal bibliography for submission)*
-
-- [REF-CRYSTALS] Avanzi et al., "CRYSTALS-Kyber Algorithm Specifications and Supporting Documentation," NIST PQC Round 3 Submission, 2021.
-- [REF-MLDSA] NIST, "Module-Lattice-Based Digital Signature Standard," FIPS 204, 2024.
-- [REF-KYBERSLASH] Kannwischer et al., "KyberSlash: Exploiting secret-dependent division timings in Kyber implementations," 2024.
-- [REF-TTEST] Becker et al., "Test Vector Leakage Assessment (TVLA) Methodology in Practice," IACR 2013.
-- [REF-RAVI] Ravi et al., "Side-channel and Fault-injection attacks over Lattice-based Post-quantum Schemes," TCHES 2019.
-- [REF-HERMELINK] Hermelink et al., "Fault-enabled chosen-ciphertext attacks on Kyber," ASIACRYPT 2021.
-- [REF-LLM-VULN] Liang et al., "Can Large Language Models Find And Fix Vulnerable Software?," arXiv 2023.
-- [REF-AUTOAUDIT] Yang et al., "LLM-Powered Smart Contract Vulnerability Detection," 2024.
-- [REF-PENTEST-GPT] Deng et al., "PentestGPT: An LLM-empowered Automatic Penetration Testing Framework," USENIX Security 2024.
-- [REF-HYBRID-FUZZ] Xia et al., "Fuzz4All: Universal Fuzzing with Large Language Models," ICSE 2024.
-- [REF-CTVERIF] Almeida et al., "Verifying Constant-Time Implementations," USENIX Security 2016.
-- [REF-BINSEC] Daniel et al., "Binsec/Rel: Efficient Relational Symbolic Execution for Constant-Time at Binary-Level," IEEE S&P 2020.
-- [REF-DUDECT] Reparaz et al., "Dude, is my code constant time?," DATE 2017.
-- [REF-MAZE] Wang et al., "MAZE: Towards Automated Heap Feng Shui," 2021.
+- [REF-CRYSTALS] R. Avanzi, J. Bos, L. Ducas, E. Kiltz, T. Lepoint, V. Lyubashevsky, J. M. Schanck, P. Schwabe, G. Seiler, and D. Stehlé, "CRYSTALS-Kyber Algorithm Specifications and Supporting Documentation," NIST PQC Round 3 Submission, v3.02, 2021. URL: https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf. (Standardised as NIST FIPS 203, DOI: 10.6028/NIST.FIPS.203, 2024.)
+- [REF-MLDSA] National Institute of Standards and Technology, "Module-Lattice-Based Digital Signature Standard," FIPS 204, 2024. DOI: 10.6028/NIST.FIPS.204.
+- [REF-KYBERSLASH] M. J. Kannwischer, B. Kannwischer, and P. Schwabe, "KyberSlash: Exploiting secret-dependent division timings in Kyber implementations," IACR Transactions on Cryptographic Hardware and Embedded Systems (TCHES), 2025. ePrint: https://eprint.iacr.org/2024/1049. DOI: https://tches.iacr.org/index.php/TCHES/article/view/12046.
+- [REF-TTEST] G. Becker, J. Cooper, E. DeMulder, G. Goodwill, J. Jaffe, G. Kenworthy, T. Kouzminov, A. Leiserson, M. Marson, P. Rohatgi, and S. Saab, "Test Vector Leakage Assessment (TVLA) Methodology in Practice," International Cryptographic Module Conference (ICMC), 2013. Available via Semantic Scholar: https://www.semanticscholar.org/paper/Test-Vector-Leakage-Assessment-(TVLA)-Methodology-Becker-Cooper/...
+- [REF-RAVI] P. Ravi, S. Bhasin, S. S. Roy, and A. Chattopadhyay, "Side-channel and Fault-injection attacks over Lattice-based Post-quantum Schemes (Kyber, Dilithium): Survey and New Results," ACM Transactions on Embedded Computing Systems (TECS), vol. 22, no. 2, 2023. DOI: 10.1145/3603170. ePrint: https://eprint.iacr.org/2022/737. (Note: earlier drafts attributed to TCHES 2019 — the definitive publication is ACM TECS 2023.)
+- [REF-HERMELINK] J. Hermelink, P. Pessl, and T. Pöppelmann, "Fault-Enabled Chosen-Ciphertext Attacks on Kyber," in Progress in Cryptology — INDOCRYPT 2021, LNCS vol. 13143, pp. 311–334. DOI: 10.1007/978-3-030-92518-5_15. ePrint: https://eprint.iacr.org/2021/1222. (Note: venue is INDOCRYPT 2021, not ASIACRYPT.)
+- [REF-LLM-VULN] D. Noever, "Can Large Language Models Find And Fix Vulnerable Software?," arXiv:2308.10345, 2023. URL: https://arxiv.org/abs/2308.10345.
+- [REF-AUTOAUDIT] Z. Li et al. (ddzipp), "AutoAudit — The LLM for Cyber Security," GitHub, 2024. URL: https://github.com/ddzipp/AutoAudit. (No formal proceedings DOI available at time of writing; verify if a conference version has been published.)
+- [REF-PENTEST-GPT] G. Deng, Y. Liu, V. Mayoral-Vilches, P. Liu, Y. Li, Y. Xu, T. Zhang, Y. Liu, M. Pinzger, and S. Rass, "PentestGPT: Evaluating and Harnessing Large Language Models for Automated Penetration Testing," in Proc. 33rd USENIX Security Symposium, 2024. URL: https://www.usenix.org/conference/usenixsecurity24/presentation/deng.
+- [REF-HYBRID-FUZZ] C. S. Xia, M. Paltenghi, J. L. Tian, M. Pradel, and L. Zhang, "Fuzz4All: Universal Fuzzing with Large Language Models," in Proc. IEEE/ACM 46th International Conference on Software Engineering (ICSE), 2024. DOI: 10.1145/3597503.3639121. arXiv: https://arxiv.org/abs/2308.04748.
+- [REF-CTVERIF] J. B. Almeida, M. Barbosa, G. Barthe, F. Dupressoir, and M. Emmi, "Verifying Constant-Time Implementations," in Proc. 25th USENIX Security Symposium, pp. 53–70, 2016. URL: https://www.usenix.org/conference/usenixsecurity16/technical-sessions/presentation/almeida. ACM DL: https://dl.acm.org/doi/10.5555/3241094.3241100.
+- [REF-BINSEC] L.-A. Daniel, S. Bardin, and T. Rezk, "Binsec/Rel: Efficient Relational Symbolic Execution for Constant-Time at Binary-Level," in Proc. IEEE Symposium on Security and Privacy (S&P), pp. 1021–1038, 2020. arXiv: https://arxiv.org/abs/1912.08788.
+- [REF-DUDECT] O. Reparaz, J. Balasch, and I. Verbauwhede, "Dude, is my code constant time?," in Proc. Design, Automation & Test in Europe (DATE), pp. 1701–1706, 2017. IEEE: https://ieeexplore.ieee.org/document/7927267/. ACM DL: https://dl.acm.org/doi/10.5555/3130379.3130776. ePrint: https://eprint.iacr.org/2016/1123.
+- [REF-MAZE] **[CITATION NEEDS VERIFICATION]** The original placeholder "Wang et al., MAZE: Towards Automated Heap Feng Shui, 2021" refers to a heap-exploitation paper and does not match the §8 description ("taint tracking to guide AFL++ towards secret-dependent paths"). The closest matching work is S. Nilizadeh, Y. Noller, and C. Pasareanu, "DIFFUZZ: Differential Fuzzing for Side-Channel Analysis," ICSE 2019, arXiv: https://arxiv.org/abs/1811.07005. Replace with the correct citation before submission.
 
 ---
 
