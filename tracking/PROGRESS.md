@@ -58,6 +58,15 @@ Tag entries [A] (Track A) or [B] (Track B). Use ISO dates.
   added after each LLM call in vectorize(); (3) on second compile failure, _fallback_vector()
   generates a guaranteed-compilable harness deterministically from the function signature
   (no LLM). Fallback files tagged _fallback in filename.
+- 2026-06-22 [A] Integration DONE: LEAK-1/2/3/4/5 adversary loop complete. FINAL RESULT: 4/5 Kyber
+  autonomous (LEAK-1/2/3/4 secret_dependent_branch class), 1/5 hint-assisted (LEAK-5
+  nonconstant_comparison). MLDSA-LEAK-1 oracle CONFIRMED on WSL2/x86 (t=164.30).
+- 2026-06-22 [B] B6 paper draft DONE — docs/paper/paper.md restructured to standard academic format:
+  Abstract, Introduction (with §1.3 Technical Background), Literature Review (§2 with 5 sub-sections),
+  Methodology (§3, merged Threat Model + Architecture + Experimental Setup), Results (§4), Discussion
+  (§5 with §5.5 Multi-LLM Future Work), Conclusion (§6). All §8 [REF-*] placeholders replaced with
+  real DOIs/URLs; 3 errors corrected (Ravi venue, Hermelink venue, LLM-VULN author); [REF-MAZE]
+  flagged for manual replacement before submission.
 
 - 2026-06-19 [A] Integration COMPLETE: LEAK-1/2/3/4/5 adversary loop done. FINAL RESULT: 4/5 Kyber
   autonomous (LEAK-1/2/3/4 secret_dependent_branch), 1/5 hint-assisted (LEAK-5 nonconstant_comparison).
