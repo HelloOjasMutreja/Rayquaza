@@ -242,11 +242,11 @@ AFL++ (version 4.x, default configuration, no sanitizers) ran for 24 hours per t
 
 | Leak | Vulnerability class | Location (ground truth) | LLM category | LLM location | Correct? | Oracle t | Mode |
 |---|---|---|---|---|---|---|---|
-| LEAK-1 | `secret_dependent_branch` | `cmov()` line 9 | `secret_dependent_branch` | `cmov()` line 9 | ✅ | 213.48 | Autonomous |
-| LEAK-2 | `secret_dependent_branch` | `poly_tomsg()` | `secret_dependent_branch` | `poly_tomsg()` line 9 | ✅ | −139.91* | Autonomous |
-| LEAK-3 | `secret_dependent_branch` | `basemul()` line 25 | `secret_dependent_branch` | `basemul()` line 25 | ✅ | −2421.91 | Autonomous |
-| LEAK-4 | `secret_dependent_branch` | `indcpa_dec()` line 28 | `secret_dependent_branch` | `indcpa_dec()` line 28 | ✅ | −901.41 | Autonomous |
-| LEAK-5 | `nonconstant_comparison` | `crypto_kem_dec()` line 36 | `nonconstant_comparison` | `crypto_kem_dec()` line 36 | ✅ | 141.09 | Scanner-directed |
+| LEAK-1 | `secret_dependent_branch` | `cmov()` line 9 | `secret_dependent_branch` | `cmov()` line 9 | Yes | 213.48 | Autonomous |
+| LEAK-2 | `secret_dependent_branch` | `poly_tomsg()` | `secret_dependent_branch` | `poly_tomsg()` line 9 | Yes | −139.91* | Autonomous |
+| LEAK-3 | `secret_dependent_branch` | `basemul()` line 25 | `secret_dependent_branch` | `basemul()` line 25 | Yes | −2421.91 | Autonomous |
+| LEAK-4 | `secret_dependent_branch` | `indcpa_dec()` line 28 | `secret_dependent_branch` | `indcpa_dec()` line 28 | Yes | −901.41 | Autonomous |
+| LEAK-5 | `nonconstant_comparison` | `crypto_kem_dec()` line 36 | `nonconstant_comparison` | `crypto_kem_dec()` line 36 | Yes | 141.09 | Scanner-directed |
 
 *LEAK-2: oracle t under the LLM's test vector was −0.17 (not significant). The ground-truth misprediction vector (t=−139.91) was constructed manually. See §4.2.
 
@@ -293,9 +293,9 @@ Oracle results:
 | Target | AFL execs (~24h) | AFL corpus | vs. clean | AFL detected? | LLM located? | LLM oracle t |
 |---|---|---|---|---|---|---|
 | Clean baseline | 119,488,221 | 2 paths | — | — | — | — |
-| LEAK-2 (`poly_tomsg`, branch) | 120,494,544 | 20 paths | +18 paths | ✗ | ✅ | −139.91 |
-| LEAK-4 (`indcpa_dec`, loop) | 120,158,729 | 18 paths | +16 paths | ✗ | ✅ | −901.41 |
-| LEAK-5 (`crypto_kem_dec`, memcmp) | 120,548,452 | 2 paths | **0 paths** | ✗ | ✅ | 141.09 |
+| LEAK-2 (`poly_tomsg`, branch) | 120,494,544 | 20 paths | +18 paths | No | Yes | −139.91 |
+| LEAK-4 (`indcpa_dec`, loop) | 120,158,729 | 18 paths | +16 paths | No | Yes | −901.41 |
+| LEAK-5 (`crypto_kem_dec`, memcmp) | 120,548,452 | 2 paths | **0 paths** | No | Yes | 141.09 |
 
 Three key observations emerge:
 
@@ -330,8 +330,8 @@ We ran Rayquaza in two modes on all five Kyber targets:
 
 | Mode | LEAK-1 | LEAK-2 | LEAK-3 | LEAK-4 | LEAK-5 | Total |
 |---|---|---|---|---|---|---|
-| Mode A (autonomous) | ✅ | ✅ | ✅ | ✅ | ✗ | **4/5** |
-| Mode B (hybrid) | ✅ | ✅ | ✅ | ✅ | ✅ | **5/5** |
+| Mode A (autonomous) | Yes | Yes | Yes | Yes | No | **4/5** |
+| Mode B (hybrid) | Yes | Yes | Yes | Yes | Yes | **5/5** |
 
 Mode A establishes baseline LLM autonomous coverage. Mode B demonstrates practical completeness via hybrid. The MANDATORY directive fires only when the static scan positively matches — it cannot introduce false positives on clean code, and it does not fire for `secret_dependent_branch` findings where the LLM succeeds autonomously.
 
