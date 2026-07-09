@@ -194,7 +194,7 @@ class CodeIngester:
                 {"role": "user", "content": user_content},
             ],
         }
-        resp = requests.post(OLLAMA_URL, json=payload, timeout=180)
+        resp = requests.post(OLLAMA_URL, json=payload, timeout=600)
         resp.raise_for_status()
         return resp.json().get("message", {}).get("content", "")
 
