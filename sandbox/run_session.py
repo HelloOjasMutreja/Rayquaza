@@ -50,6 +50,13 @@ class RunSession:
             "RAYQ_REASON_MODEL": self._model,
             "RAYQ_STATIC_SCAN": "1" if self._static_scan else "0",
         }
+        # Guard against a stale loop_state.json being misread as this run's output
+        # (e.g. if the engine subprocess crashes before writing fresh state).
+        try:
+            LOOP_STATE.unlink()
+        except FileNotFoundError:
+            pass
+
         started = time.time()
         state = RunState(run_id=self._run_id, model_label=f"{self._model} (live)")
 
@@ -94,22 +101,26 @@ class RunSession:
         """Derive located/confirmed from the loop_state the engine wrote for this run."""
         located = confirmed = autonomous = False
         t_stat = None
-        verdict = "UNKNOWN"
+        verdict = "NO_OUTPUT"   # default: engine wrote no matching state (crash / no result)
         cycles = 0
+        # Only trust a loop_state this run actually produced: its target_file basename
+        # must match the target we analysed. Otherwise it is stale / another target.
         if LOOP_STATE.exists():
             data = load_loop_state(LOOP_STATE)
-            cycles = data.get("current_cycle", 0)
-            hyps = data.get("hypotheses", [])
-            if hyps:
-                best = max(hyps, key=lambda h: abs(h.get("t_statistic") or 0.0))
-                gt = GROUND_TRUTH.get(self._target_id, {})
-                cat = best.get("category", "")
-                loc = best.get("location", "")
-                located = (cat == gt.get("category")) and (gt.get("location", "") in loc)
-                confirmed = bool(best.get("significant"))
-                t_stat = best.get("t_statistic")
-                verdict = best.get("status", "UNKNOWN")
-                autonomous = "MANDATORY" not in (best.get("evidence", "") or "").upper()
+            if Path(data.get("target_file", "")).name == self._target_c.name:
+                cycles = data.get("current_cycle", 0)
+                verdict = "UNCHANGED"
+                hyps = data.get("hypotheses", [])
+                if hyps:
+                    best = max(hyps, key=lambda h: abs(h.get("t_statistic") or 0.0))
+                    gt = GROUND_TRUTH.get(self._target_id, {})
+                    cat = best.get("category", "")
+                    loc = best.get("location", "")
+                    located = (cat == gt.get("category")) and (gt.get("location", "") in loc)
+                    confirmed = bool(best.get("significant"))
+                    t_stat = best.get("t_statistic")
+                    verdict = best.get("status", "UNCHANGED")
+                    autonomous = "MANDATORY" not in (best.get("evidence", "") or "").upper()
         return TargetResult(
             target_id=self._target_id, located=located, confirmed=confirmed,
             t_stat=t_stat, cycles=cycles, wall_seconds=round(ended - started, 1),

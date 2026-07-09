@@ -119,7 +119,7 @@ class CodeIngester:
 
     def preprocess(self, filepath) -> dict:
         path = Path(filepath)
-        raw_source = path.read_text()
+        raw_source = path.read_text(encoding="utf-8")
         clean = self.strip_comments(raw_source)
 
         functions = []
@@ -242,7 +242,7 @@ class CodeIngester:
             print("ERROR: 'requests' not installed. Run: pip3 install requests")
             sys.exit(1)
 
-        system_prompt = PROMPT_FILE.read_text()
+        system_prompt = PROMPT_FILE.read_text(encoding="utf-8")
 
         # Prefer the combined set (token-flagged + secondary-scan); fall back
         # to flagged-only for callers built before the secondary scan existed.
@@ -321,7 +321,7 @@ class CodeIngester:
             "count": len(hypotheses),
             "hypotheses": [asdict(h) for h in hypotheses],
         }
-        out_path.write_text(json.dumps(payload, indent=2))
+        out_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return str(out_path)
 
 

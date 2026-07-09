@@ -74,7 +74,7 @@ def main():
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     out_path = OUTPUT_DIR / f"mock_timing_{timestamp}.json"
-    out_path.write_text(json.dumps(result, indent=2))
+    out_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
 
     print(json.dumps(result, indent=2))
     print(f"\nSaved to: {out_path}")

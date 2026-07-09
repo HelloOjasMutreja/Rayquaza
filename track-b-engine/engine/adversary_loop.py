@@ -338,7 +338,7 @@ class AdversaryLoop:
 
     # -- VECTORIZE ------------------------------------------------------------
     def vectorize(self, hyp: Hypothesis) -> str:
-        prompt = STAGE3_PROMPT.read_text()
+        prompt = STAGE3_PROMPT.read_text(encoding="utf-8")
         hyp_json = json.dumps(asdict(hyp))
         sig = self._signature_for(hyp)
         system = (
@@ -380,7 +380,7 @@ class AdversaryLoop:
 
         suffix = "_fallback" if "fallback: LLM vector" in src else ""
         out = VECTORS_DIR / f"vec_{hyp.id}_{_ts()}{suffix}.c"
-        out.write_text(src)
+        out.write_text(src, encoding="utf-8")
         return str(out)
 
     # -- WAIT FOR FEEDBACK ----------------------------------------------------
@@ -402,7 +402,7 @@ class AdversaryLoop:
             # fall back to newest mock file
             files = sorted(FEEDBACK_DIR.glob("mock_timing_*.json"),
                            key=lambda p: p.stat().st_mtime)
-            return json.loads(files[-1].read_text()) if files else None
+            return json.loads(files[-1].read_text(encoding="utf-8")) if files else None
 
     def _poll_feedback(self, hyp: Hypothesis):
         deadline = time.time() + FEEDBACK_TIMEOUT_S
@@ -413,7 +413,7 @@ class AdversaryLoop:
             matches = list(FEEDBACK_DIR.glob(f"timing_{hyp.id}_*.json"))
             if matches:
                 newest = max(matches, key=lambda p: p.stat().st_mtime)
-                return json.loads(newest.read_text())
+                return json.loads(newest.read_text(encoding="utf-8"))
             print(f"    ...waiting for feedback file timing_{hyp.id}_*.json "
                   f"in {FEEDBACK_DIR} (poll every {POLL_INTERVAL_S}s)")
             time.sleep(POLL_INTERVAL_S)
@@ -423,7 +423,7 @@ class AdversaryLoop:
 
     # -- REFINE ---------------------------------------------------------------
     def refine(self, hyp: Hypothesis, timing: dict) -> dict:
-        prompt = STAGE2_PROMPT.read_text()
+        prompt = STAGE2_PROMPT.read_text(encoding="utf-8")
         hyps_json = json.dumps([asdict(hyp)])
         timing_json = json.dumps(timing)
         run_count = str(timing.get("run_count", ""))
@@ -509,7 +509,7 @@ class AdversaryLoop:
             f"t_stat: {t_stat} | significant: {sig} | "
             f"Next: {next_hint}\n"
         )
-        with EXPERIMENT_LOG.open("a") as fh:
+        with EXPERIMENT_LOG.open("a", encoding="utf-8") as fh:
             fh.write(line)
 
     # -- SAVE STATE -----------------------------------------------------------
@@ -525,11 +525,11 @@ class AdversaryLoop:
             "demoted_ids": self.demoted_ids,
             "invalidated_ids": self.invalidated_ids,
         }
-        LOOP_STATE_FILE.write_text(json.dumps(payload, indent=2))
+        LOOP_STATE_FILE.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
     def _load_resume(self):
         if self.resume and LOOP_STATE_FILE.exists():
-            prev = json.loads(LOOP_STATE_FILE.read_text())
+            prev = json.loads(LOOP_STATE_FILE.read_text(encoding="utf-8"))
             self.completed_ids = prev.get("completed_ids", [])
             self.promoted_ids = prev.get("promoted_ids", [])
             self.demoted_ids = prev.get("demoted_ids", [])
