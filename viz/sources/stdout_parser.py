@@ -11,7 +11,7 @@ class ParseResult:
 
 
 _STARTING_RE   = re.compile(r"Starting cycle 1 of (\d+)")
-_WAITING_RE    = re.compile(r"waiting for feedback file containing '([A-Z0-9]+)'")
+_WAITING_RE    = re.compile(r"waiting for feedback file timing_(.+?)_\*\.json")
 _RESULT_RE     = re.compile(
     r"\[Cycle \d+\] Hypothesis (\w+) → (\w+) \(t=([0-9.\-]+), sig=(True|False)\)"
 )
