@@ -252,6 +252,10 @@ AFL++ (version 4.x, default configuration, no sanitizers) ran for 24 hours per t
 
 **Headline**: codellama:7b autonomously rediscovered **4/5** planted Kyber512 leaks. All four autonomous rediscoveries are `secret_dependent_branch` class. LEAK-5 (`nonconstant_comparison`) required static-scan direction; given the directive, the LLM output was correct in both category and location.
 
+![Figure 2](figures/fig2_t_vs_afl.png)
+
+**Figure 2.** Oracle |t| for every confirmed leak (log scale). All six signals exceed the significance threshold by two-to-four orders of magnitude, while AFL++ detected none over 24 hours (~120M executions per target). The LLM confirms precisely what the fuzzer is structurally blind to.
+
 ### 4.2 Per-Leak Analysis
 
 **LEAK-1 — `cmov()` if-branch (Autonomous, t=213.48)**
@@ -272,7 +276,11 @@ The LLM identified `indcpa_dec()` line 28: "branch on mp.coeffs[k] < 0 creates m
 
 **LEAK-5 — `crypto_kem_dec()` memcmp FO comparison (Scanner-directed, t=141.09)**
 
-Without the MANDATORY FINDINGS directive, codellama:7b consistently fixated on the `sk[...]` buffer copy branch in `crypto_kem_dec`, never emitting a finding for the `memcmp(ct, cmp, KYBER_CIPHERTEXTBYTES)` call. This pattern — where a `nonconstant_comparison` is present but a nearby `secret_dependent_branch` is more syntactically prominent — is a reliable failure mode of the 7B model class. With the directive (triggered by static regex match on `memcmp(`), the model emitted: `nonconstant_comparison @ crypto_kem_dec() line 36`. Oracle: t=141.09 (n=50,000), mean_A=45.375 ns/call (equal buffers, full 768-byte scan), mean_B=30.975 ns/call (differ at byte 0, early exit). This is the KyberSlash-class vulnerability modelled directly after [REF-KYBERSLASH].
+Without the MANDATORY FINDINGS directive, codellama:7b consistently fixated on the `sk[...]` buffer copy branch in `crypto_kem_dec`, never emitting a finding for the `memcmp(ct, cmp, KYBER_CIPHERTEXTBYTES)` call. This pattern — where a `nonconstant_comparison` is present but a nearby `secret_dependent_branch` is more syntactically prominent — is a reliable failure mode of the 7B model class. With the directive (triggered by static regex match on `memcmp(`), the model emitted: `nonconstant_comparison @ crypto_kem_dec() line 36`. Oracle: t=141.09 (n=50,000), mean_A=45.375 ns/call (equal buffers, full 768-byte scan), mean_B=30.975 ns/call (differ at byte 0, early exit). This is the KyberSlash-class vulnerability modelled directly after [REF-KYBERSLASH]. Figure 1 shows the two per-call timing distributions separating.
+
+![Figure 1](figures/fig1_timing_distribution.png)
+
+**Figure 1.** Per-call decapsulation timing distributions for LEAK-5 (`crypto_kem_dec` memcmp), reconstructed from the oracle's measured means and variances (n=50,000). Class A (valid ciphertext, full 768-byte scan) and Class B (invalid ciphertext, early exit at byte 0) separate by Δ=14.4 ns — a Welch t of 141.09. The separation *is* the leak.
 
 The credit structure is important for honest evaluation: the *vulnerability class* was identified by the static scanner (regex match on `memcmp(`); the LLM contributed the hypothesis text, exact line number, and exploitability reasoning. We report this as "scanner-directed" to accurately reflect that the categorical conclusion came from the static scan.
 
@@ -285,6 +293,10 @@ Oracle results:
 - **macOS/AArch64** (same code, cc -O2, REPS=100/1000/5000): t≈0.9/−0.8/0.75 (sign-unstable, non-significant at all REPS levels). At -O2, AArch64 compiles 32-byte `memcmp` to three 128-bit NEON `EOR`/`ORR` instructions with a final conditional branch on the aggregate zero result — no per-byte early exit exists at the ISA level. REPS amplification cannot amplify a signal that does not exist in the instruction stream.
 
 **Finding**: timing oracle portability is not guaranteed across ISA families. The same non-CT vulnerability is detectable on x86-64 but not on AArch64 -O2. Practitioners must qualify oracle results by ISA and compiler flags.
+
+![Figure 4](figures/fig4_isa_portability.png)
+
+**Figure 4.** ISA portability of the ML-DSA-44 memcmp oracle. The identical source leaks measurably on x86-64 (glibc byte-loop `memcmp`, t=164.30) but is invisible on AArch64 at -O2, where the 32-byte comparison compiles to fixed-width NEON instructions with no per-byte early exit (t≈0.9). A timing audit run only on ARM hardware would miss this leak entirely.
 
 ### 4.4 LLM vs. AFL++ Comparison
 
@@ -306,6 +318,10 @@ Three key observations emerge:
 3. **Branch leaks change coverage but remain undetected**: LEAK-2 and LEAK-4 produce more corpus paths (20 and 18 vs. 2 for clean) because the additional branches add coverage edges. AFL++ reaches the branches but cannot identify them as timing-sensitive. An analyst seeing a larger corpus cannot conclude that a timing leak is present.
 
 The comparison establishes a clear capability division: LLM-guided analysis operates at the semantic level (reads code, reasons about secret-dependence); coverage-guided fuzzing operates at the syntactic level (explores paths, detects crashes). These are complementary, not competitive, for the timing side-channel discovery task.
+
+![Figure 3](figures/fig3_afl_corpus.png)
+
+**Figure 3.** AFL++ corpus paths after 24 hours. The memcmp leak (LEAK-5) produces a corpus *identical* to the clean baseline (2 = 2) — coverage-guided fuzzing cannot distinguish the weakened implementation from the correct one. Branch leaks (LEAK-2/4) add coverage edges, but AFL++ still cannot identify them as timing-sensitive.
 
 ### 4.5 Model Capability Analysis
 
