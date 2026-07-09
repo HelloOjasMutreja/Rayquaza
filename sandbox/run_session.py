@@ -14,6 +14,7 @@ from viz.orchestrator import invoke_oracle
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 FINDINGS = REPO_ROOT / "shared" / "findings"
+FEEDBACK = REPO_ROOT / "shared" / "feedback"
 # The engine always writes its run state here (track-b-engine/engine/adversary_loop.py).
 LOOP_STATE = FINDINGS / "loop_state.json"
 
@@ -56,6 +57,14 @@ class RunSession:
             LOOP_STATE.unlink()
         except FileNotFoundError:
             pass
+        # Hypothesis ids (H001, H002, ...) are assigned per-run starting from H001,
+        # so a leftover timing_H001_*.json from a PREVIOUS cell's target can be
+        # misread by this cell's poll loop as its own (correctly-named but stale)
+        # oracle result. Clear only the engine's auto-generated ids (H###) before
+        # every cell -- this preserves hand-named reference data (e.g.
+        # timing_LEAK1-001_*.json, timing_MLDSA1-ORACLE_*.json) used elsewhere.
+        for f in FEEDBACK.glob("timing_H[0-9][0-9][0-9]_*.json"):
+            f.unlink(missing_ok=True)
 
         started = time.time()
         state = RunState(run_id=self._run_id, model_label=f"{self._model} (live)")
