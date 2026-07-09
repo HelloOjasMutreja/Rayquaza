@@ -21,6 +21,7 @@ GROUND_TRUTH = {
     "kyber512_leak2": {"category": "secret_dependent_branch", "location": "poly_tomsg"},
     "kyber512_leak4": {"category": "secret_dependent_branch", "location": "indcpa_dec"},
     "kyber512_leak5": {"category": "nonconstant_comparison", "location": "crypto_kem_dec"},
+    "mldsa44_leak1": {"category": "nonconstant_comparison", "location": "mld_sign_verify_internal"},
 }
 
 
@@ -28,11 +29,13 @@ class RunSession:
     """Runs one model across one target via the engine subprocess behind the gateway,
     folds live events for the UI, and writes a Run artifact at the end."""
 
-    def __init__(self, model: str, target_id: str, target_c: Path, on_state):
+    def __init__(self, model: str, target_id: str, target_c: Path, on_state,
+                 static_scan: bool = True):
         self._model = model
         self._target_id = target_id
         self._target_c = Path(target_c)
         self._on_state = on_state
+        self._static_scan = static_scan  # False = autonomous mode (no static-scan directive)
         self._run_id = uuid.uuid4().hex[:8]
         self._meter = Meter(model=model)
         keys = {p: config.api_key(p) for p in ("anthropic", "openai")}
@@ -45,6 +48,7 @@ class RunSession:
             "RAYQ_OLLAMA_URL": self._gateway.url,
             "RAYQ_CODE_MODEL": self._model,
             "RAYQ_REASON_MODEL": self._model,
+            "RAYQ_STATIC_SCAN": "1" if self._static_scan else "0",
         }
         started = time.time()
         state = RunState(run_id=self._run_id, model_label=f"{self._model} (live)")
