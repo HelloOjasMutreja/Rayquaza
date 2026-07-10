@@ -1,0 +1,27 @@
+{
+  "generated": "20260709_223342",
+  "mode": "hybrid",
+  "models": [
+    "codellama:7b"
+  ],
+  "targets": [
+    "kyber512_leak5"
+  ],
+  "rows": [
+    {
+      "model": "codellama:7b",
+      "target": "kyber512_leak5",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 470.8545,
+      "verdict": "PROMOTED",
+      "wall_s": 644.9,
+      "cost_usd": 0.0,
+      "tokens": {
+        "prompt": 5953,
+        "completion": 2431
+      },
+      "error": null
+    }
+  ]
+}
