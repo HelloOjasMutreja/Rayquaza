@@ -1,0 +1,27 @@
+{
+  "generated": "20260710_181700",
+  "mode": "hybrid",
+  "models": [
+    "claude-fable-5"
+  ],
+  "targets": [
+    "kyber512_leak5"
+  ],
+  "rows": [
+    {
+      "model": "claude-fable-5",
+      "target": "kyber512_leak5",
+      "located": false,
+      "confirmed": false,
+      "t_stat": null,
+      "verdict": "NO_OUTPUT",
+      "wall_s": 10.5,
+      "cost_usd": 0.06284,
+      "tokens": {
+        "prompt": 6274,
+        "completion": 2
+      },
+      "error": null
+    }
+  ]
+}
