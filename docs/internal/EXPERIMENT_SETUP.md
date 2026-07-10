@@ -120,11 +120,22 @@ The repo is **private**, so pick one:
 - **Option B:** `git clone` with a GitHub Personal Access Token
   (`git clone https://<PAT>@github.com/HelloOjasMutreja/Rayquaza.git`).
 
-Then build the standalone oracle harnesses (self-contained C, no liboqs needed):
+**Important:** clone the **`multi-llm-experiment`** branch, not `main`. That branch has 4
+pipeline bug fixes (oracle wait-detection, oracle cwd, HTTP timeouts, cross-target feedback
+contamination) found the hard way overnight on 2026-07-09 -- `main` will silently produce
+`t=None` on every run without them.
+```
+git clone -b multi-llm-experiment https://<PAT>@github.com/HelloOjasMutreja/Rayquaza.git
+```
+
+Then build the standalone oracle harnesses (self-contained C, no liboqs needed). Build the
+`harness_oracle` target specifically, not bare `make` -- `kyber512_leak5`'s Makefile's default
+`all` target also tries to build `harness_leak5`, which needs a `indcpa.c` that isn't checked in
+and will abort the whole `make` before it reaches `harness_oracle`:
 ```
 cd Rayquaza
-for t in leak2 leak4 leak5; do (cd track-a-target/targets/kyber512_$t && make); done
-(cd track-a-target/targets/mldsa44_leak1 && make)
+for t in leak1 leak2 leak3 leak4 leak5; do (cd track-a-target/targets/kyber512_$t && make harness_oracle); done
+(cd track-a-target/targets/mldsa44_leak1 && make harness_oracle)
 ```
 
 ### 2.5 Run the 32B tier
