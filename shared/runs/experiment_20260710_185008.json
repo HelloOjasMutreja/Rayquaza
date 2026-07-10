@@ -1,0 +1,27 @@
+{
+  "generated": "20260710_185008",
+  "mode": "hybrid",
+  "models": [
+    "gpt-5.4-nano"
+  ],
+  "targets": [
+    "kyber512_leak5"
+  ],
+  "rows": [
+    {
+      "model": "gpt-5.4-nano",
+      "target": "kyber512_leak5",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 155.8644,
+      "verdict": "PROMOTED",
+      "wall_s": 48.9,
+      "cost_usd": 0.00347,
+      "tokens": {
+        "prompt": 4739,
+        "completion": 2018
+      },
+      "error": null
+    }
+  ]
+}
