@@ -1,3 +1,4 @@
+import os
 import time
 import uuid
 from pathlib import Path
@@ -17,6 +18,11 @@ FINDINGS = REPO_ROOT / "shared" / "findings"
 FEEDBACK = REPO_ROOT / "shared" / "feedback"
 # The engine always writes its run state here (track-b-engine/engine/adversary_loop.py).
 LOOP_STATE = FINDINGS / "loop_state.json"
+# Hard per-cell spend cap for paid API models (each model x target run gets its own
+# fresh Meter, so a full matrix's worst-case total is this times the cell count --
+# keep it low). Override with RAYQ_MAX_COST_USD.
+# Free/local (Ollama) models are unaffected -- pricing.cost() always returns 0 for them.
+MAX_COST_USD = float(os.environ.get("RAYQ_MAX_COST_USD", "0.40"))
 
 GROUND_TRUTH = {
     "kyber512_leak2": {"category": "secret_dependent_branch", "location": "poly_tomsg"},
@@ -38,7 +44,7 @@ class RunSession:
         self._on_state = on_state
         self._static_scan = static_scan  # False = autonomous mode (no static-scan directive)
         self._run_id = uuid.uuid4().hex[:8]
-        self._meter = Meter(model=model)
+        self._meter = Meter(model=model, max_cost_usd=MAX_COST_USD)
         keys = {p: config.api_key(p) for p in ("anthropic", "openai")}
         self._router = Router(keys={k: v for k, v in keys.items() if v})
         self._gateway = Gateway(self._router, self._meter)

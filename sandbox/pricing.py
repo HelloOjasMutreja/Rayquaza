@@ -3,6 +3,7 @@ from sandbox import config
 # Price per 1,000,000 tokens (USD), (input, output). Update as provider pricing changes.
 _PRICES = {
     "claude-sonnet-4-6": (3.0, 15.0),
+    "claude-haiku-4-5": (1.0, 5.0),
     "gpt-4o": (2.5, 10.0),
     "gpt-4o-mini": (0.15, 0.60),
 }
