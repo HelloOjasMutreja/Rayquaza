@@ -12,7 +12,9 @@ _BUILTIN = [
     {"id": "codellama:7b", "provider": "ollama", "label": "CodeLlama 7B (local)"},
     {"id": "qwen3:8b", "provider": "ollama", "label": "Qwen3 8B (local)"},
     {"id": "claude-sonnet-4-6", "provider": "anthropic", "label": "Claude Sonnet 4.6"},
+    {"id": "claude-sonnet-5", "provider": "anthropic", "label": "Claude Sonnet 5"},
     {"id": "claude-haiku-4-5", "provider": "anthropic", "label": "Claude Haiku 4.5"},
+    {"id": "claude-opus-4-8", "provider": "anthropic", "label": "Claude Opus 4.8"},
     {"id": "gpt-4o", "provider": "openai", "label": "GPT-4o"},
     {"id": "gpt-4o-mini", "provider": "openai", "label": "GPT-4o mini"},
 ]
