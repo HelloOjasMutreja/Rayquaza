@@ -1,0 +1,27 @@
+{
+  "generated": "20260710_173341",
+  "mode": "hybrid",
+  "models": [
+    "claude-sonnet-4-6"
+  ],
+  "targets": [
+    "kyber512_leak5"
+  ],
+  "rows": [
+    {
+      "model": "claude-sonnet-4-6",
+      "target": "kyber512_leak5",
+      "located": false,
+      "confirmed": true,
+      "t_stat": 1053.8752,
+      "verdict": "PROMOTED",
+      "wall_s": 141.1,
+      "cost_usd": 0.101235,
+      "tokens": {
+        "prompt": 9315,
+        "completion": 4886
+      },
+      "error": null
+    }
+  ]
+}
