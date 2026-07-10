@@ -1,0 +1,75 @@
+{
+  "generated": "20260710_174629",
+  "mode": "hybrid",
+  "models": [
+    "claude-haiku-4-5"
+  ],
+  "targets": [
+    "kyber512_leak5",
+    "kyber512_leak4",
+    "kyber512_leak2",
+    "mldsa44_leak1"
+  ],
+  "rows": [
+    {
+      "model": "claude-haiku-4-5",
+      "target": "kyber512_leak5",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 573.4058,
+      "verdict": "PROMOTED",
+      "wall_s": 43.9,
+      "cost_usd": 0.014649,
+      "tokens": {
+        "prompt": 5709,
+        "completion": 1788
+      },
+      "error": null
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "target": "kyber512_leak4",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -302.1856,
+      "verdict": "PROMOTED",
+      "wall_s": 45.7,
+      "cost_usd": 0.015811,
+      "tokens": {
+        "prompt": 5821,
+        "completion": 1998
+      },
+      "error": null
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "target": "kyber512_leak2",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -112.3254,
+      "verdict": "PROMOTED",
+      "wall_s": 49.8,
+      "cost_usd": 0.014666,
+      "tokens": {
+        "prompt": 5586,
+        "completion": 1816
+      },
+      "error": null
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "target": "mldsa44_leak1",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -703.1816,
+      "verdict": "PROMOTED",
+      "wall_s": 94.2,
+      "cost_usd": 0.029388,
+      "tokens": {
+        "prompt": 9528,
+        "completion": 3972
+      },
+      "error": null
+    }
+  ]
+}
