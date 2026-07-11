@@ -70,13 +70,15 @@ All rules, dividers, table lines, and box outlines are **1px**, always `border` 
 
 - Cover page + numbered content pages, running header/footer as above.
 - Page size: A4, default for all DRDO SAG documents produced by this system (matches standard Indian institutional convention; override per-document only if a specific one explicitly requires Letter).
-- Margins: 0.7in sides, 0.75in top/bottom, applied via the renderer's `@page` box. These are starting values carried over from the mockup proportions; adjust only if the first rendered `paper.md` PDF shows a concrete problem (e.g. a wide table or figure genuinely needing more width), not preemptively.
+- Margins: 0.7in sides, 0.75in top/bottom, passed directly as the `margin` argument to Playwright's `page.pdf(...)` call. These are starting values carried over from the mockup proportions; adjust only if the first rendered `paper.md` PDF shows a concrete problem (e.g. a wide table or figure genuinely needing more width), not preemptively.
 
 ## 4. Toolchain
 
-- **Renderer:** Python + a CSS Paged Media–capable engine (WeasyPrint) consuming the same token/subsystem CSS used for on-screen rendering — no separate LaTeX toolchain, no manual browser print step.
+- **Renderer:** Python + Playwright driving headless Chromium's native print-to-PDF, consuming the same token/subsystem CSS used for on-screen rendering — no LaTeX toolchain, no manual browser print step.
+  - **Why not WeasyPrint (originally planned):** WeasyPrint requires the GTK3 native runtime (Pango/cairo/GObject DLLs) which is not present on this Windows machine and requires a heavy separate system-level install to add. Verified during planning: `pip install weasyprint` succeeds but `from weasyprint import HTML` fails at import with `OSError: cannot load library 'libgobject-2.0-0'`.
+  - **Why Playwright/Chromium works:** `pip install playwright && python -m playwright install chromium` is self-contained (downloads its own Chromium build, no system dependency), and Chromium's native PDF export supports page size, margins, and running header/footer templates (`page.pdf(display_header_footer=True, header_template=..., footer_template=..., margin=...)`) directly — verified working on this machine during planning.
 - **Metadata:** each source `.md` declares YAML front-matter — `title`, `authors`, `date`, `classification`, `template` (subsystem selector, e.g. `paper`) — consumed by the build script, not hand-typed at build time.
-- **Pipeline shape:** markdown → HTML (reusing the existing `markdown` Python package and the figure-embedding/heading-numbering/table-wrapping post-processing already built for the web artifact) → styled with `tokens.css` + the selected subsystem CSS → rendered to PDF via WeasyPrint, with print-specific additions (cover page, running header/footer via CSS Paged Media `@page` rules) layered on top of the existing content transforms.
+- **Pipeline shape:** markdown → HTML (reusing the existing `markdown` Python package and the figure-embedding/heading-numbering/table-wrapping post-processing already built for the web artifact) → styled with `tokens.css` + the selected subsystem CSS → loaded into headless Chromium via Playwright → exported to PDF via `page.pdf(...)`, with the cover page as regular HTML content (not a Chromium header/footer template) and the running header/footer built from Chromium's native `header_template`/`footer_template` support.
 - **Location:** a new `docs/style/` directory holding `tokens.css`, `subsystem-academic.css`, and the build script (e.g. `docs/style/build_pdf.py`); kept separate from `docs/paper/figures/` (which stays focused on matplotlib figure generation).
 
 ## 5. Rollout Order
