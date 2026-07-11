@@ -1,0 +1,28 @@
+{
+  "run_id": "46663242",
+  "model_code": "gpt-5.6-sol",
+  "model_reason": "gpt-5.6-sol",
+  "provider": "openai",
+  "targets": [
+    {
+      "target_id": "mldsa44_leak1",
+      "located": false,
+      "confirmed": true,
+      "t_stat": -321.8019,
+      "cycles": 1,
+      "wall_seconds": 97.4,
+      "autonomous": true,
+      "verdict": "PROMOTED"
+    }
+  ],
+  "started_at": 1783712131.3317266,
+  "ended_at": 1783712228.7002418,
+  "tokens": {
+    "prompt": 4953,
+    "completion": 3124
+  },
+  "cost_usd": 0.118485,
+  "cost_estimated": true,
+  "fp_rate": 1.0,
+  "notes": ""
+}

@@ -1,0 +1,28 @@
+{
+  "run_id": "f4d82d2d",
+  "model_code": "gpt-5.4-nano",
+  "model_reason": "gpt-5.4-nano",
+  "provider": "openai",
+  "targets": [
+    {
+      "target_id": "kyber512_leak5",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 155.8644,
+      "cycles": 1,
+      "wall_seconds": 48.9,
+      "autonomous": true,
+      "verdict": "PROMOTED"
+    }
+  ],
+  "started_at": 1783709359.9343557,
+  "ended_at": 1783709408.7887692,
+  "tokens": {
+    "prompt": 4739,
+    "completion": 2018
+  },
+  "cost_usd": 0.00347,
+  "cost_estimated": true,
+  "fp_rate": 0.0,
+  "notes": ""
+}

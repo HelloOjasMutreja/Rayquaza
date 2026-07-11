@@ -1,0 +1,28 @@
+{
+  "run_id": "711ec4ef",
+  "model_code": "claude-haiku-4-5",
+  "model_reason": "claude-haiku-4-5",
+  "provider": "anthropic",
+  "targets": [
+    {
+      "target_id": "mldsa44_leak1",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -703.1816,
+      "cycles": 2,
+      "wall_seconds": 94.2,
+      "autonomous": true,
+      "verdict": "PROMOTED"
+    }
+  ],
+  "started_at": 1783705495.2178113,
+  "ended_at": 1783705589.3742714,
+  "tokens": {
+    "prompt": 9528,
+    "completion": 3972
+  },
+  "cost_usd": 0.029388,
+  "cost_estimated": true,
+  "fp_rate": 0.0,
+  "notes": ""
+}

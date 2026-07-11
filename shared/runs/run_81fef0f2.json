@@ -1,0 +1,28 @@
+{
+  "run_id": "81fef0f2",
+  "model_code": "qwen2.5-coder:7b",
+  "model_reason": "qwen2.5-coder:7b",
+  "provider": "ollama",
+  "targets": [
+    {
+      "target_id": "kyber512_leak5",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 579.6778,
+      "cycles": 1,
+      "wall_seconds": 376.8,
+      "autonomous": true,
+      "verdict": "PROMOTED"
+    }
+  ],
+  "started_at": 1783641502.9712598,
+  "ended_at": 1783641879.7388577,
+  "tokens": {
+    "prompt": 4711,
+    "completion": 1191
+  },
+  "cost_usd": 0.0,
+  "cost_estimated": false,
+  "fp_rate": 0.0,
+  "notes": ""
+}

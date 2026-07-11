@@ -1,0 +1,28 @@
+{
+  "run_id": "963364ba",
+  "model_code": "gpt-5.6-luna",
+  "model_reason": "gpt-5.6-luna",
+  "provider": "openai",
+  "targets": [
+    {
+      "target_id": "kyber512_leak5",
+      "located": false,
+      "confirmed": false,
+      "t_stat": null,
+      "cycles": 1,
+      "wall_seconds": 628.9,
+      "autonomous": true,
+      "verdict": "UNCHANGED"
+    }
+  ],
+  "started_at": 1783709525.9806318,
+  "ended_at": 1783710154.9205022,
+  "tokens": {
+    "prompt": 3068,
+    "completion": 1509
+  },
+  "cost_usd": 0.012122,
+  "cost_estimated": true,
+  "fp_rate": 0.0,
+  "notes": ""
+}

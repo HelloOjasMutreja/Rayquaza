@@ -1,0 +1,28 @@
+{
+  "run_id": "1f77221d",
+  "model_code": "gpt-5.6-terra",
+  "model_reason": "gpt-5.6-terra",
+  "provider": "openai",
+  "targets": [
+    {
+      "target_id": "kyber512_leak4",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -316.0921,
+      "cycles": 1,
+      "wall_seconds": 57.2,
+      "autonomous": true,
+      "verdict": "PROMOTED"
+    }
+  ],
+  "started_at": 1783711712.4429018,
+  "ended_at": 1783711769.6127806,
+  "tokens": {
+    "prompt": 4654,
+    "completion": 2421
+  },
+  "cost_usd": 0.04795,
+  "cost_estimated": true,
+  "fp_rate": 0.0,
+  "notes": ""
+}
