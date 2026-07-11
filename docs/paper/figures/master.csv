@@ -1,0 +1,64 @@
+model,vendor,family,size_b,tier,hardware,target,vuln_class,located,confirmed,outcome,t_stat,verdict,wall_s,cost_usd,prompt_tokens,completion_tokens,price_in,price_out,error,src_timestamp
+claude-fable-5,Anthropic,Claude,,Frontier API,API,kyber512_leak5,nonconstant_comparison,False,False,refused_cyber,,NO_OUTPUT,10.5,0.06284,6274,2,10.0,50.0,,20260710_181700
+claude-haiku-4-5,Anthropic,Claude,,Frontier API,API,kyber512_leak2,secret_dependent_branch,True,True,located_confirmed,-112.3254,PROMOTED,49.8,0.014666,5586,1816,1.0,5.0,,20260710_174629
+claude-haiku-4-5,Anthropic,Claude,,Frontier API,API,kyber512_leak4,secret_dependent_branch,True,True,located_confirmed,-302.1856,PROMOTED,45.7,0.015811,5821,1998,1.0,5.0,,20260710_174629
+claude-haiku-4-5,Anthropic,Claude,,Frontier API,API,kyber512_leak5,nonconstant_comparison,True,True,located_confirmed,573.4058,PROMOTED,43.9,0.014649,5709,1788,1.0,5.0,,20260710_174629
+claude-haiku-4-5,Anthropic,Claude,,Frontier API,API,mldsa44_leak1,nonconstant_comparison,True,True,located_confirmed,-703.1816,PROMOTED,94.2,0.029388,9528,3972,1.0,5.0,,20260710_174629
+claude-opus-4-8,Anthropic,Claude,,Frontier API,API,kyber512_leak2,secret_dependent_branch,True,True,located_confirmed,-273.0198,PROMOTED,123.8,0.187,12015,5077,5.0,25.0,,20260710_181008
+claude-opus-4-8,Anthropic,Claude,,Frontier API,API,kyber512_leak4,secret_dependent_branch,True,True,located_confirmed,-323.2181,PROMOTED,134.3,0.212995,12034,6113,5.0,25.0,,20260710_181008
+claude-opus-4-8,Anthropic,Claude,,Frontier API,API,kyber512_leak5,nonconstant_comparison,True,True,located_confirmed,941.1405,PROMOTED,197.6,0.299935,16747,8648,5.0,25.0,,20260710_181008
+claude-opus-4-8,Anthropic,Claude,,Frontier API,API,mldsa44_leak1,nonconstant_comparison,False,True,confirmed_mislocated,-686.5727,PROMOTED,204.7,0.31145,16845,9089,5.0,25.0,,20260710_181008
+claude-sonnet-4-6,Anthropic,Claude,,Frontier API,API,kyber512_leak2,secret_dependent_branch,True,True,located_confirmed,-63.8392,PROMOTED,66.5,0.050904,5613,2271,3.0,15.0,,20260710_174006
+claude-sonnet-4-6,Anthropic,Claude,,Frontier API,API,kyber512_leak4,secret_dependent_branch,True,True,located_confirmed,-281.9688,PROMOTED,78.6,0.063225,5680,3079,3.0,15.0,,20260710_174006
+claude-sonnet-4-6,Anthropic,Claude,,Frontier API,API,kyber512_leak5,nonconstant_comparison,False,True,confirmed_mislocated,1053.8752,PROMOTED,141.1,0.101235,9315,4886,3.0,15.0,,20260710_173341
+claude-sonnet-4-6,Anthropic,Claude,,Frontier API,API,mldsa44_leak1,nonconstant_comparison,False,True,confirmed_mislocated,-629.4983,PROMOTED,222.6,0.158937,13434,7909,3.0,15.0,,20260710_174006
+claude-sonnet-5,Anthropic,Claude,,Frontier API,API,kyber512_leak2,secret_dependent_branch,True,True,located_confirmed,-38.003,PROMOTED,61.3,0.043196,7393,2841,2.0,10.0,,20260710_175556
+claude-sonnet-5,Anthropic,Claude,,Frontier API,API,kyber512_leak4,secret_dependent_branch,True,True,located_confirmed,-306.6869,PROMOTED,64.1,0.050946,7638,3567,2.0,10.0,,20260710_175556
+claude-sonnet-5,Anthropic,Claude,,Frontier API,API,kyber512_leak5,nonconstant_comparison,True,True,located_confirmed,129.2183,PROMOTED,133.0,0.093872,12691,6849,2.0,10.0,,20260710_175556
+claude-sonnet-5,Anthropic,Claude,,Frontier API,API,mldsa44_leak1,nonconstant_comparison,False,True,confirmed_mislocated,-680.5086,PROMOTED,214.6,0.160976,17433,12611,2.0,10.0,,20260710_175556
+codellama:13b,Open-weight,CodeLlama,13,Cloud GPU,NVIDIA T4 (16GB),kyber512_leak2,secret_dependent_branch,True,True,located_confirmed,-951.0369,PROMOTED,161.2,0.0,7757,2770,,,,20260710_094607
+codellama:13b,Open-weight,CodeLlama,13,Cloud GPU,NVIDIA T4 (16GB),kyber512_leak4,secret_dependent_branch,True,True,located_confirmed,-1330.4092,PROMOTED,156.6,0.0,7974,2644,,,,20260710_094607
+codellama:13b,Open-weight,CodeLlama,13,Cloud GPU,NVIDIA T4 (16GB),kyber512_leak5,nonconstant_comparison,False,True,confirmed_mislocated,2117.5774,PROMOTED,227.0,0.0,7919,2414,,,,20260710_094607
+codellama:13b,Open-weight,CodeLlama,13,Cloud GPU,NVIDIA T4 (16GB),mldsa44_leak1,nonconstant_comparison,False,True,confirmed_mislocated,-215.4708,PROMOTED,155.7,0.0,8213,2609,,,,20260710_094607
+codellama:7b,Open-weight,CodeLlama,7,Local CPU,Intel CPU (WSL2),kyber512_leak2,secret_dependent_branch,True,True,located_confirmed,-184.2038,PROMOTED,721.6,0.0,7675,2732,,,,20260709_234513
+codellama:7b,Open-weight,CodeLlama,7,Local CPU,Intel CPU (WSL2),kyber512_leak4,secret_dependent_branch,True,True,located_confirmed,-317.8524,UNCHANGED,720.3,0.0,7842,2651,,,,20260709_233218
+codellama:7b,Open-weight,CodeLlama,7,Local CPU,Intel CPU (WSL2),kyber512_leak5,nonconstant_comparison,True,True,located_confirmed,564.4659,PROMOTED,473.8,0.0,5890,1385,,,,20260709_231907
+codellama:7b,Open-weight,CodeLlama,7,Local CPU,Intel CPU (WSL2),mldsa44_leak1,nonconstant_comparison,True,True,located_confirmed,-589.0884,PROMOTED,488.6,0.0,6149,1421,,,,20260709_235750
+qwen2.5-coder:14b,Open-weight,Qwen2.5-Coder,14,Cloud GPU,NVIDIA T4 (16GB),kyber512_leak2,secret_dependent_branch,True,True,located_confirmed,-976.4417,PROMOTED,133.5,0.0,6163,1982,,,,20260710_093029
+qwen2.5-coder:14b,Open-weight,Qwen2.5-Coder,14,Cloud GPU,NVIDIA T4 (16GB),kyber512_leak4,secret_dependent_branch,True,True,located_confirmed,-1311.7979,PROMOTED,163.2,0.0,6197,2096,,,,20260710_093029
+qwen2.5-coder:14b,Open-weight,Qwen2.5-Coder,14,Cloud GPU,NVIDIA T4 (16GB),kyber512_leak5,nonconstant_comparison,True,True,located_confirmed,1937.4128,PROMOTED,228.3,0.0,6202,1982,,,,20260710_090553
+qwen2.5-coder:14b,Open-weight,Qwen2.5-Coder,14,Cloud GPU,NVIDIA T4 (16GB),mldsa44_leak1,nonconstant_comparison,True,True,located_confirmed,-236.9915,PROMOTED,141.0,0.0,6563,2127,,,,20260710_093029
+qwen2.5-coder:32b,Open-weight,Qwen2.5-Coder,32,Cloud GPU,NVIDIA A10G (24GB),kyber512_leak2,secret_dependent_branch,True,True,located_confirmed,-635.5371,PROMOTED,91.4,0.0,4656,1252,,,,20260710_160222
+qwen2.5-coder:32b,Open-weight,Qwen2.5-Coder,32,Cloud GPU,NVIDIA A10G (24GB),kyber512_leak4,secret_dependent_branch,True,True,located_confirmed,-3782.3379,PROMOTED,126.5,0.0,6194,2013,,,,20260710_160222
+qwen2.5-coder:32b,Open-weight,Qwen2.5-Coder,32,Cloud GPU,NVIDIA A10G (24GB),kyber512_leak5,nonconstant_comparison,True,True,located_confirmed,209.2769,PROMOTED,402.9,0.0,4721,1138,,,,20260710_160222
+qwen2.5-coder:32b,Open-weight,Qwen2.5-Coder,32,Cloud GPU,NVIDIA A10G (24GB),mldsa44_leak1,nonconstant_comparison,True,True,located_confirmed,-15.0409,PROMOTED,132.4,0.0,6531,2140,,,,20260710_160222
+qwen2.5-coder:7b,Open-weight,Qwen2.5-Coder,7,Local CPU,Intel CPU (WSL2),kyber512_leak2,secret_dependent_branch,True,True,located_confirmed,-110.256,PROMOTED,428.3,0.0,6105,2080,,,,20260710_001944
+qwen2.5-coder:7b,Open-weight,Qwen2.5-Coder,7,Local CPU,Intel CPU (WSL2),kyber512_leak4,secret_dependent_branch,True,True,located_confirmed,-321.7909,PROMOTED,452.0,0.0,6414,2168,,,,20260710_001223
+qwen2.5-coder:7b,Open-weight,Qwen2.5-Coder,7,Local CPU,Intel CPU (WSL2),kyber512_leak5,nonconstant_comparison,True,True,located_confirmed,579.6778,PROMOTED,376.8,0.0,4711,1191,,,,20260710_000439
+qwen2.5-coder:7b,Open-weight,Qwen2.5-Coder,7,Local CPU,Intel CPU (WSL2),mldsa44_leak1,nonconstant_comparison,False,True,confirmed_mislocated,-656.2349,PROMOTED,497.1,0.0,6412,1896,,,,20260709_231907
+gpt-5.4,OpenAI,GPT,,Frontier API,API,kyber512_leak2,secret_dependent_branch,True,True,located_confirmed,-106.1361,PROMOTED,47.2,0.032715,4656,1405,2.5,15.0,,20260710_200707
+gpt-5.4,OpenAI,GPT,,Frontier API,API,kyber512_leak4,secret_dependent_branch,True,True,located_confirmed,-320.3862,PROMOTED,46.8,0.03789,4710,1741,2.5,15.0,,20260710_200707
+gpt-5.4,OpenAI,GPT,,Frontier API,API,kyber512_leak5,nonconstant_comparison,True,True,located_confirmed,466.9382,PROMOTED,47.3,0.039192,4751,1821,2.5,15.0,,20260710_190913
+gpt-5.4,OpenAI,GPT,,Frontier API,API,mldsa44_leak1,nonconstant_comparison,True,True,located_confirmed,-675.3727,PROMOTED,371.6,0.037038,4993,1637,2.5,15.0,,20260710_200707
+gpt-5.4-mini,OpenAI,GPT,,Frontier API,API,kyber512_leak2,secret_dependent_branch,True,True,located_confirmed,-180.91,PROMOTED,42.0,0.010232,4600,1507,0.75,4.5,,20260710_200707
+gpt-5.4-mini,OpenAI,GPT,,Frontier API,API,kyber512_leak4,secret_dependent_branch,True,True,located_confirmed,-312.948,PROMOTED,98.8,0.010226,4616,1503,0.75,4.5,,20260710_200707
+gpt-5.4-mini,OpenAI,GPT,,Frontier API,API,kyber512_leak5,nonconstant_comparison,True,True,located_confirmed,114.4926,PROMOTED,46.3,0.014917,6173,2286,0.75,4.5,,20260710_190913
+gpt-5.4-mini,OpenAI,GPT,,Frontier API,API,mldsa44_leak1,nonconstant_comparison,False,True,confirmed_mislocated,-646.2553,PROMOTED,42.9,0.009836,4949,1361,0.75,4.5,,20260710_200707
+gpt-5.4-nano,OpenAI,GPT,,Frontier API,API,kyber512_leak2,secret_dependent_branch,True,True,located_confirmed,-147.212,PROMOTED,47.9,0.003207,4656,1821,0.2,1.25,,20260710_200707
+gpt-5.4-nano,OpenAI,GPT,,Frontier API,API,kyber512_leak4,secret_dependent_branch,True,True,located_confirmed,-311.1748,PROMOTED,47.0,0.003527,4810,2052,0.2,1.25,,20260710_200707
+gpt-5.4-nano,OpenAI,GPT,,Frontier API,API,kyber512_leak5,nonconstant_comparison,True,True,located_confirmed,155.8644,PROMOTED,48.9,0.00347,4739,2018,0.2,1.25,,20260710_185008
+gpt-5.4-nano,OpenAI,GPT,,Frontier API,API,mldsa44_leak1,nonconstant_comparison,True,True,located_confirmed,-129.4059,PROMOTED,47.4,0.003547,5133,2016,0.2,1.25,,20260710_200707
+gpt-5.5,OpenAI,GPT,,Frontier API,API,kyber512_leak2,secret_dependent_branch,True,True,located_confirmed,-108.9497,PROMOTED,80.4,0.09529,4562,2416,5.0,30.0,,20260710_200707
+gpt-5.5,OpenAI,GPT,,Frontier API,API,kyber512_leak4,secret_dependent_branch,True,True,located_confirmed,-303.8489,PROMOTED,1624.7,0.09175,4706,2274,5.0,30.0,,20260710_200707
+gpt-5.5,OpenAI,GPT,,Frontier API,API,kyber512_leak5,nonconstant_comparison,True,True,located_confirmed,544.6163,PROMOTED,209.4,0.134125,4739,3681,5.0,30.0,,20260710_190913
+gpt-5.5,OpenAI,GPT,,Frontier API,API,mldsa44_leak1,nonconstant_comparison,True,True,located_confirmed,-353.6225,PROMOTED,92.6,0.126865,5009,3394,5.0,30.0,,20260710_200707
+gpt-5.6-luna,OpenAI,GPT,,Frontier API,API,kyber512_leak5,nonconstant_comparison,False,False,miss,,UNCHANGED,628.9,0.012122,3068,1509,1.0,6.0,,20260710_190913
+gpt-5.6-sol,OpenAI,GPT,,Frontier API,API,kyber512_leak2,secret_dependent_branch,True,True,located_confirmed,-90.7844,PROMOTED,101.1,0.11805,4596,3169,5.0,30.0,,20260710_200707
+gpt-5.6-sol,OpenAI,GPT,,Frontier API,API,kyber512_leak4,secret_dependent_branch,True,True,located_confirmed,-308.2527,PROMOTED,162.3,0.09575,4630,2420,5.0,30.0,,20260710_200707
+gpt-5.6-sol,OpenAI,GPT,,Frontier API,API,kyber512_leak5,nonconstant_comparison,True,True,located_confirmed,402.8855,PROMOTED,76.6,0.080055,4695,1886,5.0,30.0,,20260710_190913
+gpt-5.6-sol,OpenAI,GPT,,Frontier API,API,mldsa44_leak1,nonconstant_comparison,False,True,confirmed_mislocated,-321.8019,PROMOTED,97.4,0.118485,4953,3124,5.0,30.0,,20260710_200707
+gpt-5.6-terra,OpenAI,GPT,,Frontier API,API,kyber512_leak2,secret_dependent_branch,True,True,located_confirmed,-151.9691,PROMOTED,43.6,0.031785,4590,1354,2.5,15.0,,20260710_200707
+gpt-5.6-terra,OpenAI,GPT,,Frontier API,API,kyber512_leak4,secret_dependent_branch,True,True,located_confirmed,-316.0921,PROMOTED,57.2,0.04795,4654,2421,2.5,15.0,,20260710_200707
+gpt-5.6-terra,OpenAI,GPT,,Frontier API,API,kyber512_leak5,nonconstant_comparison,True,True,located_confirmed,236.9323,PROMOTED,109.1,0.056903,4743,3003,2.5,15.0,,20260710_190913
+gpt-5.6-terra,OpenAI,GPT,,Frontier API,API,mldsa44_leak1,nonconstant_comparison,True,True,located_confirmed,-71.1603,PROMOTED,53.6,0.046968,4921,2311,2.5,15.0,,20260710_200707
+gpt-5.3-codex,OpenAI,GPT-Codex,,Frontier API,API,kyber512_leak5,nonconstant_comparison,False,False,incompatible_endpoint,,NO_OUTPUT,2.1,0.0,0,0,1.75,14.0,,20260710_190913

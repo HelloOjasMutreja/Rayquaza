@@ -1,0 +1,61 @@
+// Rayquaza system-architecture diagram — Eraser (eraser.io) diagram-as-code.
+// Paste into an Eraser "Diagram as Code" flowchart, then export / recreate in Excalidraw.
+// Two load-bearing details this diagram must show:
+//   1. The DASHED feedback arrow from "Stage 2 — Refine" back to "Stage 1 — Ingestion"
+//      (that is what makes the pipeline closed-loop).
+//   2. The Model Gateway fanning out to three provider families behind ONE interface
+//      (RAYQ_CODE_MODEL / RAYQ_REASON_MODEL) — this is what made the 18-model,
+//      5-vendor comparison possible with zero engine code changes.
+
+title Rayquaza — Closed-Loop, Provider-Agnostic LLM Timing-Leak Discovery Pipeline
+
+Weakened PQC Source [shape: document, icon: file-code, color: gray]
+
+Model Gateway [icon: shuffle, color: purple] {
+  Router [label: "Router (model id -> provider)"]
+  Meter [label: "Meter (tokens, cost, budget cap)"]
+  Open-weight [label: "Ollama: CodeLlama, Qwen2.5-Coder (7B-32B, local/cloud GPU)"]
+  Anthropic [label: "Anthropic API: Haiku, Sonnet, Opus, Fable (5 models)"]
+  OpenAI [label: "OpenAI API: GPT-5.x nano..sol, Codex (9 models)"]
+}
+
+Stage 1 — Ingestion [icon: cpu, color: blue] {
+  ingest_llm [label: "Code LLM (via Model Gateway)"]
+  Secret-token flagging
+  Static secondary scan [label: "Static scan (memcmp / branch / loop)"]
+  MANDATORY directive [label: "MANDATORY FINDINGS (hybrid mode only)"]
+  Ranked hypotheses [shape: oval]
+}
+
+Stage 3 — Vectorize [icon: cpu, color: blue] {
+  vectorize_llm [label: "Code LLM (via Model Gateway)"]
+  Skeleton-fill prompt
+  Compile gate [label: "Compile gate (cc -O0 -lm)"]
+  Deterministic fallback
+  C timing harness [shape: document]
+}
+
+Timing Oracle [icon: activity, color: green] {
+  harness_oracle [label: "harness_oracle (real patched fn)"]
+  REPS amplification [label: "REPS 100-500"]
+  Welch t-test [label: "Welch t-test, n=50,000"]
+  timing JSON [shape: document]
+}
+
+Stage 2 — Refine [icon: git-branch, color: orange] {
+  refine_llm [label: "Reasoning LLM (via Model Gateway)"]
+  Verdict [label: "PROMOTED / DEMOTED / INVALIDATED / UNCHANGED"]
+  Exploitation path
+}
+
+Confirmed Leak [shape: oval, icon: check-circle, color: green, label: "Confirmed leak: class + location + t-stat + exploit path"]
+
+Weakened PQC Source > Stage 1 — Ingestion
+Model Gateway > Stage 1 — Ingestion: serves ingest_llm
+Model Gateway > Stage 3 — Vectorize: serves vectorize_llm
+Model Gateway > Stage 2 — Refine: serves refine_llm
+Stage 1 — Ingestion > Stage 3 — Vectorize: ranked hypotheses
+Stage 3 — Vectorize > Timing Oracle: timing harness
+Timing Oracle > Stage 2 — Refine: timing JSON (ground truth)
+Stage 2 — Refine > Confirmed Leak: PROMOTED
+Stage 2 — Refine --> Stage 1 — Ingestion: refine & re-hypothesise (closed loop)
