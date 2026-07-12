@@ -51,3 +51,30 @@ def test_strip_title_block_noop_if_no_leading_h1():
     from md_to_html import strip_title_block
     html = "<h2>Abstract</h2>\n<p>Body.</p>"
     assert strip_title_block(html) == html
+
+
+def test_number_and_id_headings_top_level_numbered_heading():
+    from md_to_html import number_and_id_headings
+    html = "<h2>5. Multi-Model Comparison</h2>"
+    result = number_and_id_headings(html)
+    assert result == (
+        '<h2 id="5-multi-model-comparison">'
+        '<span class="secnum">5.</span> Multi-Model Comparison</h2>'
+    )
+
+
+def test_number_and_id_headings_subsection_numbered_heading():
+    from md_to_html import number_and_id_headings
+    html = "<h3>5.6 Autonomous vs. Hybrid</h3>"
+    result = number_and_id_headings(html)
+    assert result == (
+        '<h3 id="56-autonomous-vs-hybrid">'
+        '<span class="secnum">5.6</span> Autonomous vs. Hybrid</h3>'
+    )
+
+
+def test_number_and_id_headings_unnumbered_heading_gets_id_only():
+    from md_to_html import number_and_id_headings
+    html = "<h2>Abstract</h2>"
+    result = number_and_id_headings(html)
+    assert result == '<h2 id="abstract">Abstract</h2>'

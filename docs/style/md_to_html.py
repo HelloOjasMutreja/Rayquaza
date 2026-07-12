@@ -50,3 +50,28 @@ def strip_title_block(html: str) -> str:
     for the cover page. No-op if the document doesn't start with an <h1>."""
     pattern = re.compile(r"^\s*<h1>.*?</h1>\s*<p>.*?</p>\s*<hr\s*/?>\s*", re.S)
     return pattern.sub("", html, count=1)
+
+
+def _slugify(text: str) -> str:
+    text = re.sub(r"<[^>]+>", "", text)
+    text = text.strip().lower()
+    text = re.sub(r"[^a-z0-9\s-]", "", text)
+    text = re.sub(r"\s+", "-", text)
+    return text
+
+
+def number_and_id_headings(html: str) -> str:
+    """For every <h2>/<h3>, inject a slugified id attribute. If the heading
+    text starts with a section number (e.g. '5.' or '5.6'), wrap that
+    numbering token in <span class="secnum">...</span>, exactly as it
+    appears in the source (with or without a trailing period)."""
+    def _repl(match: re.Match) -> str:
+        level, inner = match.group(1), match.group(2)
+        slug = _slugify(inner)
+        numbering = re.match(r"^(\d+(?:\.\d+)*\.?)\s+(.*)$", inner)
+        if numbering:
+            rendered = f'<span class="secnum">{numbering.group(1)}</span> {numbering.group(2)}'
+        else:
+            rendered = inner
+        return f'<h{level} id="{slug}">{rendered}</h{level}>'
+    return re.sub(r"<h([23])>(.*?)</h\1>", _repl, html)
