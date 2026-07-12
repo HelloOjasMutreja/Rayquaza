@@ -111,3 +111,23 @@ def test_wrap_tables_wraps_table_element():
     html = '<table><tr><td>x</td></tr></table>'
     result = wrap_tables(html)
     assert result == '<div class="table-wrap"><table><tr><td>x</td></tr></table></div>'
+
+
+def test_wrap_callouts_headline():
+    from md_to_html import wrap_callouts
+    html = '<p><strong>Headline</strong>: codellama:7b found 4/5 leaks.</p>'
+    result = wrap_callouts(html)
+    assert result == '<div class="callout"><span class="pill">HEADLINE</span>codellama:7b found 4/5 leaks.</div>'
+
+
+def test_wrap_callouts_finding():
+    from md_to_html import wrap_callouts
+    html = '<p><strong>Finding</strong>: portability is not guaranteed.</p>'
+    result = wrap_callouts(html)
+    assert result == '<div class="callout"><span class="pill">FINDING</span>portability is not guaranteed.</div>'
+
+
+def test_wrap_callouts_leaves_other_bold_paragraphs_untouched():
+    from md_to_html import wrap_callouts
+    html = '<p><strong>Note</strong>: something else.</p>'
+    assert wrap_callouts(html) == html

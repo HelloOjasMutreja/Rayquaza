@@ -106,3 +106,15 @@ def wrap_tables(html: str) -> str:
     html = html.replace("<table>", '<div class="table-wrap"><table>')
     html = html.replace("</table>", "</table></div>")
     return html
+
+
+def wrap_callouts(html: str) -> str:
+    """Convert '<p><strong>Headline</strong>: text</p>' or
+    '<p><strong>Finding</strong>: text</p>' paragraphs into a neutral
+    callout box with a solid ink-on-paper pill label -- no colored
+    border/edge strip (explicitly rejected during design review)."""
+    pattern = re.compile(r'<p><strong>(Headline|Finding)</strong>:?\s*(.*?)</p>', re.S)
+    def _repl(match: re.Match) -> str:
+        label, body = match.groups()
+        return f'<div class="callout"><span class="pill">{label.upper()}</span>{body}</div>'
+    return pattern.sub(_repl, html)
