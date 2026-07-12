@@ -78,3 +78,22 @@ def test_number_and_id_headings_unnumbered_heading_gets_id_only():
     html = "<h2>Abstract</h2>"
     result = number_and_id_headings(html)
     assert result == '<h2 id="abstract">Abstract</h2>'
+
+
+def test_wrap_figures_merges_image_and_caption_paragraph():
+    from md_to_html import wrap_figures
+    html = (
+        '<p><img alt="Figure 0" src="data:image/png;base64,AAAA" /></p>\n'
+        '<p><strong>Figure 0.</strong> The pipeline diagram.</p>'
+    )
+    result = wrap_figures(html)
+    assert result == (
+        '<figure><img alt="Figure 0" src="data:image/png;base64,AAAA">'
+        '<figcaption><span class="fignum">Figure 0.</span> The pipeline diagram.</figcaption></figure>'
+    )
+
+
+def test_wrap_figures_leaves_unpaired_image_untouched():
+    from md_to_html import wrap_figures
+    html = '<p><img alt="x" src="data:image/png;base64,AAAA" /></p>\n<p>Unrelated text.</p>'
+    assert wrap_figures(html) == html

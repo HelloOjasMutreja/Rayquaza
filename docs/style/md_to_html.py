@@ -75,3 +75,21 @@ def number_and_id_headings(html: str) -> str:
             rendered = inner
         return f'<h{level} id="{slug}">{rendered}</h{level}>'
     return re.sub(r"<h([23])>(.*?)</h\1>", _repl, html)
+
+
+def wrap_figures(html: str) -> str:
+    """Merge a '<p><img ...></p>' immediately followed by a
+    '<p><strong>Figure N.</strong> caption</p>' into one <figure> block.
+    Pairs not matching this exact shape are left untouched."""
+    pattern = re.compile(
+        r'<p><img alt="([^"]*)" src="([^"]+)"\s*/?></p>\s*'
+        r'<p><strong>(Figure \d+\.)</strong>\s*(.*?)</p>',
+        re.S,
+    )
+    def _repl(match: re.Match) -> str:
+        alt, src, fignum, caption = match.groups()
+        return (
+            f'<figure><img alt="{alt}" src="{src}">'
+            f'<figcaption><span class="fignum">{fignum}</span> {caption}</figcaption></figure>'
+        )
+    return pattern.sub(_repl, html)
