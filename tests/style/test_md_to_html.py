@@ -97,3 +97,17 @@ def test_wrap_figures_leaves_unpaired_image_untouched():
     from md_to_html import wrap_figures
     html = '<p><img alt="x" src="data:image/png;base64,AAAA" /></p>\n<p>Unrelated text.</p>'
     assert wrap_figures(html) == html
+
+
+def test_wrap_tables_styles_caption_paragraph():
+    from md_to_html import wrap_tables
+    html = '<p><strong>Table 1: Planted leaks.</strong></p>'
+    result = wrap_tables(html)
+    assert result == '<p class="table-caption"><span class="fignum">Table 1: Planted leaks.</span> </p>'
+
+
+def test_wrap_tables_wraps_table_element():
+    from md_to_html import wrap_tables
+    html = '<table><tr><td>x</td></tr></table>'
+    result = wrap_tables(html)
+    assert result == '<div class="table-wrap"><table><tr><td>x</td></tr></table></div>'

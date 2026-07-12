@@ -93,3 +93,16 @@ def wrap_figures(html: str) -> str:
             f'<figcaption><span class="fignum">{fignum}</span> {caption}</figcaption></figure>'
         )
     return pattern.sub(_repl, html)
+
+
+def wrap_tables(html: str) -> str:
+    """Style '<p><strong>Table N...</strong> rest</p>' caption paragraphs,
+    and wrap every <table> in a <div class="table-wrap">."""
+    html = re.sub(
+        r'<p><strong>(Table \d+[^<]*)</strong>\s*(.*?)</p>',
+        lambda m: f'<p class="table-caption"><span class="fignum">{m.group(1)}</span> {m.group(2)}</p>',
+        html, flags=re.S,
+    )
+    html = html.replace("<table>", '<div class="table-wrap"><table>')
+    html = html.replace("</table>", "</table></div>")
+    return html
