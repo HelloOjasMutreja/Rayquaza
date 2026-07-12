@@ -42,3 +42,11 @@ def embed_images(md_text: str, base_dir: Path) -> str:
         b64 = base64.b64encode(image_bytes).decode("ascii")
         return f"![{alt}](data:image/png;base64,{b64})"
     return re.sub(r"!\[([^\]]*)\]\(([^)]+)\)", _embed, md_text)
+
+
+def strip_title_block(html: str) -> str:
+    """Remove a leading <h1>...</h1><p>...</p><hr/> block (the document's
+    manual title/author block), since front-matter supplies the same data
+    for the cover page. No-op if the document doesn't start with an <h1>."""
+    pattern = re.compile(r"^\s*<h1>.*?</h1>\s*<p>.*?</p>\s*<hr\s*/?>\s*", re.S)
+    return pattern.sub("", html, count=1)

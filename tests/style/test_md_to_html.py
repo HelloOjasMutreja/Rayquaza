@@ -33,3 +33,21 @@ def test_embed_images_leaves_non_png_and_urls_untouched():
     md = "![a](http://example.com/x.png) and ![b](fig.svg)"
     result = embed_images(md, Path("."))
     assert result == md
+
+
+def test_strip_title_block_removes_leading_h1_author_hr():
+    from md_to_html import strip_title_block
+    html = (
+        "<h1>Title</h1>\n"
+        "<p><strong>Authors</strong><br>Affiliation</p>\n"
+        "<hr />\n"
+        "<h2>Abstract</h2>\n<p>Body.</p>"
+    )
+    result = strip_title_block(html)
+    assert result == "<h2>Abstract</h2>\n<p>Body.</p>"
+
+
+def test_strip_title_block_noop_if_no_leading_h1():
+    from md_to_html import strip_title_block
+    html = "<h2>Abstract</h2>\n<p>Body.</p>"
+    assert strip_title_block(html) == html
