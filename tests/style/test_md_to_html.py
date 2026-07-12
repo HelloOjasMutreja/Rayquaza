@@ -117,14 +117,14 @@ def test_wrap_callouts_headline():
     from md_to_html import wrap_callouts
     html = '<p><strong>Headline</strong>: codellama:7b found 4/5 leaks.</p>'
     result = wrap_callouts(html)
-    assert result == '<div class="callout"><span class="pill">HEADLINE</span>codellama:7b found 4/5 leaks.</div>'
+    assert result == '<div class="callout callout--headline"><span class="pill">HEADLINE</span>codellama:7b found 4/5 leaks.</div>'
 
 
 def test_wrap_callouts_finding():
     from md_to_html import wrap_callouts
     html = '<p><strong>Finding</strong>: portability is not guaranteed.</p>'
     result = wrap_callouts(html)
-    assert result == '<div class="callout"><span class="pill">FINDING</span>portability is not guaranteed.</div>'
+    assert result == '<div class="callout callout--finding"><span class="pill">FINDING</span>portability is not guaranteed.</div>'
 
 
 def test_wrap_callouts_leaves_other_bold_paragraphs_untouched():
@@ -196,5 +196,5 @@ def test_render_markdown_to_html_full_pipeline(tmp_path):
     assert "<figure>" in html and "data:image/png;base64," in html
     assert '<div class="table-wrap">' in html
     assert '<p class="table-caption">' in html
-    assert '<div class="callout"><span class="pill">FINDING</span>' in html
+    assert '<div class="callout callout--finding"><span class="pill">FINDING</span>' in html
     assert '<span class="reftag">REF-FOO</span>' in html

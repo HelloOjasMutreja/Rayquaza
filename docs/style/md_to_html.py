@@ -110,13 +110,15 @@ def wrap_tables(html: str) -> str:
 
 def wrap_callouts(html: str) -> str:
     """Convert '<p><strong>Headline</strong>: text</p>' or
-    '<p><strong>Finding</strong>: text</p>' paragraphs into a neutral
-    callout box with a solid ink-on-paper pill label -- no colored
-    border/edge strip (explicitly rejected during design review)."""
+    '<p><strong>Finding</strong>: text</p>' paragraphs into a callout
+    box with a solid pill label. A modifier class (callout--headline /
+    callout--finding) is emitted so CSS can apply semantic accent colours
+    per label type."""
     pattern = re.compile(r'<p><strong>(Headline|Finding)</strong>:?\s*(.*?)</p>', re.S)
     def _repl(match: re.Match) -> str:
         label, body = match.groups()
-        return f'<div class="callout"><span class="pill">{label.upper()}</span>{body}</div>'
+        modifier = label.lower()
+        return f'<div class="callout callout--{modifier}"><span class="pill">{label.upper()}</span>{body}</div>'
     return pattern.sub(_repl, html)
 
 
