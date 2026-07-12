@@ -5,6 +5,7 @@ the design-token system in this directory.
 Run: python docs/style/build_pdf.py docs/paper/paper.md
 """
 import argparse
+import re
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
@@ -26,6 +27,20 @@ def build_html_document(front_matter: dict, body_html: str) -> str:
     date = front_matter.get("date", "")
     classification = front_matter.get("classification", "")
 
+    # Extract Google Fonts @import URLs from subsystem_css
+    # CSS spec requires @import to precede all other rules; inlining breaks this position.
+    # Extract them here to inject as <link> tags in the HTML <head> instead.
+    font_imports = re.findall(r'@import\s+url\([\'"]?(https://fonts\.googleapis\.com[^\'")\s]+)[\'"]?\)\s*;', subsystem_css)
+
+    # Strip all @import url('https://...') lines from subsystem_css before inlining
+    subsystem_css_clean = re.sub(r'@import\s+url\([\'"]?https://[^\'")\s]+[\'"]?\)\s*;', '', subsystem_css)
+
+    # Build <link> tags for the head
+    font_links = '\n'.join(
+        f'<link rel="stylesheet" href="{url}">'
+        for url in font_imports
+    )
+
     cover = f'''
     <section class="cover">
       <div class="cover-eyebrow">{affiliation}</div>
@@ -43,9 +58,12 @@ def build_html_document(front_matter: dict, body_html: str) -> str:
 <html>
 <head>
 <meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+{font_links}
 <style>
 {tokens_css}
-{subsystem_css}
+{subsystem_css_clean}
 .cover {{ display:flex; flex-direction:column; height: 9.5in; }}
 .cover-eyebrow {{ font-family: var(--font-mono); font-size:8pt; letter-spacing:.1em; text-transform:uppercase; color: var(--color-ink-soft); }}
 .cover-title {{ font-size:22pt; margin-top:2in; max-width:9in; }}
@@ -66,11 +84,16 @@ def build_html_document(front_matter: dict, body_html: str) -> str:
 def render_pdf(html: str, output_path: Path, short_title: str = "", classification: str = "") -> None:
     """Render html to a PDF at output_path using headless Chromium, with a
     running header (short_title) and footer (classification + page number)."""
+    # Playwright header/footer templates execute in an isolated context where CSS custom
+    # properties (CSS variables) are NOT available. Therefore var(--color-ink-soft) cannot
+    # be used. #8a8a85 is a medium grey chosen to visually approximate --color-ink-soft
+    # (#313131) at the smaller header/footer font size and on a white Chromium-generated margin.
     header_template = (
         '<div style="font-family:\'Roboto Mono\',monospace;font-size:7px;'
         'width:100%;padding:0 0.7in;color:#8a8a85;display:flex;justify-content:space-between;">'
         f'<span>{short_title}</span></div>'
     )
+    # See header_template comment above for explanation of #8a8a85 hardcoded color.
     footer_template = (
         '<div style="font-family:\'Roboto Mono\',monospace;font-size:7px;'
         'width:100%;padding:0 0.7in;color:#8a8a85;display:flex;justify-content:space-between;">'
