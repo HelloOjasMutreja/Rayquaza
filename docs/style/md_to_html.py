@@ -140,7 +140,7 @@ def render_markdown_to_html(md_path: Path) -> tuple[dict, str]:
     raw = md_path.read_text(encoding="utf-8")
     front_matter, body_md = parse_front_matter(raw)
     body_md = embed_images(body_md, md_path.parent)
-    converter = _markdown.Markdown(extensions=["tables", "sane_lists", "footnotes", "smarty"])
+    converter = _markdown.Markdown(extensions=["tables", "sane_lists", "footnotes", "smarty", "fenced_code"])
     html = converter.convert(body_md)
     html = strip_title_block(html)
     html = number_and_id_headings(html)

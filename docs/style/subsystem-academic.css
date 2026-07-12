@@ -6,12 +6,16 @@
 @import url('tokens.css');
 @import url('https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Roboto+Mono:wght@400&display=swap');
 
-/* html background extends to full A4 canvas in Chromium PDF, preventing
-   a two-tone effect where the margin area is pure white against off-white body. */
-html { background: var(--color-paper); }
-
+/* Background is intentionally NOT set here. Chromium's print-to-PDF never
+   paints the page-margin box with html/body background -- only the printable
+   content area -- so any background set here would still leave the margin
+   band unpainted whenever a non-zero page margin is used. build_pdf.py
+   handles background per document type instead: the cover page (rendered
+   with zero margin, full-bleed) paints its own background inline; the body
+   pages (rendered with real @page-equivalent margins, for correct pagination
+   with no header/footer overlap) get their background, running header/footer,
+   and page number painted afterwards as a full-page reportlab underlay. */
 body {
-  background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-weight: var(--weight-regular);
@@ -41,6 +45,24 @@ code {
   border-radius: var(--radius-inner);
   padding: 1px 4px;
   font-size: 0.85em;
+}
+
+/* fenced code blocks (```...```) -- preserve exact whitespace/line breaks
+   (needed for ASCII diagrams), don't wrap inline like code's default */
+pre {
+  background: var(--color-surface);
+  border: var(--stroke) solid var(--color-border);
+  border-radius: var(--radius-mid);
+  padding: 8pt 10pt;
+  margin: 10pt 0;
+  overflow-x: auto;
+  break-inside: avoid;
+}
+pre code {
+  background: none;
+  padding: 0;
+  font-size: 8.5pt;
+  white-space: pre;
 }
 
 figure { margin: 12pt 0; text-align: center; }

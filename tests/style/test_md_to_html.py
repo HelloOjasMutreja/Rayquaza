@@ -180,6 +180,35 @@ Some intro text.
 '''
 
 
+def test_render_markdown_to_html_preserves_fenced_code_block_layout(tmp_path):
+    """Regression test: triple-backtick fenced blocks (e.g. ASCII diagrams)
+    must render as a real <pre><code> block with line breaks preserved, not
+    reflow as wrapped prose. This requires the 'fenced_code' markdown
+    extension -- without it, ``` blocks silently fall through as an inline
+    <code> span inside a <p>, and the whitespace/line-break structure of an
+    ASCII diagram is lost."""
+    from md_to_html import render_markdown_to_html
+
+    md_path = tmp_path / "sample.md"
+    md_path.write_text(
+        "# Sample\n\n**A. Uthor**\n\n---\n\n## 1. Diagram\n\n"
+        "```\n"
+        "+------+     +------+\n"
+        "| A    | --> | B    |\n"
+        "+------+     +------+\n"
+        "```\n",
+        encoding="utf-8",
+    )
+    front_matter, html = render_markdown_to_html(md_path)
+
+    assert "<pre>" in html and "<code>" in html
+    # exact line structure of the diagram must survive, not be collapsed
+    # into a single wrapped paragraph ('-->' is correctly HTML-escaped
+    # to '--&gt;' inside the code block, so match that)
+    assert "+------+     +------+" in html
+    assert "| A    | --&gt; | B    |" in html
+
+
 def test_render_markdown_to_html_full_pipeline(tmp_path):
     from md_to_html import render_markdown_to_html
 
