@@ -7,6 +7,8 @@ Run: python docs/style/build_pdf.py docs/paper/paper.md
 import argparse
 from pathlib import Path
 
+from playwright.sync_api import sync_playwright
+
 from md_to_html import render_markdown_to_html
 
 STYLE_DIR = Path(__file__).resolve().parent
@@ -59,3 +61,52 @@ def build_html_document(front_matter: dict, body_html: str) -> str:
 </article>
 </body>
 </html>'''
+
+
+def render_pdf(html: str, output_path: Path, short_title: str = "", classification: str = "") -> None:
+    """Render html to a PDF at output_path using headless Chromium, with a
+    running header (short_title) and footer (classification + page number)."""
+    header_template = (
+        '<div style="font-family:\'Roboto Mono\',monospace;font-size:7px;'
+        'width:100%;padding:0 0.7in;color:#8a8a85;display:flex;justify-content:space-between;">'
+        f'<span>{short_title}</span></div>'
+    )
+    footer_template = (
+        '<div style="font-family:\'Roboto Mono\',monospace;font-size:7px;'
+        'width:100%;padding:0 0.7in;color:#8a8a85;display:flex;justify-content:space-between;">'
+        f'<span>{classification}</span><span class="pageNumber"></span></div>'
+    )
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        page.set_content(html, wait_until="networkidle")
+        page.pdf(
+            path=str(output_path),
+            format="A4",
+            display_header_footer=True,
+            header_template=header_template,
+            footer_template=footer_template,
+            margin={"top": "0.75in", "bottom": "0.75in", "left": "0.7in", "right": "0.7in"},
+            print_background=True,
+        )
+        browser.close()
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Render a Rayquaza markdown document to a styled PDF.")
+    parser.add_argument("source", type=Path, help="Path to the source .md file")
+    parser.add_argument("--output", type=Path, default=None, help="Output PDF path (default: same name, .pdf extension)")
+    args = parser.parse_args()
+
+    front_matter, body_html = render_markdown_to_html(args.source)
+    html = build_html_document(front_matter, body_html)
+
+    output = args.output or args.source.with_suffix(".pdf")
+    short_title = str(front_matter.get("title", args.source.stem))[:60]
+    classification = str(front_matter.get("classification", ""))
+    render_pdf(html, output, short_title=short_title, classification=classification)
+    print(f"wrote {output}")
+
+
+if __name__ == "__main__":
+    main()
