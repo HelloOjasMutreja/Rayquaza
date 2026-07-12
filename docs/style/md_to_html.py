@@ -24,3 +24,21 @@ def parse_front_matter(text: str) -> tuple[dict, str]:
             front_matter = yaml.safe_load(fm_text) or {}
             return front_matter, body
     return {}, text
+
+
+def embed_images(md_text: str, base_dir: Path) -> str:
+    """In markdown source text, replace ![alt](relative/path.png) references
+    with ![alt](data:image/png;base64,...) data URIs, resolved relative to
+    base_dir. References to non-.png images, absolute URLs, or already-data
+    URIs are left unchanged."""
+    def _embed(match: re.Match) -> str:
+        alt, src = match.group(1), match.group(2)
+        if src.startswith(("http://", "https://", "data:")):
+            return match.group(0)
+        if not src.lower().endswith(".png"):
+            return match.group(0)
+        image_path = base_dir / src
+        image_bytes = image_path.read_bytes()
+        b64 = base64.b64encode(image_bytes).decode("ascii")
+        return f"![{alt}](data:image/png;base64,{b64})"
+    return re.sub(r"!\[([^\]]*)\]\(([^)]+)\)", _embed, md_text)
