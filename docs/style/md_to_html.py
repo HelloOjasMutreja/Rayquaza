@@ -118,3 +118,13 @@ def wrap_callouts(html: str) -> str:
         label, body = match.groups()
         return f'<div class="callout"><span class="pill">{label.upper()}</span>{body}</div>'
     return pattern.sub(_repl, html)
+
+
+def wrap_reftags(html: str) -> str:
+    """Style '[REF-FOO]' bracket tags at the start of a References <li>
+    as a small mono pill."""
+    return re.sub(
+        r'<li>\[(REF-[A-Z0-9-]+)\]\s*',
+        lambda m: f'<li><span class="reftag">{m.group(1)}</span> ',
+        html,
+    )

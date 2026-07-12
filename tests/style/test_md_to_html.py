@@ -131,3 +131,16 @@ def test_wrap_callouts_leaves_other_bold_paragraphs_untouched():
     from md_to_html import wrap_callouts
     html = '<p><strong>Note</strong>: something else.</p>'
     assert wrap_callouts(html) == html
+
+
+def test_wrap_reftags_styles_bracket_tag():
+    from md_to_html import wrap_reftags
+    html = '<li>[REF-KYBERSLASH] M. J. Kannwischer et al.</li>'
+    result = wrap_reftags(html)
+    assert result == '<li><span class="reftag">REF-KYBERSLASH</span> M. J. Kannwischer et al.</li>'
+
+
+def test_wrap_reftags_leaves_normal_list_items_untouched():
+    from md_to_html import wrap_reftags
+    html = '<li>Not a reference.</li>'
+    assert wrap_reftags(html) == html
