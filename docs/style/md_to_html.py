@@ -128,3 +128,22 @@ def wrap_reftags(html: str) -> str:
         lambda m: f'<li><span class="reftag">{m.group(1)}</span> ',
         html,
     )
+
+
+def render_markdown_to_html(md_path: Path) -> tuple[dict, str]:
+    """Full pipeline: read md_path, split front matter, render the
+    remaining markdown to HTML, strip the manual title block, then apply
+    every wrap_*/number_and_id_headings transform in order. Returns
+    (front_matter, body_html)."""
+    raw = md_path.read_text(encoding="utf-8")
+    front_matter, body_md = parse_front_matter(raw)
+    body_md = embed_images(body_md, md_path.parent)
+    converter = _markdown.Markdown(extensions=["tables", "sane_lists", "footnotes", "smarty"])
+    html = converter.convert(body_md)
+    html = strip_title_block(html)
+    html = number_and_id_headings(html)
+    html = wrap_figures(html)
+    html = wrap_tables(html)
+    html = wrap_callouts(html)
+    html = wrap_reftags(html)
+    return front_matter, html

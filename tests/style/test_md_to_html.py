@@ -144,3 +144,57 @@ def test_wrap_reftags_leaves_normal_list_items_untouched():
     from md_to_html import wrap_reftags
     html = '<li>Not a reference.</li>'
     assert wrap_reftags(html) == html
+
+
+FIXTURE_MD = '''---
+title: "Sample Report"
+authors: "A. Uthor"
+template: paper
+---
+# Sample Report
+
+**A. Uthor**
+Some Affiliation
+
+---
+
+## 1. Introduction
+
+Some intro text.
+
+![Figure 0](tiny.png)
+
+**Figure 0.** A tiny test figure.
+
+**Table 1: A small table.**
+
+| A | B |
+|---|---|
+| 1 | 2 |
+
+**Finding**: something notable happened.
+
+## References
+
+- [REF-FOO] Some Author, "A Paper," 2020.
+'''
+
+
+def test_render_markdown_to_html_full_pipeline(tmp_path):
+    from md_to_html import render_markdown_to_html
+
+    png_bytes = base64.b64decode(TINY_PNG_B64)
+    (tmp_path / "tiny.png").write_bytes(png_bytes)
+    md_path = tmp_path / "sample.md"
+    md_path.write_text(FIXTURE_MD, encoding="utf-8")
+
+    front_matter, html = render_markdown_to_html(md_path)
+
+    assert front_matter == {"title": "Sample Report", "authors": "A. Uthor", "template": "paper"}
+    assert not html.strip().startswith("<h1>")
+    assert '<span class="secnum">1.</span> Introduction' in html
+    assert "<figure>" in html and "data:image/png;base64," in html
+    assert '<div class="table-wrap">' in html
+    assert '<p class="table-caption">' in html
+    assert '<div class="callout"><span class="pill">FINDING</span>' in html
+    assert '<span class="reftag">REF-FOO</span>' in html
