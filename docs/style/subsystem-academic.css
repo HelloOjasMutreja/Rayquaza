@@ -43,9 +43,14 @@ code {
   font-size: 0.85em;
 }
 
-figure { margin: 12pt 0; }
+figure { margin: 12pt 0; text-align: center; }
 figure img {
-  width: 100%;
+  /* cap height so a tall figure fits within one page's content area
+     (A4 minus vertical padding/running bands), preserving aspect ratio,
+     rather than overflowing and forcing an ugly page-crossing break */
+  width: auto;
+  max-width: 100%;
+  max-height: 8.2in;
   border: var(--stroke) solid var(--color-border);
   border-radius: var(--radius-mid);
 }
