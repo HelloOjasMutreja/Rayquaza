@@ -119,6 +119,19 @@ def test_wrap_figures_leaves_unpaired_image_untouched():
     assert wrap_figures(html) == html
 
 
+def test_wrap_figures_accepts_diagram_caption_unnumbered():
+    from md_to_html import wrap_figures
+    html = (
+        '<p><img alt="Core pipeline" src="data:image/png;base64,AAAA" /></p>\n'
+        '<p><strong>Diagram.</strong> The core closed loop.</p>'
+    )
+    result = wrap_figures(html)
+    assert result == (
+        '<figure><img alt="Core pipeline" src="data:image/png;base64,AAAA">'
+        '<figcaption><span class="fignum">Diagram.</span> The core closed loop.</figcaption></figure>'
+    )
+
+
 def test_wrap_tables_styles_caption_paragraph():
     from md_to_html import wrap_tables
     html = '<p><strong>Table 1: Planted leaks.</strong></p>'

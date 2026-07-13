@@ -85,10 +85,14 @@ def number_and_id_headings(html: str) -> str:
 def wrap_figures(html: str) -> str:
     """Merge a '<p><img ...></p>' immediately followed by a
     '<p><strong>Figure N.</strong> caption</p>' into one <figure> block.
-    Pairs not matching this exact shape are left untouched."""
+    Also accepts a '<strong>Diagram.</strong>' caption prefix, for an
+    explanatory diagram that isn't part of the numbered Figure sequence
+    (e.g. a methodology-section diagram illustrating content a later,
+    numbered figure covers in full) -- same visual frame, no implied
+    figure number. Pairs not matching either exact shape are left untouched."""
     pattern = re.compile(
         r'<p><img alt="([^"]*)" src="([^"]+)"\s*/?></p>\s*'
-        r'<p><strong>(Figure \d+\.)</strong>\s*(.*?)</p>',
+        r'<p><strong>(Figure \d+\.|Diagram\.)</strong>\s*(.*?)</p>',
         re.S,
     )
     def _repl(match: re.Match) -> str:

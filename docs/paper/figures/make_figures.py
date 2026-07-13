@@ -165,6 +165,54 @@ def fig_isa_portability():
     save(fig, "fig4_isa_portability")
 
 
+# ── §3.2 diagram — core closed loop, no gateway (gateway not introduced
+#    until §5.1 in the reading order; this replaces a plain ASCII-art box
+#    diagram that predated the design system and looked out of place next
+#    to every other properly-rendered figure) ──────────────────────────────
+def fig_core_pipeline():
+    from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+
+    fig, ax = plt.subplots(figsize=(9.0, 3.6))
+    ax.set_xlim(0, 95); ax.set_ylim(0, 24); ax.axis("off")
+
+    def box(x, y, w, h, label, color, fontsize=9.2, textcolor="white"):
+        b = FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.6,rounding_size=3",
+                            linewidth=0, facecolor=color, alpha=0.92, zorder=2)
+        ax.add_patch(b)
+        ax.text(x + w/2, y + h/2, label, ha="center", va="center", fontsize=fontsize,
+                color=textcolor, zorder=3, wrap=True, linespacing=1.35)
+        return (x, y, w, h)
+
+    def arrow(b1, b2, label="", lw=1.4, label_dy=1.6):
+        x1, y1, w1, h1 = b1; x2, y2, w2, h2 = b2
+        p1 = (x1 + w1, y1 + h1/2); p2 = (x2, y2 + h2/2)
+        a = FancyArrowPatch(p1, p2, arrowstyle="-|>", mutation_scale=13,
+                            linewidth=lw, color=INK_SOFT, zorder=1)
+        ax.add_patch(a)
+        if label:
+            ax.text((p1[0]+p2[0])/2, (p1[1]+p2[1])/2 + label_dy, label,
+                    ha="center", fontsize=7.6, color=INK_SOFT, zorder=4)
+
+    src   = box(1,  7, 13, 10, "Weakened\nPQC Source", INK_SOFT, fontsize=8.6)
+    s1    = box(18, 7, 15, 10, "Stage 1\nIngestion", BLUE)
+    s3    = box(37, 7, 15, 10, "Stage 3\nVectorize", BLUE)
+    oracle= box(56, 7, 17, 10, "Timing Oracle\n(harness, Welch t)", GREEN)
+    s2    = box(77, 7, 17, 10, "Stage 2\nRefine", ORANGE)
+
+    arrow(src, s1)
+    arrow(s1, s3, "ranked hypotheses")
+    arrow(s3, oracle, "C timing harness")
+    arrow(oracle, s2, "timing JSON\n(ground truth)")
+
+    a = FancyArrowPatch((85.5, 7), (25.5, 7), connectionstyle="arc3,rad=-0.4",
+                        arrowstyle="-|>", mutation_scale=13, linewidth=1.3,
+                        linestyle=(0, (5, 3)), color=RED, zorder=1)
+    ax.add_patch(a)
+    ax.text(55, 1.6, "refine & re-hypothesise -- closed loop", ha="center",
+            fontsize=8, color=RED)
+    save(fig, "diagram_core_pipeline")
+
+
 # ── Figure 0 — architecture: closed loop + provider-agnostic model gateway ──
 def fig_architecture():
     import matplotlib.patches as mpatches
@@ -422,6 +470,7 @@ if __name__ == "__main__":
     # fallback only. To regenerate fig0 from Eraser: paste architecture.eraser
     # into Eraser.io's "Diagram as Code", export as PNG, and replace
     # docs/paper/figures/fig0_architecture.png directly.
+    fig_core_pipeline()
     fig_timing_distribution()
     fig_t_vs_afl()
     fig_afl_corpus()

@@ -137,29 +137,9 @@ Rayquaza occupies a unique position in the landscape: it is the first system to 
 
 ### 3.2 System Architecture Overview
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                          Rayquaza                               │
-│                                                                  │
-│  C Source ──► [Stage 1: Ingestion]  codellama:7b                │
-│               ├── Secret-token flagging                          │
-│               ├── Static secondary scan (memcmp/branch/loop)    │
-│               ├── MANDATORY FINDINGS directive (when triggered)  │
-│               └── Ranked Hypothesis list                         │
-│                           │                                      │
-│               [Stage 3: Vectorize]  codellama:7b                │
-│               ├── Skeleton-fill prompt → C timing harness        │
-│               ├── Compile check + error-feedback retry           │
-│               └── Deterministic fallback (if LLM fails)         │
-│                           │                                      │
-│               [Timing Oracle]  harness_oracle (C binary)         │
-│               └── Welch t-test, n=50,000 → timing JSON          │
-│                           │                                      │
-│               [Stage 2: Refine]  qwen3:8b                       │
-│               ├── PROMOTED / DEMOTED / INVALIDATED / UNCHANGED   │
-│               └── Exploitation path (if PROMOTED)               │
-└──────────────────────────────────────────────────────────────────┘
-```
+![Core pipeline](figures/diagram_core_pipeline.png)
+
+**Diagram.** The core Rayquaza closed loop. Stage 1 (codellama:7b) proposes ranked hypotheses from source; Stage 3 (codellama:7b) vectorises the top hypothesis into a compiled C timing harness; the Timing Oracle applies a calibrated Welch t-test against the real target binary; Stage 2 (qwen3:8b) reads the oracle's verdict and promotes, demotes, or invalidates the hypothesis (with an exploitation path sketched on promotion), closing the loop back to Stage 1. The provider-agnostic model gateway introduced in §5.1 (Figure 0) sits behind every LLM call shown here but is omitted from this diagram for clarity.
 
 Stages are numbered 1→3→2 to reflect that Stage 3 (vectorisation) must follow hypothesis generation (Stage 1) and precede feedback refinement (Stage 2). This ordering reflects the dependency chain: hypotheses drive vector design; oracle results from vectors drive refinement.
 
