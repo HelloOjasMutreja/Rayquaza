@@ -22,6 +22,9 @@ body {
   font-size: 11.5pt;
   line-height: 1.6;
   margin: 0;
+  /* avoid a single dangling line of a paragraph at a page top/bottom */
+  orphans: 2;
+  widows: 2;
 }
 
 h1, h2, h3 { font-weight: var(--weight-semibold); line-height: 1.3; }
@@ -89,6 +92,9 @@ figcaption .fignum { font-weight: var(--weight-medium); color: var(--color-blue)
   font-size: 8.5pt;
   color: var(--color-ink-soft);
   margin: 4pt 0 10pt;
+  /* keep a caption glued to the table that follows it, so the caption is
+     never stranded at the bottom of a page with the table pushed over */
+  break-after: avoid;
 }
 .table-caption .fignum { font-weight: var(--weight-medium); color: var(--color-blue); }
 
@@ -98,18 +104,32 @@ figcaption .fignum { font-weight: var(--weight-medium); color: var(--color-blue)
   overflow: hidden;
   margin: 10pt 0;
 }
-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8.5pt;
+  /* auto layout sizes columns to content, but overflow-wrap:anywhere on the
+     cells lets long code tokens break so the table can always shrink to fit
+     the content width instead of overflowing and being clipped at the page
+     edge (.table-wrap has overflow:hidden) */
+  table-layout: auto;
+}
 thead th {
   background: var(--color-surface);
   text-align: left;
   font-weight: var(--weight-medium);
-  padding: 6pt 8pt;
+  padding: 5pt 7pt;
 }
 tbody td {
-  padding: 5pt 8pt;
+  padding: 4.5pt 7pt;
   border-top: var(--stroke) solid var(--color-border);
   font-variant-numeric: tabular-nums;
 }
+/* Only the long code identifiers (secret_dependent_branch,
+   mld_sign_verify_internal, ...) are allowed to break mid-token -- that is
+   what lets a wide table shrink to fit. Plain prose cells wrap only at
+   spaces, so short words like "Kyber512" are never split mid-word. */
+td code, th code { overflow-wrap: anywhere; word-break: break-word; }
 
 .callout {
   background: var(--color-surface);

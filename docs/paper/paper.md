@@ -1,6 +1,6 @@
 ---
 title: "Rayquaza: LLM-Guided Timing Side-Channel Rediscovery in Post-Quantum Cryptography Implementations"
-authors: "Vedanth Dama, Ojas Mutroja"
+authors: "Vedanth Dama, Ojas Mutreja"
 affiliation: "Defence Research and Development Organisation — Scientific Analysis Group (DRDO SAG)"
 date: "July 2026"
 classification: "Internal — B7 Draft"
@@ -9,7 +9,7 @@ template: paper
 
 # Rayquaza: LLM-Guided Timing Side-Channel Rediscovery in Post-Quantum Cryptography Implementations
 
-**Vedanth Dama, Ojas Mutroja**
+**Vedanth Dama, Ojas Mutreja**
 Defence Research and Development Organisation — Scientific Analysis Group (DRDO SAG)
 *Internal Technical Report — B7 Draft, July 2026*
 

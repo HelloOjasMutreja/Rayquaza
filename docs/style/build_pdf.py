@@ -64,8 +64,8 @@ STYLE_DIR = Path(__file__).resolve().parent
 # running header/footer, which is painted into exactly this band afterwards.
 BODY_MARGIN_TOP_IN = 0.75
 BODY_MARGIN_BOTTOM_IN = 0.75
-BODY_MARGIN_LEFT_IN = 0.7
-BODY_MARGIN_RIGHT_IN = 0.7
+BODY_MARGIN_LEFT_IN = 0.62
+BODY_MARGIN_RIGHT_IN = 0.62
 
 PAPER_RGB = (249 / 255, 248 / 255, 243 / 255)   # --color-paper #F9F8F3
 INK_SOFT_RGB = (0x31 / 255, 0x31 / 255, 0x31 / 255)  # --color-ink-soft #313131
@@ -163,9 +163,13 @@ def build_body_html(front_matter: dict, body_html: str) -> str:
     and the paper background + running header/footer + page number are all
     painted afterwards as a per-page reportlab underlay (see module
     docstring for why)."""
+    # No horizontal body padding: the left/right text inset comes entirely
+    # from Chromium's page margin (BODY_MARGIN_LEFT/RIGHT_IN), so body text
+    # aligns exactly with the reportlab-painted running header/footer, which
+    # are drawn at the same margin offset.
     extra_css = '''
     html, body { background: transparent; }
-    body { padding: 0 0.7in; }
+    body { padding: 0; }
     '''
     return f'''{_document_head(extra_css)}
 <body>
