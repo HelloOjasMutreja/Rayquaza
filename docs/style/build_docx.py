@@ -19,6 +19,7 @@ Run: python docs/style/build_docx.py docs/paper/paper.md
 import argparse
 import base64
 import io
+import re
 import uuid
 from html.parser import HTMLParser
 from pathlib import Path
@@ -36,8 +37,7 @@ from md_to_html import render_markdown_to_html
 STYLE_DIR = Path(__file__).resolve().parent
 FONTS_DIR = STYLE_DIR / "fonts"
 
-# --- design tokens (mirror of tokens.css) ---
-PAPER = "F9F8F3"
+# --- design tokens (mirror of tokens.css) -- fixed across every subsystem ---
 SURFACE = "E2E1DA"
 BORDER = "BEBEBE"
 INK = "262626"
@@ -50,8 +50,54 @@ RED = "FB2C55"
 FONT_SANS = "Public Sans"
 FONT_MONO = "Roboto Mono"
 
-BODY_PT = 10.5
-BODY_LINE = 1.35
+# --- per-subsystem theme: paper bg, lead accent (secnum/fignum/reftag/links),
+# and the type scale. "you know the drill" -- same tokens, curated subset,
+# per docs/superpowers/specs/2026-07-12-pdf-design-system-design.md.
+THEMES = {
+    "academic": {
+        "paper": "F9F8F3",
+        "accent": BLUE,
+        "body_pt": 10.5, "body_line": 1.35,
+        "h2_pt": 15, "h3_pt": 12.5,
+        "table_pt": 8.5,
+        "cover_title_pt": 23, "cover_authors_pt": 12.5, "cover_affil_pt": 10.5,
+    },
+    "primer": {
+        "paper": SURFACE,  # warmer paper-warm tone, reused from the shared surface token
+        "accent": GREEN,
+        "body_pt": 12.5, "body_line": 1.55,
+        "h2_pt": 19, "h3_pt": 15.5,
+        "table_pt": 9.5,
+        "cover_title_pt": 27, "cover_authors_pt": 14, "cover_affil_pt": 11.5,
+    },
+}
+
+# theme-able globals, set by _apply_theme() before a build starts
+PAPER = THEMES["academic"]["paper"]
+ACCENT = THEMES["academic"]["accent"]
+BODY_PT = THEMES["academic"]["body_pt"]
+BODY_LINE = THEMES["academic"]["body_line"]
+H2_PT = THEMES["academic"]["h2_pt"]
+H3_PT = THEMES["academic"]["h3_pt"]
+TABLE_PT = THEMES["academic"]["table_pt"]
+COVER_TITLE_PT = THEMES["academic"]["cover_title_pt"]
+COVER_AUTHORS_PT = THEMES["academic"]["cover_authors_pt"]
+COVER_AFFIL_PT = THEMES["academic"]["cover_affil_pt"]
+
+
+def _apply_theme(name: str) -> None:
+    """Reassign the module's theme-able globals for the chosen subsystem.
+    Must run before any document content is emitted -- every emitter below
+    reads these globals fresh at call time (never as a bound default), so
+    this is safe as a one-time reassignment per build_docx() run."""
+    global PAPER, ACCENT, BODY_PT, BODY_LINE, H2_PT, H3_PT, TABLE_PT
+    global COVER_TITLE_PT, COVER_AUTHORS_PT, COVER_AFFIL_PT
+    t = THEMES.get(name, THEMES["academic"])
+    PAPER = t["paper"]; ACCENT = t["accent"]
+    BODY_PT = t["body_pt"]; BODY_LINE = t["body_line"]
+    H2_PT = t["h2_pt"]; H3_PT = t["h3_pt"]; TABLE_PT = t["table_pt"]
+    COVER_TITLE_PT = t["cover_title_pt"]; COVER_AUTHORS_PT = t["cover_authors_pt"]
+    COVER_AFFIL_PT = t["cover_affil_pt"]
 
 
 # ======================================================================
@@ -166,8 +212,12 @@ def _shade_run(run, hex_fill):
     rPr.append(shd)
 
 
-def _style_run(run, *, font=FONT_SANS, size=BODY_PT, color=INK,
+def _style_run(run, *, font=FONT_SANS, size=None, color=INK,
                bold=False, italic=False, mono=False, shade=None):
+    # size defaults to the CURRENT theme's body size -- resolved here, not
+    # bound at function-definition time, so _apply_theme() changes take effect
+    if size is None:
+        size = BODY_PT
     run.font.name = FONT_MONO if mono else font
     # ensure east-asian/cs also use the font so Word doesn't substitute
     rPr = run._r.get_or_add_rPr()
@@ -198,12 +248,15 @@ def _add_page_number_field(paragraph):
 # ======================================================================
 # inline runs: walk an element's inline children (#text, strong, em, code, a)
 # ======================================================================
-def _emit_inline(paragraph, node, *, base_size=BODY_PT, base_color=INK,
+def _emit_inline(paragraph, node, *, base_size=None, base_color=INK,
                  bold=False, italic=False):
+    if base_size is None:
+        base_size = BODY_PT
     for child in node.children:
         if child.tag == "#text":
-            if child.text:
-                r = paragraph.add_run(child.text)
+            normalized = re.sub(r"\s+", " ", child.text) if child.text else ""
+            if normalized:
+                r = paragraph.add_run(normalized)
                 _style_run(r, size=base_size, color=base_color, bold=bold, italic=italic)
         elif child.tag in ("strong", "b"):
             _emit_inline(paragraph, child, base_size=base_size, base_color=base_color,
@@ -218,16 +271,16 @@ def _emit_inline(paragraph, node, *, base_size=BODY_PT, base_color=INK,
         elif child.tag == "a":
             txt = _text_of(child)
             r = paragraph.add_run(txt)
-            _style_run(r, size=base_size, color=BLUE)
+            _style_run(r, size=base_size, color=ACCENT)
         elif child.tag == "span" and "secnum" in _cls(child):
             r = paragraph.add_run(_text_of(child) + " ")
-            _style_run(r, size=base_size, color=BLUE, bold=True)
+            _style_run(r, size=base_size, color=ACCENT, bold=True)
         elif child.tag == "span" and "fignum" in _cls(child):
             r = paragraph.add_run(_text_of(child) + " ")
-            _style_run(r, mono=True, size=base_size, color=BLUE, bold=True)
+            _style_run(r, mono=True, size=base_size, color=ACCENT, bold=True)
         elif child.tag == "span" and "reftag" in _cls(child):
             r = paragraph.add_run(_text_of(child))
-            _style_run(r, mono=True, size=8, color=BLUE, shade=SURFACE)
+            _style_run(r, mono=True, size=8, color=ACCENT, shade=SURFACE)
             paragraph.add_run(" ")
         elif child.tag == "br":
             paragraph.add_run().add_break()
@@ -237,10 +290,21 @@ def _emit_inline(paragraph, node, *, base_size=BODY_PT, base_color=INK,
                          bold=bold, italic=italic)
 
 
-def _text_of(node: _Node) -> str:
+def _raw_text_of(node: _Node) -> str:
+    """Flatten a node's text content, preserving exact whitespace. Only used
+    where whitespace is meaningful (fenced code blocks)."""
     if node.tag == "#text":
         return node.text or ""
-    return "".join(_text_of(c) for c in node.children)
+    return "".join(_raw_text_of(c) for c in node.children)
+
+
+def _text_of(node: _Node) -> str:
+    """Flatten a node's text content for flowing prose: collapses internal
+    whitespace runs (including the source markdown's soft-wrap line breaks)
+    to a single space, matching how a browser renders normal-flow HTML text.
+    Without this, python-docx writes the source's literal newlines into the
+    run text, and Word/LibreOffice render each as a forced line break."""
+    return re.sub(r"\s+", " ", _raw_text_of(node))
 
 
 # ======================================================================
@@ -251,15 +315,16 @@ def _emit_heading(doc, node, level):
     p.paragraph_format.space_before = Pt(12 if level == 2 else 8)
     p.paragraph_format.space_after = Pt(4)
     p.paragraph_format.keep_with_next = True
-    size = 15 if level == 2 else 12.5
-    # secnum span (blue) + remaining text
+    size = H2_PT if level == 2 else H3_PT
+    # secnum span (accent) + remaining text
     for child in node.children:
         if child.tag == "span" and "secnum" in _cls(child):
             r = p.add_run(_text_of(child) + "  ")
-            _style_run(r, size=size, color=BLUE, bold=True)
+            _style_run(r, size=size, color=ACCENT, bold=True)
         elif child.tag == "#text":
-            if child.text and child.text.strip():
-                r = p.add_run(child.text)
+            normalized = re.sub(r"\s+", " ", child.text) if child.text else ""
+            if normalized.strip():
+                r = p.add_run(normalized)
                 _style_run(r, size=size, color=INK, bold=True)
         else:
             r = p.add_run(_text_of(child))
@@ -366,11 +431,12 @@ def _emit_table(doc, table_node):
 def _emit_cell_inline(paragraph, cell_node, header):
     paragraph.paragraph_format.line_spacing = 1.05
     paragraph.paragraph_format.space_after = Pt(0)
-    size = 8.5
+    size = TABLE_PT
     for child in cell_node.children:
         if child.tag == "#text":
-            if child.text:
-                r = paragraph.add_run(child.text)
+            normalized = re.sub(r"\s+", " ", child.text) if child.text else ""
+            if normalized:
+                r = paragraph.add_run(normalized)
                 _style_run(r, size=size, color=INK, bold=header)
         elif child.tag == "code":
             r = paragraph.add_run(_text_of(child))
@@ -405,10 +471,11 @@ def _emit_figure(doc, fig_node):
         for child in cap.children:
             if child.tag == "span" and "fignum" in _cls(child):
                 r = p.add_run(_text_of(child) + " ")
-                _style_run(r, mono=True, size=8, color=BLUE, bold=True)
+                _style_run(r, mono=True, size=8, color=ACCENT, bold=True)
             elif child.tag == "#text":
-                if child.text:
-                    r = p.add_run(child.text)
+                normalized = re.sub(r"\s+", " ", child.text) if child.text else ""
+                if normalized:
+                    r = p.add_run(normalized)
                     _style_run(r, mono=True, size=8, color=INK_SOFT)
             else:
                 r = p.add_run(_text_of(child))
@@ -423,10 +490,11 @@ def _emit_table_caption(doc, node):
     for child in node.children:
         if child.tag == "span" and "fignum" in _cls(child):
             r = p.add_run(_text_of(child) + " ")
-            _style_run(r, mono=True, size=8, color=BLUE, bold=True)
+            _style_run(r, mono=True, size=8, color=ACCENT, bold=True)
         elif child.tag == "#text":
-            if child.text:
-                r = p.add_run(child.text)
+            normalized = re.sub(r"\s+", " ", child.text) if child.text else ""
+            if normalized:
+                r = p.add_run(normalized)
                 _style_run(r, mono=True, size=8, color=INK_SOFT)
         else:
             r = p.add_run(_text_of(child))
@@ -435,7 +503,7 @@ def _emit_table_caption(doc, node):
 
 def _emit_pre(doc, pre_node):
     code = _find(pre_node, "code") or pre_node
-    text = _text_of(code)
+    text = _raw_text_of(code)  # preserve exact whitespace/line breaks for code
     tbl = doc.add_table(rows=1, cols=1)
     _set_table_width_pct(tbl)
     cell = tbl.cell(0, 0)
@@ -537,18 +605,18 @@ def _build_cover(doc, fm):
 
     p = doc.add_paragraph()
     r = p.add_run(title)
-    _style_run(r, size=23, color=INK, bold=True)
+    _style_run(r, size=COVER_TITLE_PT, color=INK, bold=True)
     p.paragraph_format.space_after = Pt(20)
     p.paragraph_format.line_spacing = 1.15
 
     p = doc.add_paragraph()
     r = p.add_run(authors)
-    _style_run(r, size=12.5, color=INK, bold=True)
+    _style_run(r, size=COVER_AUTHORS_PT, color=INK, bold=True)
     p.paragraph_format.space_after = Pt(2)
 
     p = doc.add_paragraph()
     r = p.add_run(affil)
-    _style_run(r, size=10.5, color=INK_SOFT)
+    _style_run(r, size=COVER_AFFIL_PT, color=INK_SOFT)
     p.paragraph_format.space_after = Pt(16)
 
     p = doc.add_paragraph()
@@ -689,6 +757,11 @@ def _embed_fonts_in_zip(docx_path: Path) -> None:
 def build_docx(md_path: Path, output_path: Path) -> None:
     front_matter, body_html = render_markdown_to_html(md_path)
     root = _parse_html(body_html)
+
+    # front-matter's `template:` field names the document type (paper/primer);
+    # map that to the internal theme name (paper -> academic subsystem)
+    template = str(front_matter.get("template", "paper"))
+    _apply_theme({"paper": "academic", "primer": "primer"}.get(template, "academic"))
 
     doc = Document()
 

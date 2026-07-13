@@ -80,6 +80,26 @@ def test_number_and_id_headings_unnumbered_heading_gets_id_only():
     assert result == '<h2 id="abstract">Abstract</h2>'
 
 
+def test_number_and_id_headings_part_style_heading():
+    from md_to_html import number_and_id_headings
+    html = "<h2>Part 1 — Why this research exists</h2>"
+    result = number_and_id_headings(html)
+    assert result == (
+        '<h2 id="part-1-why-this-research-exists">'
+        '<span class="secnum">Part 1</span> Why this research exists</h2>'
+    )
+
+
+def test_number_and_id_headings_part_style_heading_with_decimal():
+    from md_to_html import number_and_id_headings
+    html = "<h2>Part 4.5 — Then we asked something</h2>"
+    result = number_and_id_headings(html)
+    assert result == (
+        '<h2 id="part-45-then-we-asked-something">'
+        '<span class="secnum">Part 4.5</span> Then we asked something</h2>'
+    )
+
+
 def test_wrap_figures_merges_image_and_caption_paragraph():
     from md_to_html import wrap_figures
     html = (

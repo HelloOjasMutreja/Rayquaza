@@ -1,4 +1,11 @@
-# Rayquaza — A Plain-English Primer
+---
+title: "Rayquaza — A Plain-English Primer"
+authors: "Ojas Mutreja, Vedanth Dama"
+affiliation: "Defence Research and Development Organisation — Scientific Analysis Group (DRDO SAG)"
+date: "July 2026"
+classification: "Internal — B7 Draft"
+template: primer
+---
 
 *A companion to the technical paper. This is the on-ramp: it starts from zero — no cryptography,
 no AI background assumed — and ramps steadily up to the point where the paper takes over. If you

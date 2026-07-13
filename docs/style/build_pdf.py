@@ -68,19 +68,44 @@ BODY_MARGIN_LEFT_IN = 0.62
 BODY_MARGIN_RIGHT_IN = 0.62
 
 PAPER_RGB = (249 / 255, 248 / 255, 243 / 255)   # --color-paper #F9F8F3
+SURFACE_RGB = (0xE2 / 255, 0xE1 / 255, 0xDA / 255)  # --color-surface #E2E1DA
 INK_SOFT_RGB = (0x31 / 255, 0x31 / 255, 0x31 / 255)  # --color-ink-soft #313131
 
+# Per-document-type theme: which subsystem CSS file, which shared token is
+# used as "paper" for this subsystem, and the reportlab-painted underlay
+# colour matching it. "you know the drill" -- same tokens, curated subset,
+# per docs/superpowers/specs/2026-07-12-pdf-design-system-design.md.
+THEMES = {
+    "paper": {
+        "subsystem_css": "subsystem-academic.css",
+        "paper_var": "--color-paper",
+        "paper_rgb": PAPER_RGB,
+        "accent_var": "--color-blue",
+    },
+    "primer": {
+        "subsystem_css": "subsystem-primer.css",
+        "paper_var": "--color-surface",
+        "paper_rgb": SURFACE_RGB,
+        "accent_var": "--color-green",
+    },
+}
 
-def _load_css() -> tuple[str, str, str]:
-    """Read tokens.css + subsystem-academic.css. Returns
+
+def _theme_for(front_matter: dict) -> dict:
+    template = str(front_matter.get("template", "paper"))
+    return THEMES.get(template, THEMES["paper"])
+
+
+def _load_css(subsystem_filename: str) -> tuple[str, str, str]:
+    """Read tokens.css + the given subsystem CSS file. Returns
     (tokens_css, subsystem_css_without_font_imports, font_link_tags).
 
-    The Google-Fonts @import in subsystem-academic.css is positionally
-    invalid once the CSS is inlined into a <style> block (CSS requires
-    @import before all other rules), so it is extracted and re-emitted as
-    <link> tags for the document <head>."""
+    The Google-Fonts @import in the subsystem file is positionally invalid
+    once the CSS is inlined into a <style> block (CSS requires @import
+    before all other rules), so it is extracted and re-emitted as <link>
+    tags for the document <head>."""
     tokens_css = (STYLE_DIR / "tokens.css").read_text(encoding="utf-8")
-    subsystem_css = (STYLE_DIR / "subsystem-academic.css").read_text(encoding="utf-8")
+    subsystem_css = (STYLE_DIR / subsystem_filename).read_text(encoding="utf-8")
     font_imports = re.findall(
         r'@import\s+url\([\'"]?(https://fonts\.googleapis\.com[^\'")\s]+)[\'"]?\)\s*;',
         subsystem_css,
@@ -92,9 +117,9 @@ def _load_css() -> tuple[str, str, str]:
     return tokens_css, subsystem_css, font_links
 
 
-def _document_head(extra_css: str = "") -> str:
+def _document_head(extra_css: str, subsystem_filename: str) -> str:
     """Shared <!doctype><head> with fonts + inlined design system CSS."""
-    tokens_css, subsystem_css, font_links = _load_css()
+    tokens_css, subsystem_css, font_links = _load_css(subsystem_filename)
     return f'''<!doctype html>
 <html>
 <head>
@@ -119,28 +144,29 @@ def build_cover_html(front_matter: dict) -> str:
     affiliation = front_matter.get("affiliation", "")
     date = front_matter.get("date", "")
     classification = front_matter.get("classification", "")
+    theme = _theme_for(front_matter)
 
-    extra_css = '''
-    html, body { background: var(--color-paper); }
-    .cover { min-height: 100vh; box-sizing: border-box; padding: 0.9in 0.8in;
-             display: flex; flex-direction: column; }
-    .cover-rule { height: 3pt; background: var(--color-blue); width: 100%;
-                  position: absolute; top: 0; left: 0; }
-    .cover-eyebrow { font-family: var(--font-mono); font-size: 8pt;
+    extra_css = f'''
+    html, body {{ background: var({theme["paper_var"]}); }}
+    .cover {{ min-height: 100vh; box-sizing: border-box; padding: 0.9in 0.8in;
+             display: flex; flex-direction: column; }}
+    .cover-rule {{ height: 3pt; background: var({theme["accent_var"]}); width: 100%;
+                  position: absolute; top: 0; left: 0; }}
+    .cover-eyebrow {{ font-family: var(--font-mono); font-size: 8pt;
                      letter-spacing: .1em; text-transform: uppercase;
-                     color: var(--color-ink-soft); }
-    .cover-title { font-size: 24pt; line-height: 1.25; margin-top: 2in;
-                   max-width: 9in; font-weight: var(--weight-semibold); }
-    .cover-authors { font-size: 12pt; margin-top: .32in;
-                     font-weight: var(--weight-medium); }
-    .cover-affil { font-size: 10.5pt; color: var(--color-ink-soft); margin-top: 2pt; }
-    .cover-meta { margin-top: auto; display: flex; justify-content: space-between;
+                     color: var(--color-ink-soft); }}
+    .cover-title {{ font-size: 24pt; line-height: 1.25; margin-top: 2in;
+                   max-width: 9in; font-weight: var(--weight-semibold); }}
+    .cover-authors {{ font-size: 12pt; margin-top: .32in;
+                     font-weight: var(--weight-medium); }}
+    .cover-affil {{ font-size: 10.5pt; color: var(--color-ink-soft); margin-top: 2pt; }}
+    .cover-meta {{ margin-top: auto; display: flex; justify-content: space-between;
                   font-family: var(--font-mono); font-size: 8.5pt;
                   color: var(--color-ink-soft);
                   border-top: var(--stroke) solid var(--color-border);
-                  padding-top: 8pt; }
+                  padding-top: 8pt; }}
     '''
-    return f'''{_document_head(extra_css)}
+    return f'''{_document_head(extra_css, theme["subsystem_css"])}
 <body>
   <div class="cover-rule"></div>
   <section class="cover">
@@ -163,6 +189,7 @@ def build_body_html(front_matter: dict, body_html: str) -> str:
     and the paper background + running header/footer + page number are all
     painted afterwards as a per-page reportlab underlay (see module
     docstring for why)."""
+    theme = _theme_for(front_matter)
     # No horizontal body padding: the left/right text inset comes entirely
     # from Chromium's page margin (BODY_MARGIN_LEFT/RIGHT_IN), so body text
     # aligns exactly with the reportlab-painted running header/footer, which
@@ -171,7 +198,7 @@ def build_body_html(front_matter: dict, body_html: str) -> str:
     html, body { background: transparent; }
     body { padding: 0; }
     '''
-    return f'''{_document_head(extra_css)}
+    return f'''{_document_head(extra_css, theme["subsystem_css"])}
 <body>
 <article>
 {body_html}
@@ -218,7 +245,8 @@ def _render_body_pdf_bytes(html: str) -> bytes:
     return data
 
 
-def _paint_body_pages(pdf_bytes: bytes, short_title: str, classification: str, start_at: int) -> bytes:
+def _paint_body_pages(pdf_bytes: bytes, short_title: str, classification: str, start_at: int,
+                       paper_rgb: tuple = PAPER_RGB) -> bytes:
     """For every page of the (transparent) body PDF: paint a full-page paper
     rectangle, draw the running header/footer text and page number into the
     reserved margin band, then merge the Chromium page content on top. Page
@@ -239,7 +267,7 @@ def _paint_body_pages(pdf_bytes: bytes, short_title: str, classification: str, s
     for i, chromium_page in enumerate(reader.pages):
         buf = io.BytesIO()
         c = canvas.Canvas(buf, pagesize=(width, height))
-        c.setFillColorRGB(*PAPER_RGB)
+        c.setFillColorRGB(*paper_rgb)
         c.rect(0, 0, width, height, fill=1, stroke=0)
         c.setFont("Helvetica", 7.5)
         c.setFillColorRGB(*INK_SOFT_RGB)
@@ -274,10 +302,12 @@ def render_pdf(front_matter: dict, body_html: str, output_path: Path) -> None:
     numbered body pages (starting at 2), written to output_path."""
     short_title = str(front_matter.get("title", ""))[:70]
     classification = str(front_matter.get("classification", ""))
+    theme = _theme_for(front_matter)
 
     cover_pdf = _render_cover_pdf_bytes(build_cover_html(front_matter))
     body_pdf = _render_body_pdf_bytes(build_body_html(front_matter, body_html))
-    body_pdf = _paint_body_pages(body_pdf, short_title, classification, start_at=2)
+    body_pdf = _paint_body_pages(body_pdf, short_title, classification, start_at=2,
+                                  paper_rgb=theme["paper_rgb"])
     final_pdf = _merge_pdfs(cover_pdf, body_pdf)
     Path(output_path).write_bytes(final_pdf)
 

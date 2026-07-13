@@ -64,11 +64,16 @@ def number_and_id_headings(html: str) -> str:
     """For every <h2>/<h3>, inject a slugified id attribute. If the heading
     text starts with a section number (e.g. '5.' or '5.6'), wrap that
     numbering token in <span class="secnum">...</span>, exactly as it
-    appears in the source (with or without a trailing period)."""
+    appears in the source (with or without a trailing period). Also
+    recognises PRIMER.md's 'Part N' / 'Part N.N' heading style (e.g.
+    'Part 4.5 — Then we asked...'), stripping the separating dash so the
+    rendered title reads cleanly after the accent-coloured 'Part N' tag."""
     def _repl(match: re.Match) -> str:
         level, inner = match.group(1), match.group(2)
         slug = _slugify(inner)
         numbering = re.match(r"^(\d+(?:\.\d+)*\.?)\s+(.*)$", inner)
+        if not numbering:
+            numbering = re.match(r"^(Part\s+\d+(?:\.\d+)?)\s*[—-]\s*(.*)$", inner, re.I)
         if numbering:
             rendered = f'<span class="secnum">{numbering.group(1)}</span> {numbering.group(2)}'
         else:
