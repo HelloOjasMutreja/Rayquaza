@@ -414,7 +414,14 @@ def fig_cost_vs_accuracy():
 
 
 if __name__ == "__main__":
-    fig_architecture()
+    # fig_architecture() is intentionally NOT called here: fig0_architecture.png
+    # is now hand-sourced from architecture.eraser, rendered via Eraser.io and
+    # exported as a PNG (cleaner and more legible than the matplotlib version
+    # this function draws) -- re-running this script must not silently
+    # overwrite that hand-placed file. The function is kept for reference/
+    # fallback only. To regenerate fig0 from Eraser: paste architecture.eraser
+    # into Eraser.io's "Diagram as Code", export as PNG, and replace
+    # docs/paper/figures/fig0_architecture.png directly.
     fig_timing_distribution()
     fig_t_vs_afl()
     fig_afl_corpus()
