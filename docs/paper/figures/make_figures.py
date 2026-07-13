@@ -131,14 +131,19 @@ def fig_afl_corpus():
         ax.text(b.get_x() + b.get_width()/2, v + 0.4, str(v),
                 ha="center", va="bottom", fontsize=10)
     ax.axhline(2, color=INK_SOFT, ls=":", lw=1)
+    # Annotation sits entirely ABOVE every bar top (tallest bar = 20), in the
+    # headroom created by the extended ylim below -- previously it sat at
+    # y=11 next to x=1.15, whose text box extended rightward across the
+    # LEAK-2 bar (x=1.7-2.3, height 20), rendering red text directly on top
+    # of the solid orange bar fill and making it unreadable.
     ax.annotate("memcmp leak's corpus is\nIDENTICAL to clean (2 = 2):\ncoverage is structurally blind",
-                xy=(1, 2), xytext=(1.15, 11),
+                xy=(1, 2), xytext=(0.55, 23),
                 arrowprops=dict(arrowstyle="->", color=RED, lw=1.2),
-                fontsize=9, color=RED)
+                fontsize=9, color=RED, ha="left", va="top")
     ax.set_ylabel("AFL++ corpus paths after 24 h")
     ax.set_title("Coverage cannot see the memcmp timing leak; "
                  "branch leaks add edges but stay unidentified", fontsize=10.5)
-    ax.set_ylim(0, 24)
+    ax.set_ylim(0, 29)
     save(fig, "fig3_afl_corpus")
 
 
