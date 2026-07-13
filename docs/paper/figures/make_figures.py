@@ -3,37 +3,65 @@
 make_figures.py — generate the paper's figures from the confirmed oracle data
 and the AFL++ comparison. Run: python docs/paper/figures/make_figures.py
 Outputs PNG + PDF into docs/paper/figures/.
+
+Palette, fonts, and neutrals are ported directly from the design-token
+system (docs/style/tokens.css) so every figure reads as part of the same
+document as the PDF/docx it's embedded in. See
+docs/superpowers/specs/2026-07-12-pdf-design-system-design.md for the
+system this mirrors -- if that spec's hex values change, update here too.
 """
 from pathlib import Path
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
+import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 from matplotlib.ticker import LogLocator
 
 OUT = Path(__file__).resolve().parent
 OUT.mkdir(parents=True, exist_ok=True)
+FONTS_DIR = OUT.parent.parent / "style" / "fonts"
 
-# Clean, print-friendly, colour-blind-safe palette
-BLUE = "#2c6fbb"   # class A / LLM
-AMBER = "#e08214"  # class B / contrast
-GREY = "#9aa0a6"
-RED = "#c0392b"
-GREEN = "#2e8b57"
-ORANGE = "#d17d1f"
-PURPLE = "#7b5ea7"  # model gateway / multi-provider layer
+# ── design tokens (mirror of docs/style/tokens.css) ──────────────────────────
+PAPER = "#F9F8F3"
+SURFACE = "#E2E1DA"
+BORDER = "#BEBEBE"
+INK = "#262626"
+INK_SOFT = "#313131"
+BLUE = "#0099FF"
+GREEN = "#2FBB45"
+ORANGE = "#DC762D"
+RED = "#FB2C55"
+
+FONT_SANS = "Public Sans"
+FONT_SANS_SEMIBOLD = "Public Sans SemiBold"
+FONT_MONO = "Roboto Mono"
+
+for _f in ("publicsans-400.ttf", "publicsans-500.ttf", "publicsans-600.ttf",
+           "publicsans-400i.ttf", "robotomono-400.ttf"):
+    _p = FONTS_DIR / _f
+    if _p.exists():
+        fm.fontManager.addfont(str(_p))
+
 plt.rcParams.update({
-    "font.size": 11, "font.family": "DejaVu Sans",
+    # DejaVu Sans as an explicit fallback: Public Sans (a trimmed static
+    # subset) doesn't cover every symbol we use in annotations (e.g. Δ, ≈),
+    # so without a fallback matplotlib would render a missing-glyph tofu box.
+    "font.size": 11, "font.family": [FONT_SANS, "DejaVu Sans"],
+    "text.color": INK, "axes.labelcolor": INK, "axes.titlecolor": INK,
+    "xtick.color": INK_SOFT, "ytick.color": INK_SOFT,
+    "axes.edgecolor": BORDER, "axes.linewidth": 1.0,
     "axes.spines.top": False, "axes.spines.right": False,
-    "axes.grid": True, "grid.alpha": 0.25, "grid.linewidth": 0.6,
+    "axes.grid": True, "grid.color": BORDER, "grid.alpha": 0.6, "grid.linewidth": 0.7,
     "figure.dpi": 150,
+    "figure.facecolor": PAPER, "axes.facecolor": PAPER, "savefig.facecolor": PAPER,
 })
 
 
 def save(fig, name):
     fig.tight_layout()
-    fig.savefig(OUT / f"{name}.png", bbox_inches="tight")
-    fig.savefig(OUT / f"{name}.pdf", bbox_inches="tight")
+    fig.savefig(OUT / f"{name}.png", bbox_inches="tight", facecolor=PAPER)
+    fig.savefig(OUT / f"{name}.pdf", bbox_inches="tight", facecolor=PAPER)
     plt.close(fig)
     print("wrote", name)
 
@@ -50,13 +78,13 @@ def fig_timing_distribution():
         return np.exp(-0.5 * ((x - m) / s) ** 2) / (s * np.sqrt(2 * np.pi))
 
     fig, ax = plt.subplots(figsize=(6.4, 3.8))
-    ax.plot(x, pdf(x, mB, sB), color=AMBER, lw=2,
+    ax.plot(x, pdf(x, mB, sB), color=ORANGE, lw=2,
             label="Class B — invalid ct, early exit at byte 0")
-    ax.fill_between(x, pdf(x, mB, sB), color=AMBER, alpha=0.12)
+    ax.fill_between(x, pdf(x, mB, sB), color=ORANGE, alpha=0.12)
     ax.plot(x, pdf(x, mA, sA), color=BLUE, lw=2,
             label="Class A — valid ct, full 768-byte scan")
     ax.fill_between(x, pdf(x, mA, sA), color=BLUE, alpha=0.12)
-    ax.axvline(mB, color=AMBER, ls=":", lw=1)
+    ax.axvline(mB, color=ORANGE, ls=":", lw=1)
     ax.axvline(mA, color=BLUE, ls=":", lw=1)
     ax.annotate("", xy=(mA, 0.002), xytext=(mB, 0.002),
                 arrowprops=dict(arrowstyle="<->", color="black", lw=1))
@@ -96,13 +124,13 @@ def fig_t_vs_afl():
 def fig_afl_corpus():
     labels = ["Clean\nbaseline", "LEAK-5\nmemcmp", "LEAK-2\npoly_tomsg", "LEAK-4\nindcpa_dec"]
     paths = [2, 2, 20, 18]
-    colors = [GREY, GREY, AMBER, AMBER]
+    colors = [BORDER, BORDER, ORANGE, ORANGE]
     fig, ax = plt.subplots(figsize=(6.6, 3.9))
     bars = ax.bar(labels, paths, color=colors, width=0.6, zorder=3)
     for b, v in zip(bars, paths):
         ax.text(b.get_x() + b.get_width()/2, v + 0.4, str(v),
                 ha="center", va="bottom", fontsize=10)
-    ax.axhline(2, color=GREY, ls=":", lw=1)
+    ax.axhline(2, color=INK_SOFT, ls=":", lw=1)
     ax.annotate("memcmp leak's corpus is\nIDENTICAL to clean (2 = 2):\ncoverage is structurally blind",
                 xy=(1, 2), xytext=(1.15, 11),
                 arrowprops=dict(arrowstyle="->", color=RED, lw=1.2),
@@ -119,7 +147,7 @@ def fig_isa_portability():
     fig, ax = plt.subplots(figsize=(5.2, 3.9))
     labels = ["x86-64\n(glibc byte-loop memcmp)", "AArch64 -O2\n(NEON fixed-width)"]
     vals = [164.30, 0.9]
-    colors = [BLUE, GREY]
+    colors = [BLUE, BORDER]
     bars = ax.bar(labels, vals, color=colors, width=0.55, zorder=3)
     ax.axhline(2.0, color=RED, ls="--", lw=1.2)
     ax.text(1.4, 2.6, "|t| = 2", color=RED, fontsize=9, ha="right")
@@ -159,10 +187,10 @@ def fig_architecture():
         ax.add_patch(a)
         if label:
             mx, my = (p1[0]+p2[0])/2 + label_dx, (p1[1]+p2[1])/2 + label_dy
-            ax.text(mx, my, label, ha="center", fontsize=7.6, color="#444", zorder=4)
+            ax.text(mx, my, label, ha="center", fontsize=7.6, color=INK_SOFT, zorder=4)
 
     # Pipeline spine (left -> right), y=30..46
-    src   = box(1,  32, 14, 10, "Weakened\nPQC Source", GREY, fontsize=8.6)
+    src   = box(1,  32, 14, 10, "Weakened\nPQC Source", INK_SOFT, fontsize=8.6)
     s1    = box(19, 32, 16, 10, "Stage 1\nIngestion", BLUE)
     s3    = box(39, 32, 16, 10, "Stage 3\nVectorize", BLUE)
     oracle= box(59, 32, 16, 10, "Timing Oracle\n(harness, Welch t)", GREEN)
@@ -183,10 +211,10 @@ def fig_architecture():
             fontsize=8, color=RED)
 
     # Model Gateway: one box, three provider families, feeding all 3 LLM stages
-    gw = box(19, 2, 76, 16, "", PURPLE, fontsize=1)  # background only
-    ax.text(22, 15.3, "Model Gateway", fontsize=10.5, fontweight="bold", color="white")
+    gw = box(19, 2, 76, 16, "", INK, fontsize=1)  # background only
+    ax.text(22, 15.3, "Model Gateway", fontsize=10.5, fontfamily=FONT_SANS_SEMIBOLD, color="white")
     ax.text(22, 12.6, "Router (model id -> provider)  +  Meter (tokens, cost, budget cap)",
-            fontsize=7.8, color="#e8e0f5")
+            fontsize=7.8, color=SURFACE)
     prov = [
         ("Open-weight (Ollama)", "CodeLlama, Qwen2.5-Coder\n7B-32B -- local CPU / cloud GPU", 22),
         ("Anthropic API", "Haiku, Sonnet 4.6/5,\nOpus 4.8, Fable 5", 48),
@@ -194,17 +222,17 @@ def fig_architecture():
     ]
     for name, detail, x in prov:
         pb = FancyBboxPatch((x, 3.5), 20, 6.5, boxstyle="round,pad=0.4,rounding_size=2",
-                            linewidth=0.8, edgecolor="white", facecolor="#6a4f92", zorder=3)
+                            linewidth=0.8, edgecolor="white", facecolor=INK_SOFT, zorder=3)
         ax.add_patch(pb)
-        ax.text(x + 10, 8.1, name, ha="center", fontsize=7.6, color="white", fontweight="bold", zorder=4)
-        ax.text(x + 10, 5.6, detail, ha="center", fontsize=6.6, color="#e8e0f5", zorder=4, linespacing=1.3)
+        ax.text(x + 10, 8.1, name, ha="center", fontsize=7.6, color="white", fontfamily=FONT_SANS_SEMIBOLD, zorder=4)
+        ax.text(x + 10, 5.6, detail, ha="center", fontsize=6.6, color=SURFACE, zorder=4, linespacing=1.3)
 
     for target, x in ((s1, 27), (s3, 47), (s2, 87)):
         a = FancyArrowPatch((x, 18), (x, 32), arrowstyle="-|>", mutation_scale=11,
-                            linewidth=1.0, linestyle=(0, (2, 2)), color=PURPLE, zorder=1)
+                            linewidth=1.0, linestyle=(0, (2, 2)), color=INK_SOFT, zorder=1)
         ax.add_patch(a)
     ax.text(1, 20.5, "RAYQ_CODE_MODEL / RAYQ_REASON_MODEL\n-- same engine code, any provider",
-            fontsize=7.6, color=PURPLE, style="italic")
+            fontsize=7.6, color=INK_SOFT, style="italic")
 
     ax.set_title("Rayquaza: closed-loop pipeline over a provider-agnostic model gateway",
                 fontsize=11.5, pad=10)
@@ -219,7 +247,7 @@ _TIER_ORDER = ["Local CPU", "Cloud GPU", "Frontier API"]
 _TARGET_ORDER = ["kyber512_leak5", "kyber512_leak4", "kyber512_leak2", "mldsa44_leak1"]
 _TARGET_LABEL = {"kyber512_leak5": "LEAK-5\nmemcmp", "kyber512_leak4": "LEAK-4\nbranch",
                   "kyber512_leak2": "LEAK-2\nbranch", "mldsa44_leak1": "MLDSA-1\nmemcmp"}
-_VENDOR_COLOR = {"Anthropic": "#c0708a", "OpenAI": "#2c9e8f", "Open-weight": BLUE}
+_VENDOR_COLOR = {"Anthropic": ORANGE, "OpenAI": GREEN, "Open-weight": BLUE}
 
 
 def _load_master():
@@ -238,10 +266,10 @@ def fig_class_gap():
     fig, ax = plt.subplots(figsize=(5.6, 4.2))
     labels = ["secret_dependent_branch\n(explicit if/for on secret data)",
               "nonconstant_comparison\n(memcmp/verify substitution)"]
-    bars = ax.bar(labels, rates, color=[BLUE, AMBER], width=0.55, zorder=3)
+    bars = ax.bar(labels, rates, color=[BLUE, ORANGE], width=0.55, zorder=3)
     for b, r, (loc, n) in zip(bars, rates, ns):
         ax.text(b.get_x() + b.get_width()/2, r + 2, f"{loc}/{n}\n({r:.0f}%)",
-                ha="center", va="bottom", fontsize=10, fontweight="bold")
+                ha="center", va="bottom", fontsize=10, fontfamily=FONT_SANS_SEMIBOLD)
     ax.set_ylabel("Located rate across 18 models (%)")
     ax.set_ylim(0, 115)
     ax.set_title("The class gap persists at scale: n=63 cells, 18 models, 5 vendors",
@@ -262,7 +290,7 @@ def fig_vendor_gap():
     bars = ax.bar(vendors, rates, color=[_VENDOR_COLOR[v] for v in vendors], width=0.5, zorder=3)
     for b, r, (loc, n) in zip(bars, rates, ns):
         ax.text(b.get_x() + b.get_width()/2, r + 2, f"{loc}/{n}\n({r:.0f}%)",
-                ha="center", va="bottom", fontsize=10, fontweight="bold")
+                ha="center", va="bottom", fontsize=10, fontfamily=FONT_SANS_SEMIBOLD)
     ax.set_ylabel("Located rate,\nnonconstant_comparison targets (%)")
     ax.set_ylim(0, 100)
     ax.set_title("Vendor spread on the hard class: LEAK-5 + MLDSA-1 combined",
@@ -282,9 +310,9 @@ def fig_model_matrix():
         return (_TIER_ORDER.index(tier), vendor, m)
     models = sorted(by_model.keys(), key=sort_key)
 
-    code = {"located_confirmed": (GREEN, "LC"), "confirmed_mislocated": (AMBER, "cm"),
-            "located_unconfirmed": (BLUE, "L-"), "miss": ("#d8dade", ".."),
-            "refused_cyber": ("#4a4a4a", "RF"), "incompatible_endpoint": ("#8a8a8a", "XX")}
+    code = {"located_confirmed": (GREEN, "LC"), "confirmed_mislocated": (ORANGE, "cm"),
+            "located_unconfirmed": (BLUE, "L-"), "miss": (BORDER, ".."),
+            "refused_cyber": (INK, "RF"), "incompatible_endpoint": (INK_SOFT, "XX")}
 
     fig, ax = plt.subplots(figsize=(7.6, 8.0))
     for i, m in enumerate(models):
@@ -295,14 +323,14 @@ def fig_model_matrix():
             ax.add_patch(plt.Rectangle((j, y), 0.92, 0.92, facecolor=color,
                                         edgecolor="white", linewidth=1.5, zorder=2))
             if tag:
-                textcolor = "white" if color in (GREEN, "#4a4a4a", "#8a8a8a") else "#333"
+                textcolor = "white" if color in (GREEN, INK, INK_SOFT) else INK
                 ax.text(j + 0.46, y + 0.46, tag, ha="center", va="center",
                         fontsize=7.5, color=textcolor, zorder=3)
     ax.set_xlim(0, len(_TARGET_ORDER)); ax.set_ylim(0, len(models))
     ax.set_xticks([j + 0.46 for j in range(len(_TARGET_ORDER))])
     ax.set_xticklabels([_TARGET_LABEL[t] for t in _TARGET_ORDER], fontsize=8.5)
     ax.set_yticks([len(models) - 1 - i + 0.46 for i in range(len(models))])
-    ax.set_yticklabels(models, fontsize=8.2)
+    ax.set_yticklabels(models, fontsize=8.2, fontfamily=FONT_MONO)
     ax.tick_params(length=0)
     for spine in ax.spines.values():
         spine.set_visible(False)
@@ -313,11 +341,11 @@ def fig_model_matrix():
         tier = by_model[m][list(by_model[m].keys())[0]]["tier"]
         if prev_tier is not None and tier != prev_tier:
             y = len(models) - i
-            ax.axhline(y, color="#999", lw=1.0, xmin=-0.35, xmax=1.0, clip_on=False)
+            ax.axhline(y, color=BORDER, lw=1.0, xmin=-0.35, xmax=1.0, clip_on=False)
         prev_tier = tier
-    legend_items = [mpatch(GREEN, "located + confirmed"), mpatch(AMBER, "confirmed, mislocated"),
-                    mpatch("#d8dade", "miss"), mpatch("#4a4a4a", "refused (cyber classifier)"),
-                    mpatch("#8a8a8a", "incompatible API endpoint")]
+    legend_items = [mpatch(GREEN, "located + confirmed"), mpatch(ORANGE, "confirmed, mislocated"),
+                    mpatch(BORDER, "miss"), mpatch(INK, "refused (cyber classifier)"),
+                    mpatch(INK_SOFT, "incompatible API endpoint")]
     ax.legend(handles=legend_items, loc="upper center", bbox_to_anchor=(0.5, -0.045),
               ncol=2, frameon=False, fontsize=8)
     ax.set_title("Every model x target outcome, hybrid mode (63 cells)", fontsize=11, pad=12)
@@ -364,7 +392,7 @@ def fig_cost_vs_accuracy():
         for i, (cost, m) in enumerate(members):
             rung = (i + 1) // 2
             dy = 0 if i == 0 else (rung * 13 if i % 2 else -rung * 13)
-            ax.annotate(m, (cost, y), fontsize=7.4,
+            ax.annotate(m, (cost, y), fontsize=7.4, fontfamily=FONT_MONO,
                         xytext=(7, dy), textcoords="offset points", va="center", zorder=4)
     ax.set_xscale("log")
     ax.set_xlabel("Total cost across 4 targets (USD, log scale)")
