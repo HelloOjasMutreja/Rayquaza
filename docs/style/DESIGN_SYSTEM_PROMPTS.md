@@ -88,11 +88,23 @@ For this diagram specifically:
 - Keep node label text in Public Sans; if a label is a literal
   identifier/variable/function name, set that specific token in Roboto Mono
   even inline within an otherwise-Public-Sans label.
+- ALWAYS specify the layout direction explicitly (e.g. Eraser's `direction
+  right` at the top of the file) for anything meant to read as a left-to-
+  right or top-to-bottom pipeline. Verified the hard way: a diagram-as-code
+  file with no direction hint let Eraser's auto-layout scatter the nodes
+  into a zigzag (one stage top-right, the next bottom-right, the one after
+  that bottom-left) — box styling was fine, but the reading order was worse
+  than the plain diagram it replaced. Never assume auto-layout will find
+  the flow order implied by the edges; state it.
 ```
 
-**Reference file:** `docs/paper/figures/architecture.eraser` is a working
-example already following this brief — reuse its structure as a template
-for future pipeline diagrams rather than starting from a blank prompt.
+**Reference files:** `docs/paper/figures/architecture.eraser` (full
+pipeline + model gateway) and `docs/paper/figures/core_pipeline.eraser`
+(closed loop only, no gateway — used where the gateway hasn't been
+introduced yet in reading order) are working examples already following
+this brief, including the `direction right` hint — reuse their structure
+as a template for future pipeline diagrams rather than starting from a
+blank prompt.
 
 ---
 

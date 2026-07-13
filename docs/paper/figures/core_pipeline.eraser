@@ -1,0 +1,65 @@
+// Rayquaza core-pipeline diagram — Eraser (eraser.io) diagram-as-code.
+// This is the SIMPLIFIED companion to architecture.eraser: the closed loop
+// only, with the Model Gateway omitted. Used at paper.md §3.2, which appears
+// before the gateway is introduced (§5.1) in reading order -- the full
+// gateway-inclusive diagram lives in architecture.eraser / Figure 0.
+//
+// Same token colors as architecture.eraser (docs/style/tokens.css /
+// docs/superpowers/specs/2026-07-12-pdf-design-system-design.md):
+//   ink #262626  ink-soft #313131  blue #0099FF  green #2FBB45
+//   orange #DC762D  red #FB2C55
+//
+// Paste into Eraser.io's "Diagram as Code", export as PNG (the untitled
+// look, no in-image title -- the paper caption below the image already
+// says "Diagram." and gives full context), and replace
+// docs/paper/figures/diagram_core_pipeline.png with the export.
+
+title Rayquaza — Core Closed Loop
+
+// direction hint: without this, Eraser's auto-layout is free to scatter
+// nodes (verified: an earlier export without this line put Stage 3 top-right,
+// Timing Oracle bottom-right, and Stage 2/Confirmed Leak bottom-left -- a
+// zigzag that's harder to follow than the plain diagram it replaced, even
+// though the box styling itself was fine). Force the intended left-to-right
+// reading order explicitly rather than hoping the auto-layout finds it.
+direction right
+
+Weakened PQC Source [shape: document, icon: file-code, color: "#313131"]
+
+Stage 1 — Ingestion [icon: cpu, color: "#0099FF"] {
+  ingest_llm [label: "Code LLM (codellama:7b)"]
+  Secret-token flagging
+  Static secondary scan [label: "Static scan (memcmp / branch / loop)"]
+  MANDATORY directive [label: "MANDATORY FINDINGS (hybrid mode only)"]
+  Ranked hypotheses [shape: oval]
+}
+
+Stage 3 — Vectorize [icon: cpu, color: "#0099FF"] {
+  vectorize_llm [label: "Code LLM (codellama:7b)"]
+  Skeleton-fill prompt
+  Compile gate [label: "Compile gate (cc -O0 -lm)"]
+  Deterministic fallback
+  C timing harness [shape: document]
+}
+
+Timing Oracle [icon: activity, color: "#2FBB45"] {
+  harness_oracle [label: "harness_oracle (real patched fn)"]
+  REPS amplification [label: "REPS 100-500"]
+  Welch t-test [label: "Welch t-test, n=50,000"]
+  timing JSON [shape: document]
+}
+
+Stage 2 — Refine [icon: git-branch, color: "#DC762D"] {
+  refine_llm [label: "Reasoning LLM (qwen3:8b)"]
+  Verdict [label: "PROMOTED / DEMOTED / INVALIDATED / UNCHANGED"]
+  Exploitation path
+}
+
+Confirmed Leak [shape: oval, icon: check-circle, color: "#2FBB45", label: "Confirmed leak: class + location + t-stat + exploit path"]
+
+Weakened PQC Source > Stage 1 — Ingestion
+Stage 1 — Ingestion > Stage 3 — Vectorize: ranked hypotheses
+Stage 3 — Vectorize > Timing Oracle: timing harness
+Timing Oracle > Stage 2 — Refine: timing JSON (ground truth)
+Stage 2 — Refine > Confirmed Leak: PROMOTED
+Stage 2 — Refine --> Stage 1 — Ingestion: refine & re-hypothesise (closed loop) [color: "#FB2C55"]

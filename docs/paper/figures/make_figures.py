@@ -470,7 +470,10 @@ if __name__ == "__main__":
     # fallback only. To regenerate fig0 from Eraser: paste architecture.eraser
     # into Eraser.io's "Diagram as Code", export as PNG, and replace
     # docs/paper/figures/fig0_architecture.png directly.
-    fig_core_pipeline()
+    #
+    # fig_core_pipeline() is likewise NOT called: diagram_core_pipeline.png is
+    # now hand-sourced from core_pipeline.eraser the same way, for the same
+    # reason. Regenerate via Eraser.io + core_pipeline.eraser, not this script.
     fig_timing_distribution()
     fig_t_vs_afl()
     fig_afl_corpus()
