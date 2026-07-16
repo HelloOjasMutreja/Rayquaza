@@ -8,7 +8,7 @@
 #   e.g. run_focused.sh track-b-engine/ingestion/test_targets/kyber512_leak2_focused.c kyber512_leak2
 set -u
 
-ROOT="/Users/vedanthdama/Rayquaza"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 FOCUSED="$1"
 ORACLE_DIR="$2"
@@ -17,10 +17,11 @@ OUT=$(mktemp)
 python3 -u track-b-engine/main.py --target "$FOCUSED" --cycles 3 > "$OUT" 2>&1 &
 LPID=$!
 
-# Learn the hypothesis id from the first "waiting for feedback containing 'HXXX'" line.
+# Learn the hypothesis id from the engine's own feedback-file glob pattern
+# (timing_H001_*.json), which is more stable than matching free-text wording.
 HYP=""
 for _ in $(seq 1 120); do
-  HYP=$(grep -oE "containing '[^']+'" "$OUT" 2>/dev/null | head -1 | sed "s/containing '//;s/'//")
+  HYP=$(grep -oE "timing_[A-Za-z0-9]+_\*\.json" "$OUT" 2>/dev/null | head -1 | sed -E 's/^timing_//; s/_\*\.json$//')
   [ -n "$HYP" ] && break
   kill -0 $LPID 2>/dev/null || break
   sleep 5
