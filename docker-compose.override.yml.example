@@ -1,0 +1,17 @@
+# Copy this file to docker-compose.override.yml to enable NVIDIA GPU
+# passthrough for the ollama service. Requires nvidia-container-toolkit
+# installed on the host (https://github.com/NVIDIA/nvidia-container-toolkit).
+#
+# Not applicable on Apple Silicon: Docker has no Metal passthrough on macOS,
+# so Ollama runs CPU-only under Docker there regardless of this file. The
+# wizard prints a one-time note about this on Apple Silicon hosts; a native
+# Ollama install outside Docker is the faster option on those machines.
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
