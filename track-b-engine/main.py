@@ -7,6 +7,7 @@ Usage:
 """
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -37,7 +38,9 @@ def main():
 
     print("Rayquaza Track B — LLM Adversary Engine")
     print(f"Target: {Path(args.target).name}")
-    print("Models: codellama:7b (analysis) / qwen3:8b (refinement)")
+    code_model = os.environ.get("RAYQ_CODE_MODEL", "codellama:7b")
+    reason_model = os.environ.get("RAYQ_REASON_MODEL", "qwen3:8b")
+    print(f"Models: {code_model} (analysis) / {reason_model} (refinement)")
     print(f"Mode: {mode}")
     print(f"Starting cycle 1 of {args.cycles}...\n")
 

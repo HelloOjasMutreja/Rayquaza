@@ -1,4 +1,4 @@
-CC      = clang-18
+CC      = gcc
 CFLAGS  = -O2 -Wall -Wextra
 TARGET  = harness_oracle
 

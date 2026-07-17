@@ -171,14 +171,16 @@ def _choose_targets() -> list[str]:
     return ["kyber512_leak1"]
 
 
-def _run_target(name: str) -> None:
+def _run_target(name: str, tier) -> None:
     console.rule(name)
     script = REPO_ROOT / "track-b-engine" / "run_focused.sh"
     focused_file = FOCUSED_TARGETS[name]
+    env = {**os.environ, "RAYQ_CODE_MODEL": tier.models[0], "RAYQ_REASON_MODEL": tier.models[1]}
     subprocess.run(
         ["bash", str(script), str(focused_file), name],
         cwd=REPO_ROOT,
         check=False,
+        env=env,
     )
 
 
@@ -206,7 +208,7 @@ def main() -> None:
     tier = _pull_models(tier)
     targets = _choose_targets()
     for name in targets:
-        _run_target(name)
+        _run_target(name, tier)
     _print_summary(targets, commit)
 
 
