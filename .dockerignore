@@ -1,0 +1,13 @@
+.git
+__pycache__
+*.pyc
+.pytest_cache
+track-a-target/targets/*/harness_oracle
+track-a-target/targets/*/harness_leak5
+sandbox/
+sandbox/secrets.local.json
+docs/
+tracking/
+viz/
+.superpowers/
+.claude/
