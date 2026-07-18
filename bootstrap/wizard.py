@@ -17,6 +17,7 @@ import sys
 from pathlib import Path
 
 from rich.console import Console
+from rich.markup import escape
 from rich.panel import Panel
 from rich.progress import BarColumn, DownloadColumn, Progress, TransferSpeedColumn
 from rich.prompt import IntPrompt
@@ -171,17 +172,87 @@ def _choose_targets() -> list[str]:
     return ["kyber512_leak1"]
 
 
-def _run_target(name: str, tier) -> None:
-    console.rule(name)
+_STAGE_PATTERNS = (
+    ("secret-handling functions flagged", "INGEST"),
+    ("analyzing full source", "INGEST"),
+    ("detected hypothesis id", "ORACLE"),
+    ("running oracle", "ORACLE"),
+    ("waiting for feedback", "ORACLE"),
+    ("Hypothesis", "REFINE"),
+    ("LOOP COMPLETE", "DONE"),
+)
+
+_STAGE_COLOR = {
+    "INGEST": "blue",
+    "ORACLE": "cyan",
+    "REFINE": "magenta",
+    "DONE": "green",
+}
+
+
+def _stage_for_line(line: str) -> str | None:
+    """Return which pipeline stage a raw engine/run_focused.sh output line
+    belongs to, so the live status spinner reflects what's actually
+    happening instead of sitting frozen during a 30s oracle poll. Returns
+    None for lines that don't match a known marker; the caller keeps
+    showing whatever stage it last saw in that case."""
+    for pattern, stage in _STAGE_PATTERNS:
+        if pattern in line:
+            return stage
+    return None
+
+
+def _style_line(line: str) -> str:
+    """Apply rich markup to a raw output line based on recognizable
+    patterns, so the live stream reads as structured progress rather than a
+    flat scroll of identical-looking text. The source line is escaped first
+    so a literal '[' in engine output (e.g. "[Cycle 1]") can't be
+    misinterpreted as rich markup syntax."""
+    safe = escape(line)
+    if "PROMOTED" in line:
+        return f"[bold green]{safe}[/bold green]"
+    if "DEMOTED" in line or "INVALIDATED" in line:
+        return f"[yellow]{safe}[/yellow]"
+    if "WARNING" in line:
+        return f"[bold yellow]{safe}[/bold yellow]"
+    if "waiting for feedback" in line:
+        return f"[dim cyan]{safe}[/dim cyan]"
+    if "detected hypothesis id" in line or "running oracle" in line:
+        return f"[cyan]{safe}[/cyan]"
+    if "LOOP COMPLETE" in line:
+        return f"[bold]{safe}[/bold]"
+    return safe
+
+
+def _run_target(name: str, tier, target_index: int | None = None, target_total: int | None = None) -> None:
+    header = name
+    if target_index is not None and target_total is not None:
+        header = f"{name}  (target {target_index}/{target_total})"
+    console.rule(header)
     script = REPO_ROOT / "track-b-engine" / "run_focused.sh"
     focused_file = FOCUSED_TARGETS[name]
     env = {**os.environ, "RAYQ_CODE_MODEL": tier.models[0], "RAYQ_REASON_MODEL": tier.models[1]}
-    subprocess.run(
+    proc = subprocess.Popen(
         ["bash", str(script), str(focused_file), name],
         cwd=REPO_ROOT,
-        check=False,
         env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
     )
+    stage = "INGEST"
+    with console.status(f"[{_STAGE_COLOR[stage]}]{stage}[/{_STAGE_COLOR[stage]}]", spinner="dots") as status:
+        for line in proc.stdout:
+            line = line.rstrip("\n")
+            if not line:
+                continue
+            new_stage = _stage_for_line(line)
+            if new_stage:
+                stage = new_stage
+                status.update(f"[{_STAGE_COLOR[stage]}]{stage}[/{_STAGE_COLOR[stage]}]")
+            console.print(_style_line(line))
+    proc.wait()
 
 
 def _print_summary(targets: list[str], commit: str) -> None:
@@ -207,8 +278,8 @@ def main() -> None:
     tier = _choose_tier()
     tier = _pull_models(tier)
     targets = _choose_targets()
-    for name in targets:
-        _run_target(name, tier)
+    for i, name in enumerate(targets, start=1):
+        _run_target(name, tier, target_index=i, target_total=len(targets))
     _print_summary(targets, commit)
 
 
