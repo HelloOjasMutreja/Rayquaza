@@ -35,6 +35,10 @@ Note: `mldsa44_leak1` is not part of this automated flow. See
 [docs/reproducing-mldsa.md](docs/reproducing-mldsa.md) for why and how to
 run it manually.
 
+For a full walkthrough (what each prompt means, how to read the live
+output and the final results, GPU passthrough, troubleshooting), see
+[docs/using-the-wizard.md](docs/using-the-wizard.md).
+
 ## How to navigate this repo
 Read `AGENTS.md` first if you are an AI agent. Humans should start with 
 `docs/00_PROJECT_CHARTER.md`, then `tracking/PROGRESS.md` for current status.
