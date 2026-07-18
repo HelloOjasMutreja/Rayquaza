@@ -1,0 +1,28 @@
+{
+  "run_id": "d421549c",
+  "model_code": "claude-sonnet-4-6",
+  "model_reason": "claude-sonnet-4-6",
+  "provider": "anthropic",
+  "targets": [
+    {
+      "target_id": "mldsa44_leak1",
+      "located": false,
+      "confirmed": true,
+      "t_stat": -629.4983,
+      "cycles": 3,
+      "wall_seconds": 222.6,
+      "autonomous": true,
+      "verdict": "PROMOTED"
+    }
+  ],
+  "started_at": 1783704984.0620055,
+  "ended_at": 1783705206.6224492,
+  "tokens": {
+    "prompt": 13434,
+    "completion": 7909
+  },
+  "cost_usd": 0.158937,
+  "cost_estimated": true,
+  "fp_rate": 1.0,
+  "notes": ""
+}

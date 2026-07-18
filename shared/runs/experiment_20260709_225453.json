@@ -1,0 +1,136 @@
+{
+  "generated": "20260709_225453",
+  "mode": "hybrid",
+  "models": [
+    "codellama:7b",
+    "qwen2.5-coder:7b"
+  ],
+  "targets": [
+    "kyber512_leak5",
+    "kyber512_leak4",
+    "kyber512_leak2",
+    "mldsa44_leak1"
+  ],
+  "rows": [
+    {
+      "model": "codellama:7b",
+      "target": "kyber512_leak5",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 561.5525,
+      "verdict": "PROMOTED",
+      "wall_s": 510.1,
+      "cost_usd": 0.0,
+      "tokens": {
+        "prompt": 6152,
+        "completion": 1450
+      },
+      "error": null
+    },
+    {
+      "model": "codellama:7b",
+      "target": "kyber512_leak4",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 561.5525,
+      "verdict": "PROMOTED",
+      "wall_s": 739.7,
+      "cost_usd": 0.0,
+      "tokens": {
+        "prompt": 7795,
+        "completion": 2831
+      },
+      "error": null
+    },
+    {
+      "model": "codellama:7b",
+      "target": "kyber512_leak2",
+      "located": false,
+      "confirmed": false,
+      "t_stat": null,
+      "verdict": "NO_OUTPUT",
+      "wall_s": 2.0,
+      "cost_usd": 0.0,
+      "tokens": {
+        "prompt": 0,
+        "completion": 0
+      },
+      "error": null
+    },
+    {
+      "model": "codellama:7b",
+      "target": "mldsa44_leak1",
+      "located": false,
+      "confirmed": false,
+      "t_stat": null,
+      "verdict": "NO_OUTPUT",
+      "wall_s": 0.3,
+      "cost_usd": 0.0,
+      "tokens": {
+        "prompt": 0,
+        "completion": 0
+      },
+      "error": null
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "target": "kyber512_leak5",
+      "located": false,
+      "confirmed": false,
+      "t_stat": null,
+      "verdict": "NO_OUTPUT",
+      "wall_s": 0.1,
+      "cost_usd": 0.0,
+      "tokens": {
+        "prompt": 0,
+        "completion": 0
+      },
+      "error": null
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "target": "kyber512_leak4",
+      "located": false,
+      "confirmed": false,
+      "t_stat": null,
+      "verdict": "NO_OUTPUT",
+      "wall_s": 0.1,
+      "cost_usd": 0.0,
+      "tokens": {
+        "prompt": 0,
+        "completion": 0
+      },
+      "error": null
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "target": "kyber512_leak2",
+      "located": false,
+      "confirmed": false,
+      "t_stat": null,
+      "verdict": "NO_OUTPUT",
+      "wall_s": 0.1,
+      "cost_usd": 0.0,
+      "tokens": {
+        "prompt": 0,
+        "completion": 0
+      },
+      "error": null
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "target": "mldsa44_leak1",
+      "located": false,
+      "confirmed": false,
+      "t_stat": null,
+      "verdict": "NO_OUTPUT",
+      "wall_s": 0.1,
+      "cost_usd": 0.0,
+      "tokens": {
+        "prompt": 0,
+        "completion": 0
+      },
+      "error": null
+    }
+  ]
+}

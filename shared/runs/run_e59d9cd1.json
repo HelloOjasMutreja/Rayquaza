@@ -1,0 +1,28 @@
+{
+  "run_id": "e59d9cd1",
+  "model_code": "gpt-5.4-mini",
+  "model_reason": "gpt-5.4-mini",
+  "provider": "openai",
+  "targets": [
+    {
+      "target_id": "mldsa44_leak1",
+      "located": false,
+      "confirmed": true,
+      "t_stat": -646.2553,
+      "cycles": 1,
+      "wall_seconds": 42.9,
+      "autonomous": true,
+      "verdict": "PROMOTED"
+    }
+  ],
+  "started_at": 1783711202.4286706,
+  "ended_at": 1783711245.3654635,
+  "tokens": {
+    "prompt": 4949,
+    "completion": 1361
+  },
+  "cost_usd": 0.009836,
+  "cost_estimated": true,
+  "fp_rate": 1.0,
+  "notes": ""
+}

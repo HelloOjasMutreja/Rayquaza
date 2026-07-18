@@ -1,0 +1,28 @@
+{
+  "run_id": "8a6d47e5",
+  "model_code": "codellama:7b",
+  "model_reason": "codellama:7b",
+  "provider": "ollama",
+  "targets": [
+    {
+      "target_id": "kyber512_leak5",
+      "located": true,
+      "confirmed": false,
+      "t_stat": null,
+      "cycles": 1,
+      "wall_seconds": 1225.8,
+      "autonomous": true,
+      "verdict": "UNCHANGED"
+    }
+  ],
+  "started_at": 1783632869.9522917,
+  "ended_at": 1783634095.7098854,
+  "tokens": {
+    "prompt": 5969,
+    "completion": 2455
+  },
+  "cost_usd": 0.0,
+  "cost_estimated": true,
+  "fp_rate": 0.0,
+  "notes": ""
+}

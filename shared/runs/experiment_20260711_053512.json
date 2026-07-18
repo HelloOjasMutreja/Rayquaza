@@ -1,0 +1,167 @@
+{
+  "generated": "20260711_053512",
+  "mode": "autonomous",
+  "models": [
+    "qwen2.5-coder:7b",
+    "claude-haiku-4-5",
+    "gpt-5.4-nano",
+    "claude-sonnet-5",
+    "gpt-5.5"
+  ],
+  "targets": [
+    "kyber512_leak5",
+    "mldsa44_leak1"
+  ],
+  "rows": [
+    {
+      "model": "qwen2.5-coder:7b",
+      "target": "kyber512_leak5",
+      "located": false,
+      "confirmed": false,
+      "t_stat": null,
+      "verdict": "NO_OUTPUT",
+      "wall_s": 615.9,
+      "cost_usd": 0.0,
+      "tokens": {
+        "prompt": 1810,
+        "completion": 108
+      },
+      "error": null
+    },
+    {
+      "model": "qwen2.5-coder:7b",
+      "target": "mldsa44_leak1",
+      "located": false,
+      "confirmed": false,
+      "t_stat": null,
+      "verdict": "NO_OUTPUT",
+      "wall_s": 468.8,
+      "cost_usd": 0.0,
+      "tokens": {
+        "prompt": 1656,
+        "completion": 124
+      },
+      "error": null
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "target": "kyber512_leak5",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 238.4119,
+      "verdict": "PROMOTED",
+      "wall_s": 51.2,
+      "cost_usd": 0.015968,
+      "tokens": {
+        "prompt": 5623,
+        "completion": 2069
+      },
+      "error": null
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "target": "mldsa44_leak1",
+      "located": false,
+      "confirmed": true,
+      "t_stat": -316.4042,
+      "verdict": "PROMOTED",
+      "wall_s": 100.0,
+      "cost_usd": 0.033372,
+      "tokens": {
+        "prompt": 10602,
+        "completion": 4554
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.4-nano",
+      "target": "kyber512_leak5",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 435.538,
+      "verdict": "PROMOTED",
+      "wall_s": 59.8,
+      "cost_usd": 0.005932,
+      "tokens": {
+        "prompt": 6297,
+        "completion": 3738
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.4-nano",
+      "target": "mldsa44_leak1",
+      "located": false,
+      "confirmed": true,
+      "t_stat": -642.1664,
+      "verdict": "PROMOTED",
+      "wall_s": 47.4,
+      "cost_usd": 0.003214,
+      "tokens": {
+        "prompt": 4728,
+        "completion": 1815
+      },
+      "error": null
+    },
+    {
+      "model": "claude-sonnet-5",
+      "target": "kyber512_leak5",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 451.5117,
+      "verdict": "PROMOTED",
+      "wall_s": 64.7,
+      "cost_usd": 0.0513,
+      "tokens": {
+        "prompt": 7685,
+        "completion": 3593
+      },
+      "error": null
+    },
+    {
+      "model": "claude-sonnet-5",
+      "target": "mldsa44_leak1",
+      "located": false,
+      "confirmed": true,
+      "t_stat": -751.8654,
+      "verdict": "PROMOTED",
+      "wall_s": 183.5,
+      "cost_usd": 0.125154,
+      "tokens": {
+        "prompt": 16557,
+        "completion": 9204
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.5",
+      "target": "kyber512_leak5",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 473.4272,
+      "verdict": "PROMOTED",
+      "wall_s": 114.7,
+      "cost_usd": 0.197665,
+      "tokens": {
+        "prompt": 4679,
+        "completion": 5809
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.5",
+      "target": "mldsa44_leak1",
+      "located": false,
+      "confirmed": false,
+      "t_stat": null,
+      "verdict": "UNCHANGED",
+      "wall_s": 659.2,
+      "cost_usd": 0.103565,
+      "tokens": {
+        "prompt": 2803,
+        "completion": 2985
+      },
+      "error": null
+    }
+  ]
+}

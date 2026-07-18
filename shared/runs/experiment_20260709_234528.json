@@ -1,0 +1,27 @@
+{
+  "generated": "20260709_234528",
+  "mode": "hybrid",
+  "models": [
+    "codellama:7b"
+  ],
+  "targets": [
+    "mldsa44_leak1"
+  ],
+  "rows": [
+    {
+      "model": "codellama:7b",
+      "target": "mldsa44_leak1",
+      "located": false,
+      "confirmed": false,
+      "t_stat": null,
+      "verdict": "NO_OUTPUT",
+      "wall_s": 1.8,
+      "cost_usd": 0.0,
+      "tokens": {
+        "prompt": 0,
+        "completion": 0
+      },
+      "error": null
+    }
+  ]
+}

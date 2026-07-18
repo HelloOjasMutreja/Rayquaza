@@ -1,0 +1,28 @@
+{
+  "run_id": "4e284254",
+  "model_code": "qwen2.5-coder:7b",
+  "model_reason": "qwen2.5-coder:7b",
+  "provider": "ollama",
+  "targets": [
+    {
+      "target_id": "mldsa44_leak1",
+      "located": false,
+      "confirmed": true,
+      "t_stat": -656.2349,
+      "cycles": 1,
+      "wall_seconds": 497.1,
+      "autonomous": true,
+      "verdict": "PROMOTED"
+    }
+  ],
+  "started_at": 1783638650.0147014,
+  "ended_at": 1783639147.1260426,
+  "tokens": {
+    "prompt": 6412,
+    "completion": 1896
+  },
+  "cost_usd": 0.0,
+  "cost_estimated": false,
+  "fp_rate": 1.0,
+  "notes": ""
+}

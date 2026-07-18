@@ -1,0 +1,28 @@
+{
+  "run_id": "9530524b",
+  "model_code": "claude-haiku-4-5",
+  "model_reason": "claude-haiku-4-5",
+  "provider": "anthropic",
+  "targets": [
+    {
+      "target_id": "kyber512_leak2",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -112.3254,
+      "cycles": 1,
+      "wall_seconds": 49.8,
+      "autonomous": true,
+      "verdict": "PROMOTED"
+    }
+  ],
+  "started_at": 1783705445.380445,
+  "ended_at": 1783705495.1595647,
+  "tokens": {
+    "prompt": 5586,
+    "completion": 1816
+  },
+  "cost_usd": 0.014666,
+  "cost_estimated": true,
+  "fp_rate": 0.0,
+  "notes": ""
+}

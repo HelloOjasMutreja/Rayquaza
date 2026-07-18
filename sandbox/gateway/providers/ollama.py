@@ -10,7 +10,7 @@ class OllamaProvider(Provider):
         payload = {"model": model, "messages": messages, "stream": False}
         if fmt:
             payload["format"] = fmt
-        resp = requests.post(self._url, json=payload, timeout=300)
+        resp = requests.post(self._url, json=payload, timeout=600)
         resp.raise_for_status()
         data = resp.json()
         return ChatResult(

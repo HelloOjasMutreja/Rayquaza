@@ -1,0 +1,28 @@
+{
+  "run_id": "74ec2857",
+  "model_code": "claude-sonnet-5",
+  "model_reason": "claude-sonnet-5",
+  "provider": "anthropic",
+  "targets": [
+    {
+      "target_id": "kyber512_leak5",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 451.5117,
+      "cycles": 1,
+      "wall_seconds": 64.7,
+      "autonomous": true,
+      "verdict": "PROMOTED"
+    }
+  ],
+  "started_at": 1783747089.4175305,
+  "ended_at": 1783747154.1637826,
+  "tokens": {
+    "prompt": 7685,
+    "completion": 3593
+  },
+  "cost_usd": 0.0513,
+  "cost_estimated": true,
+  "fp_rate": 0.0,
+  "notes": ""
+}

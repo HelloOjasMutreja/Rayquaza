@@ -1,0 +1,28 @@
+{
+  "run_id": "6113fa5c",
+  "model_code": "gpt-5.4-mini",
+  "model_reason": "gpt-5.4-mini",
+  "provider": "openai",
+  "targets": [
+    {
+      "target_id": "kyber512_leak2",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -180.91,
+      "cycles": 1,
+      "wall_seconds": 42.0,
+      "autonomous": true,
+      "verdict": "PROMOTED"
+    }
+  ],
+  "started_at": 1783711160.2027426,
+  "ended_at": 1783711202.1557684,
+  "tokens": {
+    "prompt": 4600,
+    "completion": 1507
+  },
+  "cost_usd": 0.010232,
+  "cost_estimated": true,
+  "fp_rate": 0.0,
+  "notes": ""
+}

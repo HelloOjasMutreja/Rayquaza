@@ -138,7 +138,10 @@ def invoke_oracle(target_id: str, hyp_id: str) -> None:
                        f"cd $(dirname '{wsl_path}') && ./harness_oracle {hyp_id} 50000"]
             else:
                 cmd = [str(oracle_bin), hyp_id, "50000"]
-            _sp.run(cmd, timeout=700, check=False)
+            # harness_oracle writes to a path relative to its own directory
+            # (../../../shared/feedback/...), so it must be run from there.
+            _sp.run(cmd, timeout=700, check=False, cwd=oracle_bin.parent,
+                    capture_output=True)
         except Exception:
             pass
 

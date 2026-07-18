@@ -1,0 +1,23 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+
+  runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - ollama
+    environment:
+      - RAYQ_OLLAMA_URL=http://ollama:11434/api/chat
+      - RAYQ_OLLAMA_BASE=http://ollama:11434
+    volumes:
+      - ./shared:/app/shared
+    stdin_open: true
+    tty: true
+
+volumes:
+  ollama-data:

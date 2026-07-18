@@ -1,4 +1,11 @@
-# Rayquaza — A Plain-English Primer
+---
+title: "Rayquaza — A Plain-English Primer"
+authors: "Ojas Mutreja, Vedanth Dama"
+affiliation: "Defence Research and Development Organisation — Scientific Analysis Group (DRDO SAG)"
+date: "July 2026"
+classification: "Internal — B7 Draft"
+template: primer
+---
 
 *A companion to the technical paper. This is the on-ramp: it starts from zero — no cryptography,
 no AI background assumed — and ramps steadily up to the point where the paper takes over. If you
@@ -108,11 +115,12 @@ four steps:
 
 **Two facts that matter for the paper's argument:**
 
-- **Everything runs on open-weight models, locally, with no internet.** The reader/writer is
+- **The core pipeline runs on open-weight models, locally, with no internet.** The reader/writer is
   `codellama:7b` and the judge is `qwen3:8b`, both served on the machine itself. Nothing is sent
   to an external cloud — which is exactly what makes the method usable in classified, air-gapped
-  security work. *(An earlier draft of the bank briefing mentioned "Claude"; the actual
-  experiments in the paper use these local open-weight models.)*
+  security work. *(Part 4.5 below covers a separate follow-up study that deliberately swaps in
+  paid cloud AI models — including Claude — to answer a specific question; the original,
+  air-gapped-capable pipeline described here does not depend on them.)*
 - **We compared against the traditional tool.** Alongside the AI, we ran **AFL++** — the standard
   automated bug-finder ("fuzzer") — for 24 hours on the same targets, as a fair baseline.
 
@@ -144,6 +152,58 @@ technical paper (see especially Figures 1–4 and Tables 2–3).
 
 ---
 
+## Part 4.5 — Then we asked: does paying for a bigger AI fix the blind spot?
+
+The one gap in Part 4's story is the 5th leak — the AI needed a one-line hint to catch the
+`memcmp`-style mistake. The obvious follow-up question: is that just because we used a small,
+free, local AI? Would a much bigger, much more expensive model — the kind you pay for by the API
+call — simply *know better* and catch it unaided?
+
+We tested this directly, rather than guessing. Over one (very long) night we ran the same
+pipeline against **18 different AI models** — everything from the original free local model, up
+through mid-size models on rented cloud graphics cards, up to the most capable paid models from
+both Anthropic (Claude) and OpenAI (GPT), including their most expensive "flagship" tiers. Every
+model got the same four test cases, with no cheating: same source code, same rules, same
+scorekeeping.
+
+**The honest answer is no — paying more does not fix it.**
+
+- Every single model, cheap or expensive, local or cloud, caught **100% of the "secret-dependent
+  branch" leaks** — the kind Part 4 said was easy. Zero misses, zero exceptions, across all 18
+  models. That part of the story holds up completely.
+- On the harder `memcmp`-style leaks, though, accuracy dropped to **64% overall** — and it did
+  **not** improve with a bigger price tag. The single most expensive model in the whole
+  study missed one of the two hard cases. The single *cheapest* paid model tied for the best
+  score of any model tested, local or paid, at a cost of about one-and-a-half cents for all four
+  test cases combined.
+- We even found a model — Anthropic's most capable one — that flatly **refused to look at the
+  code at all**, flagging it as sensitive "cyber" content, even though every other model (16
+  separate attempts) analysed the exact same kind of function without any objection. The most
+  capable AI in the study was, in this one specific case, the *least* usable one.
+
+**The takeaway for anyone building a tool like this**: don't assume the priciest AI model is
+automatically the best choice. For this particular job — reading real cryptographic code and
+spotting a specific kind of subtle bug — a cheap or even free model did just as well, and
+sometimes better, than models costing far more per use. The full breakdown, including which
+models scored what and why, is in the paper's new Section 5 and its accompanying figures.
+
+**One more test, to make sure the answer wasn't just an artefact of how we asked.** So far, every
+model — cheap or expensive — got a one-line nudge telling it to double-check for this specific
+kind of mistake. What if the nudge, not the model's own judgement, was doing all the work? We
+removed the nudge entirely and reran five of the models — one small free one, and four of the
+priciest cloud ones — asking them to find the hardest bug completely unassisted.
+
+**They all missed it.** Every single one — including three models that had found the exact same
+bug correctly moments earlier, when given the one-line hint. Take the hint away, and even the
+most expensive AI available reverts to missing it. This settles the question cleanly: the nudge
+isn't a crutch for a weak model that a stronger model would outgrow — it is doing real, necessary
+work that no amount of extra AI horsepower currently replaces. (There was one silver lining: on an
+*easier* version of the same kind of bug, the expensive cloud models did manage to find it
+unassisted, while the small free model still needed the hint — so bigger models are not entirely
+unaffected by scale, just not enough to close the gap on the hardest case.)
+
+---
+
 ## Part 5 — Plain-word ↔ paper-word bridge
 
 Read this once and the paper's vocabulary will feel familiar:
@@ -163,6 +223,9 @@ Read this once and the paper's vocabulary will feel familiar:
 | The AI reader / test-writer | `codellama:7b` (Stage 1 / Stage 3) |
 | The AI judge | `qwen3:8b` (Stage 2 refinement) |
 | Deliberately planted mistake | Weakened target / planted vulnerability |
+| The AI could reach any of 18 models through one connector | Model Gateway (`sandbox/gateway`, Router + Meter) |
+| Got the right answer | `located` (correct category + location) |
+| The stopwatch found a real signal (not necessarily the right answer) | `confirmed` (oracle-significant; independent of whether the model was correct) |
 
 ---
 

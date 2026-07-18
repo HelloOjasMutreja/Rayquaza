@@ -20,6 +20,13 @@ from pathlib import Path
 OLLAMA_URL = os.environ.get("RAYQ_OLLAMA_URL", "http://localhost:11434/api/chat")
 MODEL = os.environ.get("RAYQ_CODE_MODEL", "codellama:7b")
 
+# Autonomous mode (paper Mode A): set RAYQ_STATIC_SCAN=0 to disable the static
+# secondary scan + MANDATORY-FINDINGS directive, so the model runs fully unaided.
+# Default (unset or "1") preserves the current hybrid behaviour. This toggle is
+# what the multi-LLM scale experiment varies to test the nonconstant_comparison
+# blind spot across model sizes.
+STATIC_SCAN = os.environ.get("RAYQ_STATIC_SCAN", "1") != "0"
+
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 PROMPT_FILE = REPO_ROOT / "track-b-engine" / "prompts" / "stage1_analysis.txt"
 FINDINGS_DIR = REPO_ROOT / "shared" / "findings"
@@ -112,7 +119,7 @@ class CodeIngester:
 
     def preprocess(self, filepath) -> dict:
         path = Path(filepath)
-        raw_source = path.read_text()
+        raw_source = path.read_text(encoding="utf-8")
         clean = self.strip_comments(raw_source)
 
         functions = []
@@ -147,16 +154,17 @@ class CodeIngester:
         #   a function flagged on 'sk' (e.g. Kyber's crypto_kem_dec) is still
         #   surfaced to the model rather than lost behind the secret-token label.
         secondary_functions = []
-        for f in functions:
-            hits = []
-            for label, pat in SECONDARY_PATTERNS:
-                if pat.search(f.body):
-                    hits.append(label)
-            if hits:
-                f.secondary_matches = sorted(set(hits))
-                if not f.flagged:
-                    f.secondary_scan = True
-                    secondary_functions.append(f)
+        if STATIC_SCAN:
+            for f in functions:
+                hits = []
+                for label, pat in SECONDARY_PATTERNS:
+                    if pat.search(f.body):
+                        hits.append(label)
+                if hits:
+                    f.secondary_matches = sorted(set(hits))
+                    if not f.flagged:
+                        f.secondary_scan = True
+                        secondary_functions.append(f)
 
         # Functions actually sent to the analyzer: token-flagged + secondary.
         analyzed_functions = flagged_functions + secondary_functions
@@ -186,7 +194,7 @@ class CodeIngester:
                 {"role": "user", "content": user_content},
             ],
         }
-        resp = requests.post(OLLAMA_URL, json=payload, timeout=180)
+        resp = requests.post(OLLAMA_URL, json=payload, timeout=600)
         resp.raise_for_status()
         return resp.json().get("message", {}).get("content", "")
 
@@ -234,7 +242,7 @@ class CodeIngester:
             print("ERROR: 'requests' not installed. Run: pip3 install requests")
             sys.exit(1)
 
-        system_prompt = PROMPT_FILE.read_text()
+        system_prompt = PROMPT_FILE.read_text(encoding="utf-8")
 
         # Prefer the combined set (token-flagged + secondary-scan); fall back
         # to flagged-only for callers built before the secondary scan existed.
@@ -313,7 +321,7 @@ class CodeIngester:
             "count": len(hypotheses),
             "hypotheses": [asdict(h) for h in hypotheses],
         }
-        out_path.write_text(json.dumps(payload, indent=2))
+        out_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return str(out_path)
 
 

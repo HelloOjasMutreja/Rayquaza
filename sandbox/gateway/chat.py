@@ -7,6 +7,9 @@ def handle_chat(payload: dict, router, meter) -> dict:
     model = payload.get("model", "")
     messages = payload.get("messages", [])
     fmt = payload.get("format")
+    if meter.over_budget():
+        return {"model": model, "error": "budget cap reached, refusing further API calls",
+                "done": True, "message": {"role": "assistant", "content": ""}}
     try:
         provider = router.provider_for(model)
         result = provider.chat(model, messages, fmt)

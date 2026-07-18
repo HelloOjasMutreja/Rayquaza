@@ -1,0 +1,27 @@
+{
+  "generated": "20260709_235750",
+  "mode": "hybrid",
+  "models": [
+    "codellama:7b"
+  ],
+  "targets": [
+    "mldsa44_leak1"
+  ],
+  "rows": [
+    {
+      "model": "codellama:7b",
+      "target": "mldsa44_leak1",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -589.0884,
+      "verdict": "PROMOTED",
+      "wall_s": 488.6,
+      "cost_usd": 0.0,
+      "tokens": {
+        "prompt": 6149,
+        "completion": 1421
+      },
+      "error": null
+    }
+  ]
+}

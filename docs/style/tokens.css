@@ -1,0 +1,42 @@
+/* Rayquaza PDF design system -- primitive tokens.
+   Never consumed directly by content; only ever referenced by a subsystem
+   file (e.g. subsystem-academic.css). See
+   docs/superpowers/specs/2026-07-12-pdf-design-system-design.md */
+
+:root {
+  /* color primitives */
+  --color-paper: #F9F8F3;
+  --color-surface: #E2E1DA;
+  --color-border: #BEBEBE;
+  --color-ink-soft: #313131;
+  --color-ink: #262626;
+  --color-blue: #0099FF;
+  --color-green: #2FBB45;
+  --color-orange: #DC762D;
+  --color-red: #FB2C55;
+
+  /* type primitives */
+  --font-sans: "Public Sans", sans-serif;
+  --font-mono: "Roboto Mono", monospace;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+
+  /* radius primitives -- concentric chain, outer 12 / mid 6 / inner 3 */
+  --radius-outer: 12px;
+  --radius-mid: 6px;
+  --radius-inner: 3px;
+  --radius-pad-outer: 6px;
+  --radius-pad-mid: 3px;
+
+  /* spacing primitives */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* stroke width -- all rules/borders use this, never a different width */
+  --stroke: 1px;
+}

@@ -1,0 +1,28 @@
+{
+  "run_id": "9baf9e79",
+  "model_code": "claude-opus-4-8",
+  "model_reason": "claude-opus-4-8",
+  "provider": "anthropic",
+  "targets": [
+    {
+      "target_id": "kyber512_leak5",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 941.1405,
+      "cycles": 3,
+      "wall_seconds": 197.6,
+      "autonomous": true,
+      "verdict": "PROMOTED"
+    }
+  ],
+  "started_at": 1783706346.1839018,
+  "ended_at": 1783706543.7967558,
+  "tokens": {
+    "prompt": 16747,
+    "completion": 8648
+  },
+  "cost_usd": 0.299935,
+  "cost_estimated": true,
+  "fp_rate": 0.0,
+  "notes": ""
+}

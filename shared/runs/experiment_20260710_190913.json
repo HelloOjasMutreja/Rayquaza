@@ -1,0 +1,123 @@
+{
+  "generated": "20260710_190913",
+  "mode": "hybrid",
+  "models": [
+    "gpt-5.4-mini",
+    "gpt-5.4",
+    "gpt-5.6-luna",
+    "gpt-5.6-terra",
+    "gpt-5.6-sol",
+    "gpt-5.5",
+    "gpt-5.3-codex"
+  ],
+  "targets": [
+    "kyber512_leak5"
+  ],
+  "rows": [
+    {
+      "model": "gpt-5.4-mini",
+      "target": "kyber512_leak5",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 114.4926,
+      "verdict": "PROMOTED",
+      "wall_s": 46.3,
+      "cost_usd": 0.014917,
+      "tokens": {
+        "prompt": 6173,
+        "completion": 2286
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.4",
+      "target": "kyber512_leak5",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 466.9382,
+      "verdict": "PROMOTED",
+      "wall_s": 47.3,
+      "cost_usd": 0.039192,
+      "tokens": {
+        "prompt": 4751,
+        "completion": 1821
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "target": "kyber512_leak5",
+      "located": false,
+      "confirmed": false,
+      "t_stat": null,
+      "verdict": "UNCHANGED",
+      "wall_s": 628.9,
+      "cost_usd": 0.012122,
+      "tokens": {
+        "prompt": 3068,
+        "completion": 1509
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "target": "kyber512_leak5",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 236.9323,
+      "verdict": "PROMOTED",
+      "wall_s": 109.1,
+      "cost_usd": 0.056903,
+      "tokens": {
+        "prompt": 4743,
+        "completion": 3003
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "target": "kyber512_leak5",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 402.8855,
+      "verdict": "PROMOTED",
+      "wall_s": 76.6,
+      "cost_usd": 0.080055,
+      "tokens": {
+        "prompt": 4695,
+        "completion": 1886
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.5",
+      "target": "kyber512_leak5",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 544.6163,
+      "verdict": "PROMOTED",
+      "wall_s": 209.4,
+      "cost_usd": 0.134125,
+      "tokens": {
+        "prompt": 4739,
+        "completion": 3681
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.3-codex",
+      "target": "kyber512_leak5",
+      "located": false,
+      "confirmed": false,
+      "t_stat": null,
+      "verdict": "NO_OUTPUT",
+      "wall_s": 2.1,
+      "cost_usd": 0.0,
+      "tokens": {
+        "prompt": 0,
+        "completion": 0
+      },
+      "error": null
+    }
+  ]
+}

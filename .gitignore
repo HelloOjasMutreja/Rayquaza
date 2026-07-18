@@ -2,6 +2,9 @@
 # Rayquaza — .gitignore
 # ============================================================
 
+# --- Superpowers brainstorming companion sessions (ephemeral mockups) ---
+.superpowers/
+
 # --- SECURITY: Never commit secrets ---
 .env
 .env.*

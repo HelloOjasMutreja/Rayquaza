@@ -1,0 +1,289 @@
+{
+  "generated": "20260710_200707",
+  "mode": "hybrid",
+  "models": [
+    "gpt-5.4-nano",
+    "gpt-5.4-mini",
+    "gpt-5.4",
+    "gpt-5.6-terra",
+    "gpt-5.6-sol",
+    "gpt-5.5"
+  ],
+  "targets": [
+    "kyber512_leak4",
+    "kyber512_leak2",
+    "mldsa44_leak1"
+  ],
+  "rows": [
+    {
+      "model": "gpt-5.4-nano",
+      "target": "kyber512_leak4",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -311.1748,
+      "verdict": "PROMOTED",
+      "wall_s": 47.0,
+      "cost_usd": 0.003527,
+      "tokens": {
+        "prompt": 4810,
+        "completion": 2052
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.4-nano",
+      "target": "kyber512_leak2",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -147.212,
+      "verdict": "PROMOTED",
+      "wall_s": 47.9,
+      "cost_usd": 0.003207,
+      "tokens": {
+        "prompt": 4656,
+        "completion": 1821
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.4-nano",
+      "target": "mldsa44_leak1",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -129.4059,
+      "verdict": "PROMOTED",
+      "wall_s": 47.4,
+      "cost_usd": 0.003547,
+      "tokens": {
+        "prompt": 5133,
+        "completion": 2016
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "target": "kyber512_leak4",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -312.948,
+      "verdict": "PROMOTED",
+      "wall_s": 98.8,
+      "cost_usd": 0.010226,
+      "tokens": {
+        "prompt": 4616,
+        "completion": 1503
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "target": "kyber512_leak2",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -180.91,
+      "verdict": "PROMOTED",
+      "wall_s": 42.0,
+      "cost_usd": 0.010232,
+      "tokens": {
+        "prompt": 4600,
+        "completion": 1507
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "target": "mldsa44_leak1",
+      "located": false,
+      "confirmed": true,
+      "t_stat": -646.2553,
+      "verdict": "PROMOTED",
+      "wall_s": 42.9,
+      "cost_usd": 0.009836,
+      "tokens": {
+        "prompt": 4949,
+        "completion": 1361
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.4",
+      "target": "kyber512_leak4",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -320.3862,
+      "verdict": "PROMOTED",
+      "wall_s": 46.8,
+      "cost_usd": 0.03789,
+      "tokens": {
+        "prompt": 4710,
+        "completion": 1741
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.4",
+      "target": "kyber512_leak2",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -106.1361,
+      "verdict": "PROMOTED",
+      "wall_s": 47.2,
+      "cost_usd": 0.032715,
+      "tokens": {
+        "prompt": 4656,
+        "completion": 1405
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.4",
+      "target": "mldsa44_leak1",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -675.3727,
+      "verdict": "PROMOTED",
+      "wall_s": 371.6,
+      "cost_usd": 0.037038,
+      "tokens": {
+        "prompt": 4993,
+        "completion": 1637
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "target": "kyber512_leak4",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -316.0921,
+      "verdict": "PROMOTED",
+      "wall_s": 57.2,
+      "cost_usd": 0.04795,
+      "tokens": {
+        "prompt": 4654,
+        "completion": 2421
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "target": "kyber512_leak2",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -151.9691,
+      "verdict": "PROMOTED",
+      "wall_s": 43.6,
+      "cost_usd": 0.031785,
+      "tokens": {
+        "prompt": 4590,
+        "completion": 1354
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "target": "mldsa44_leak1",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -71.1603,
+      "verdict": "PROMOTED",
+      "wall_s": 53.6,
+      "cost_usd": 0.046968,
+      "tokens": {
+        "prompt": 4921,
+        "completion": 2311
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "target": "kyber512_leak4",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -308.2527,
+      "verdict": "PROMOTED",
+      "wall_s": 162.3,
+      "cost_usd": 0.09575,
+      "tokens": {
+        "prompt": 4630,
+        "completion": 2420
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "target": "kyber512_leak2",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -90.7844,
+      "verdict": "PROMOTED",
+      "wall_s": 101.1,
+      "cost_usd": 0.11805,
+      "tokens": {
+        "prompt": 4596,
+        "completion": 3169
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "target": "mldsa44_leak1",
+      "located": false,
+      "confirmed": true,
+      "t_stat": -321.8019,
+      "verdict": "PROMOTED",
+      "wall_s": 97.4,
+      "cost_usd": 0.118485,
+      "tokens": {
+        "prompt": 4953,
+        "completion": 3124
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.5",
+      "target": "kyber512_leak4",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -303.8489,
+      "verdict": "PROMOTED",
+      "wall_s": 1624.7,
+      "cost_usd": 0.09175,
+      "tokens": {
+        "prompt": 4706,
+        "completion": 2274
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.5",
+      "target": "kyber512_leak2",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -108.9497,
+      "verdict": "PROMOTED",
+      "wall_s": 80.4,
+      "cost_usd": 0.09529,
+      "tokens": {
+        "prompt": 4562,
+        "completion": 2416
+      },
+      "error": null
+    },
+    {
+      "model": "gpt-5.5",
+      "target": "mldsa44_leak1",
+      "located": true,
+      "confirmed": true,
+      "t_stat": -353.6225,
+      "verdict": "PROMOTED",
+      "wall_s": 92.6,
+      "cost_usd": 0.126865,
+      "tokens": {
+        "prompt": 5009,
+        "completion": 3394
+      },
+      "error": null
+    }
+  ]
+}

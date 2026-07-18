@@ -1,0 +1,28 @@
+{
+  "run_id": "2ff16889",
+  "model_code": "claude-fable-5",
+  "model_reason": "claude-fable-5",
+  "provider": "anthropic",
+  "targets": [
+    {
+      "target_id": "kyber512_leak5",
+      "located": false,
+      "confirmed": false,
+      "t_stat": null,
+      "cycles": 0,
+      "wall_seconds": 10.5,
+      "autonomous": false,
+      "verdict": "NO_OUTPUT"
+    }
+  ],
+  "started_at": 1783707409.6990316,
+  "ended_at": 1783707420.2163866,
+  "tokens": {
+    "prompt": 6274,
+    "completion": 2
+  },
+  "cost_usd": 0.06284,
+  "cost_estimated": true,
+  "fp_rate": 0.0,
+  "notes": ""
+}

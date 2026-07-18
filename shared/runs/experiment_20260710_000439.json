@@ -1,0 +1,27 @@
+{
+  "generated": "20260710_000439",
+  "mode": "hybrid",
+  "models": [
+    "qwen2.5-coder:7b"
+  ],
+  "targets": [
+    "kyber512_leak5"
+  ],
+  "rows": [
+    {
+      "model": "qwen2.5-coder:7b",
+      "target": "kyber512_leak5",
+      "located": true,
+      "confirmed": true,
+      "t_stat": 579.6778,
+      "verdict": "PROMOTED",
+      "wall_s": 376.8,
+      "cost_usd": 0.0,
+      "tokens": {
+        "prompt": 4711,
+        "completion": 1191
+      },
+      "error": null
+    }
+  ]
+}

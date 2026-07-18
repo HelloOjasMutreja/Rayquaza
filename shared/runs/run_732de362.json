@@ -1,0 +1,28 @@
+{
+  "run_id": "732de362",
+  "model_code": "gpt-5.4-nano",
+  "model_reason": "gpt-5.4-nano",
+  "provider": "openai",
+  "targets": [
+    {
+      "target_id": "mldsa44_leak1",
+      "located": false,
+      "confirmed": true,
+      "t_stat": -642.1664,
+      "cycles": 1,
+      "wall_seconds": 47.4,
+      "autonomous": true,
+      "verdict": "PROMOTED"
+    }
+  ],
+  "started_at": 1783747041.6482525,
+  "ended_at": 1783747089.026573,
+  "tokens": {
+    "prompt": 4728,
+    "completion": 1815
+  },
+  "cost_usd": 0.003214,
+  "cost_estimated": true,
+  "fp_rate": 1.0,
+  "notes": ""
+}

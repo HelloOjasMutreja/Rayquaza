@@ -1,0 +1,71 @@
+// Rayquaza system-architecture diagram — Eraser (eraser.io) diagram-as-code.
+// Paste into an Eraser "Diagram as Code" flowchart, then export / recreate in Excalidraw.
+//
+// Colors are the exact hex values from the design-token system
+// (docs/style/tokens.css / docs/superpowers/specs/2026-07-12-pdf-design-system-design.md).
+// If those tokens change, update the hex values below to match -- this file
+// is meant to always render as part of the same visual system as the paper.
+//   paper #F9F8F3  surface #E2E1DA  border #BEBEBE  ink #262626  ink-soft #313131
+//   blue #0099FF   green #2FBB45   orange #DC762D   red #FB2C55
+// Font: Public Sans (body/labels), Roboto Mono (identifiers/code) -- set these
+// in Eraser's style panel after pasting; the DSL below doesn't carry font choice.
+//
+// Two load-bearing details this diagram must show:
+//   1. The DASHED feedback arrow from "Stage 2 — Refine" back to "Stage 1 — Ingestion"
+//      (that is what makes the pipeline closed-loop).
+//   2. The Model Gateway fanning out to three provider families behind ONE interface
+//      (RAYQ_CODE_MODEL / RAYQ_REASON_MODEL) — this is what made the 18-model,
+//      5-vendor comparison possible with zero engine code changes.
+
+title Rayquaza — Closed-Loop, Provider-Agnostic LLM Timing-Leak Discovery Pipeline
+
+Weakened PQC Source [shape: document, icon: file-code, color: "#313131"]
+
+Model Gateway [icon: shuffle, color: "#262626"] {
+  Router [label: "Router (model id -> provider)"]
+  Meter [label: "Meter (tokens, cost, budget cap)"]
+  Open-weight [label: "Ollama: CodeLlama, Qwen2.5-Coder (7B-32B, local/cloud GPU)"]
+  Anthropic [label: "Anthropic API: Haiku, Sonnet, Opus, Fable (5 models)"]
+  OpenAI [label: "OpenAI API: GPT-5.x nano..sol, Codex (9 models)"]
+}
+
+Stage 1 — Ingestion [icon: cpu, color: "#0099FF"] {
+  ingest_llm [label: "Code LLM (via Model Gateway)"]
+  Secret-token flagging
+  Static secondary scan [label: "Static scan (memcmp / branch / loop)"]
+  MANDATORY directive [label: "MANDATORY FINDINGS (hybrid mode only)"]
+  Ranked hypotheses [shape: oval]
+}
+
+Stage 3 — Vectorize [icon: cpu, color: "#0099FF"] {
+  vectorize_llm [label: "Code LLM (via Model Gateway)"]
+  Skeleton-fill prompt
+  Compile gate [label: "Compile gate (cc -O0 -lm)"]
+  Deterministic fallback
+  C timing harness [shape: document]
+}
+
+Timing Oracle [icon: activity, color: "#2FBB45"] {
+  harness_oracle [label: "harness_oracle (real patched fn)"]
+  REPS amplification [label: "REPS 100-500"]
+  Welch t-test [label: "Welch t-test, n=50,000"]
+  timing JSON [shape: document]
+}
+
+Stage 2 — Refine [icon: git-branch, color: "#DC762D"] {
+  refine_llm [label: "Reasoning LLM (via Model Gateway)"]
+  Verdict [label: "PROMOTED / DEMOTED / INVALIDATED / UNCHANGED"]
+  Exploitation path
+}
+
+Confirmed Leak [shape: oval, icon: check-circle, color: "#2FBB45", label: "Confirmed leak: class + location + t-stat + exploit path"]
+
+Weakened PQC Source > Stage 1 — Ingestion
+Model Gateway > Stage 1 — Ingestion: serves ingest_llm
+Model Gateway > Stage 3 — Vectorize: serves vectorize_llm
+Model Gateway > Stage 2 — Refine: serves refine_llm
+Stage 1 — Ingestion > Stage 3 — Vectorize: ranked hypotheses
+Stage 3 — Vectorize > Timing Oracle: timing harness
+Timing Oracle > Stage 2 — Refine: timing JSON (ground truth)
+Stage 2 — Refine > Confirmed Leak: PROMOTED
+Stage 2 — Refine --> Stage 1 — Ingestion: refine & re-hypothesise (closed loop) [color: "#FB2C55"]

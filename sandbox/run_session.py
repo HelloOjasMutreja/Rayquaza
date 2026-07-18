@@ -1,3 +1,4 @@
+import os
 import time
 import uuid
 from pathlib import Path
@@ -14,13 +15,20 @@ from viz.orchestrator import invoke_oracle
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 FINDINGS = REPO_ROOT / "shared" / "findings"
+FEEDBACK = REPO_ROOT / "shared" / "feedback"
 # The engine always writes its run state here (track-b-engine/engine/adversary_loop.py).
 LOOP_STATE = FINDINGS / "loop_state.json"
+# Hard per-cell spend cap for paid API models (each model x target run gets its own
+# fresh Meter, so a full matrix's worst-case total is this times the cell count --
+# keep it low). Override with RAYQ_MAX_COST_USD.
+# Free/local (Ollama) models are unaffected -- pricing.cost() always returns 0 for them.
+MAX_COST_USD = float(os.environ.get("RAYQ_MAX_COST_USD", "0.40"))
 
 GROUND_TRUTH = {
     "kyber512_leak2": {"category": "secret_dependent_branch", "location": "poly_tomsg"},
     "kyber512_leak4": {"category": "secret_dependent_branch", "location": "indcpa_dec"},
     "kyber512_leak5": {"category": "nonconstant_comparison", "location": "crypto_kem_dec"},
+    "mldsa44_leak1": {"category": "nonconstant_comparison", "location": "mld_sign_verify_internal"},
 }
 
 
@@ -28,13 +36,15 @@ class RunSession:
     """Runs one model across one target via the engine subprocess behind the gateway,
     folds live events for the UI, and writes a Run artifact at the end."""
 
-    def __init__(self, model: str, target_id: str, target_c: Path, on_state):
+    def __init__(self, model: str, target_id: str, target_c: Path, on_state,
+                 static_scan: bool = True):
         self._model = model
         self._target_id = target_id
         self._target_c = Path(target_c)
         self._on_state = on_state
+        self._static_scan = static_scan  # False = autonomous mode (no static-scan directive)
         self._run_id = uuid.uuid4().hex[:8]
-        self._meter = Meter(model=model)
+        self._meter = Meter(model=model, max_cost_usd=MAX_COST_USD)
         keys = {p: config.api_key(p) for p in ("anthropic", "openai")}
         self._router = Router(keys={k: v for k, v in keys.items() if v})
         self._gateway = Gateway(self._router, self._meter)
@@ -45,7 +55,23 @@ class RunSession:
             "RAYQ_OLLAMA_URL": self._gateway.url,
             "RAYQ_CODE_MODEL": self._model,
             "RAYQ_REASON_MODEL": self._model,
+            "RAYQ_STATIC_SCAN": "1" if self._static_scan else "0",
         }
+        # Guard against a stale loop_state.json being misread as this run's output
+        # (e.g. if the engine subprocess crashes before writing fresh state).
+        try:
+            LOOP_STATE.unlink()
+        except FileNotFoundError:
+            pass
+        # Hypothesis ids (H001, H002, ...) are assigned per-run starting from H001,
+        # so a leftover timing_H001_*.json from a PREVIOUS cell's target can be
+        # misread by this cell's poll loop as its own (correctly-named but stale)
+        # oracle result. Clear only the engine's auto-generated ids (H###) before
+        # every cell -- this preserves hand-named reference data (e.g.
+        # timing_LEAK1-001_*.json, timing_MLDSA1-ORACLE_*.json) used elsewhere.
+        for f in FEEDBACK.glob("timing_H[0-9][0-9][0-9]_*.json"):
+            f.unlink(missing_ok=True)
+
         started = time.time()
         state = RunState(run_id=self._run_id, model_label=f"{self._model} (live)")
 
@@ -90,22 +116,26 @@ class RunSession:
         """Derive located/confirmed from the loop_state the engine wrote for this run."""
         located = confirmed = autonomous = False
         t_stat = None
-        verdict = "UNKNOWN"
+        verdict = "NO_OUTPUT"   # default: engine wrote no matching state (crash / no result)
         cycles = 0
+        # Only trust a loop_state this run actually produced: its target_file basename
+        # must match the target we analysed. Otherwise it is stale / another target.
         if LOOP_STATE.exists():
             data = load_loop_state(LOOP_STATE)
-            cycles = data.get("current_cycle", 0)
-            hyps = data.get("hypotheses", [])
-            if hyps:
-                best = max(hyps, key=lambda h: abs(h.get("t_statistic") or 0.0))
-                gt = GROUND_TRUTH.get(self._target_id, {})
-                cat = best.get("category", "")
-                loc = best.get("location", "")
-                located = (cat == gt.get("category")) and (gt.get("location", "") in loc)
-                confirmed = bool(best.get("significant"))
-                t_stat = best.get("t_statistic")
-                verdict = best.get("status", "UNKNOWN")
-                autonomous = "MANDATORY" not in (best.get("evidence", "") or "").upper()
+            if Path(data.get("target_file", "")).name == self._target_c.name:
+                cycles = data.get("current_cycle", 0)
+                verdict = "UNCHANGED"
+                hyps = data.get("hypotheses", [])
+                if hyps:
+                    best = max(hyps, key=lambda h: abs(h.get("t_statistic") or 0.0))
+                    gt = GROUND_TRUTH.get(self._target_id, {})
+                    cat = best.get("category", "")
+                    loc = best.get("location", "")
+                    located = (cat == gt.get("category")) and (gt.get("location", "") in loc)
+                    confirmed = bool(best.get("significant"))
+                    t_stat = best.get("t_statistic")
+                    verdict = best.get("status", "UNCHANGED")
+                    autonomous = "MANDATORY" not in (best.get("evidence", "") or "").upper()
         return TargetResult(
             target_id=self._target_id, located=located, confirmed=confirmed,
             t_stat=t_stat, cycles=cycles, wall_seconds=round(ended - started, 1),
