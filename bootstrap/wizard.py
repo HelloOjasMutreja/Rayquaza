@@ -20,7 +20,7 @@ from rich.console import Console
 from rich.markup import escape
 from rich.panel import Panel
 from rich.progress import BarColumn, DownloadColumn, Progress, TransferSpeedColumn
-from rich.prompt import IntPrompt
+from rich.prompt import Confirm, IntPrompt
 from rich.table import Table
 
 from bootstrap.build_check import TARGET_DIRS, missing_binaries, read_liboqs_commit
@@ -59,6 +59,7 @@ FOCUSED_TARGETS = {
     name: REPO_ROOT / "track-b-engine" / "ingestion" / "test_targets" / f"{name}_focused.c"
     for name in TARGET_DIRS
 }
+ALL_TARGET_NAMES = list(FOCUSED_TARGETS.keys())
 
 console = Console()
 
@@ -102,22 +103,29 @@ def _wait_for_ollama() -> None:
 def _choose_tier():
     ram_gb = detect_ram_gb()
     disk_gb = detect_disk_gb()
-    console.print(f"RAM available:   {ram_gb:.1f} GB")
-    console.print(f"Disk available: {disk_gb:.1f} GB")
 
     recommended = recommend_tier(ram_gb, disk_gb)
+    warning = ""
     if recommended is None:
-        console.print(
-            f"[{ORANGE}]Neither model tier's minimums are comfortably met on this "
+        warning = (
+            f"\n[{ORANGE}]Neither model tier's minimums are comfortably met on this "
             "machine. You can still try the lightweight tier, but pulls or runs "
             "may be slow.[/]"
         )
         recommended = tier_by_name("lightweight")
 
-    console.print(f"\nRecommended: [bold]{recommended.label}[/bold]")
+    lines = [
+        f"RAM available:   {ram_gb:.1f} GB",
+        f"Disk available: {disk_gb:.1f} GB",
+    ]
+    if warning:
+        lines.append(warning)
+    lines.append("")
+    lines.append(f"Recommended: [bold]{recommended.label}[/bold]")
     for i, tier in enumerate(TIERS, start=1):
         marker = " (recommended)" if tier.name == recommended.name else ""
-        console.print(f"  [{i}] {tier.label}{marker}")
+        lines.append(f"  [{i}] {tier.label}{marker}")
+    console.print(Panel("\n".join(lines), border_style=BORDER, title="Model tier", title_align="left"))
 
     default_choice = next(i for i, t in enumerate(TIERS, start=1) if t.name == recommended.name)
     choice = IntPrompt.ask(
@@ -172,18 +180,20 @@ def _pull_models(tier):
     return tier
 
 
-def _choose_targets() -> list[str]:
+def _choose_start_mode() -> str:
+    """Ask whether to run all 5 Kyber targets back to back, or start with
+    just the first one. Returns "all" or "incremental"; the caller
+    (_run_targets) decides what to do with that, including whether to ask
+    about continuing between targets."""
     console.print("\nRun all 5 Kyber targets, or just one to start?")
     console.print("  [1] All 5 (full reproduction)")
-    console.print("  [2] Just kyber512_leak1 (fast first taste)")
+    console.print("  [2] Just kyber512_leak1 (fast first taste, choose whether to continue after)")
     console.print(
         "  Note: mldsa44_leak1 is not included here -- it needs an x86 host "
         "to reproduce a significant result. See docs/reproducing-mldsa.md."
     )
     choice = IntPrompt.ask("Choice", default=2, choices=["1", "2"])
-    if choice == 1:
-        return list(FOCUSED_TARGETS.keys())
-    return ["kyber512_leak1"]
+    return "all" if choice == 1 else "incremental"
 
 
 _STAGE_PATTERNS = (
@@ -203,6 +213,13 @@ _STAGE_COLOR = {
     "DONE": GREEN,
 }
 
+_STAGE_DESCRIPTION = {
+    "INGEST": "reading the target source for secret-dependent branches and unsafe comparisons",
+    "ORACLE": "running 50,000 timed executions to measure the difference between conditions",
+    "REFINE": "judging whether the timing signal is a real, confirmed leak",
+    "DONE": "cycle complete, writing results",
+}
+
 
 def _stage_for_line(line: str) -> str | None:
     """Return which pipeline stage a raw engine/run_focused.sh output line
@@ -214,6 +231,18 @@ def _stage_for_line(line: str) -> str | None:
         if pattern in line:
             return stage
     return None
+
+
+def _status_text(stage: str) -> str:
+    """Build the live status line for a pipeline stage: the stage name in
+    its color, plus a muted description so there's something to read during
+    a long, otherwise-silent wait (e.g. the oracle's 30s polling interval)."""
+    color = _STAGE_COLOR[stage]
+    description = _STAGE_DESCRIPTION.get(stage, "")
+    text = f"[{color}]{stage}[/]"
+    if description:
+        text += f"  [dim {INK_SOFT}]{description}[/]"
+    return text
 
 
 def _style_line(line: str) -> str:
@@ -256,7 +285,7 @@ def _run_target(name: str, tier, target_index: int | None = None, target_total: 
         bufsize=1,
     )
     stage = "INGEST"
-    with console.status(f"[{_STAGE_COLOR[stage]}]{stage}[/]", spinner="dots") as status:
+    with console.status(_status_text(stage), spinner="dots", spinner_style=_STAGE_COLOR[stage]) as status:
         for line in proc.stdout:
             line = line.rstrip("\n")
             if not line:
@@ -264,9 +293,32 @@ def _run_target(name: str, tier, target_index: int | None = None, target_total: 
             new_stage = _stage_for_line(line)
             if new_stage:
                 stage = new_stage
-                status.update(f"[{_STAGE_COLOR[stage]}]{stage}[/]")
+                status.update(_status_text(stage), spinner_style=_STAGE_COLOR[stage])
             console.print(_style_line(line))
     proc.wait()
+
+
+def _run_targets(tier) -> list[str]:
+    """Run targets per the user's chosen mode, returning the ordered list of
+    target names actually completed. In "all" mode that's always the full
+    five, run back to back with no further prompts. In "incremental" mode,
+    it starts at kyber512_leak1 and asks after each target whether to
+    continue to the next one, so a user can step through at their own pace
+    without restarting the whole wizard -- the returned list reflects
+    exactly how far they went, which is what the final consolidated
+    summary is built from."""
+    mode = _choose_start_mode()
+    completed: list[str] = []
+    total = len(ALL_TARGET_NAMES)
+    for i, name in enumerate(ALL_TARGET_NAMES, start=1):
+        _run_target(name, tier, target_index=i, target_total=total)
+        completed.append(name)
+        is_last = i == total
+        if mode == "incremental" and not is_last:
+            next_name = ALL_TARGET_NAMES[i]
+            if not Confirm.ask(f"Continue to {next_name}?", default=True):
+                break
+    return completed
 
 
 _VERDICT_COLOR = {
@@ -297,16 +349,35 @@ def _print_summary(targets: list[str], commit: str) -> None:
     console.print("Run again any time with: docker compose run --rm runner")
 
 
+def _print_legend() -> None:
+    console.print()
+    console.print(f"[{INK_SOFT}]What these numbers mean:[/]")
+    console.print(
+        f"  [{INK_SOFT}]Verdict[/] means whether the oracle's timing measurement "
+        f"backed up the hypothesis. [bold {GREEN}]PROMOTED[/] means a real, "
+        f"statistically significant timing difference was found: a confirmed leak. "
+        f"[bold {RED}]DEMOTED[/] or [bold {RED}]INVALIDATED[/] means it didn't hold up."
+    )
+    console.print(
+        f"  [{INK_SOFT}]t-stat[/] is a Welch's t-statistic. Its [bold]magnitude[/] "
+        "(distance from zero, ignoring sign) is what matters -- the sign just "
+        "reflects which of the two measured conditions happened to be timed first. "
+        "Roughly, |t-stat| > 4 counts as a statistically significant signal, and the "
+        "larger the magnitude, the stronger and more confident the finding. There's "
+        "no \"higher is better\" or \"lower is better\" here, only \"further from "
+        "zero is a stronger signal.\""
+    )
+
+
 def main() -> None:
     _banner()
     commit = _check_build()
     _wait_for_ollama()
     tier = _choose_tier()
     tier = _pull_models(tier)
-    targets = _choose_targets()
-    for i, name in enumerate(targets, start=1):
-        _run_target(name, tier, target_index=i, target_total=len(targets))
+    targets = _run_targets(tier)
     _print_summary(targets, commit)
+    _print_legend()
 
 
 if __name__ == "__main__":

@@ -1,4 +1,14 @@
-from bootstrap.wizard import GREEN, INK_SOFT, RED, _stage_for_line, _style_line, _style_verdict
+from bootstrap.wizard import (
+    BLUE,
+    GREEN,
+    INK_SOFT,
+    ORANGE,
+    RED,
+    _stage_for_line,
+    _status_text,
+    _style_line,
+    _style_verdict,
+)
 
 
 def test_stage_for_line_detects_ingest():
@@ -78,3 +88,29 @@ def test_style_verdict_uses_red_for_invalidated():
 
 def test_style_verdict_leaves_unknown_verdicts_unstyled():
     assert _style_verdict("NO RESULT") == "NO RESULT"
+
+
+def test_status_text_uses_stage_color_and_a_muted_description():
+    result = _status_text("INGEST")
+    assert result.startswith(f"[{BLUE}]INGEST[/]")
+    assert f"[dim {INK_SOFT}]" in result
+
+
+def test_status_text_uses_green_for_oracle():
+    assert _status_text("ORACLE").startswith(f"[{GREEN}]ORACLE[/]")
+
+
+def test_status_text_uses_orange_for_refine():
+    assert _status_text("REFINE").startswith(f"[{ORANGE}]REFINE[/]")
+
+
+def test_status_text_omits_description_block_when_none_defined():
+    # every current stage has a description, but the function must not
+    # crash or add a stray "dim" block if a future stage doesn't.
+    from bootstrap.wizard import _STAGE_COLOR, _STAGE_DESCRIPTION
+    _STAGE_COLOR["_TEST_STAGE"] = BLUE
+    try:
+        result = _status_text("_TEST_STAGE")
+        assert "dim" not in result
+    finally:
+        del _STAGE_COLOR["_TEST_STAGE"]
