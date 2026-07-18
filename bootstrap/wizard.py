@@ -36,6 +36,20 @@ from bootstrap.hardware import (
 from bootstrap.ollama_client import pull_model, wait_until_ready
 from bootstrap.summary import build_summary
 
+# Rayquaza design-system palette (docs/style/tokens.css), reused here so the
+# terminal wizard visually matches the PDF/DOCX design system and, more
+# specifically, the pipeline diagram's own per-stage colors
+# (docs/paper/figures/core_pipeline.eraser): Stage 1/3 ingestion/vectorize
+# is blue, the Timing Oracle is green, Stage 2 refine is orange, and the
+# feedback/re-hypothesize loop -- along with anything else "wrong, miss, or
+# warning" -- is red.
+BLUE = "#0099FF"
+GREEN = "#2FBB45"
+ORANGE = "#DC762D"
+RED = "#FB2C55"
+BORDER = "#BEBEBE"
+INK_SOFT = "#313131"
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TARGETS_ROOT = REPO_ROOT / "track-a-target" / "targets"
 FINDINGS_DIR = REPO_ROOT / "shared" / "findings"
@@ -53,11 +67,11 @@ def _banner() -> None:
     console.print(Panel.fit(
         "[bold]RAYQUAZA[/bold] -- Post-Quantum Timing-Leak Discovery\n"
         "LLM-guided rediscovery of planted PQC side-channels",
-        border_style="cyan",
+        border_style=BLUE,
     ))
     if is_apple_silicon():
         console.print(
-            "[yellow]Note:[/yellow] Docker has no Metal passthrough on Apple "
+            f"[{ORANGE}]Note:[/] Docker has no Metal passthrough on Apple "
             "Silicon, so Ollama will run CPU-only in this container. A native "
             "Ollama install outside Docker (pointed at with OLLAMA_HOST) would "
             "be faster on this machine if you want it. This run will still "
@@ -68,21 +82,21 @@ def _banner() -> None:
 def _check_build() -> str:
     missing = missing_binaries(TARGETS_ROOT, TARGET_DIRS)
     if missing:
-        console.print(f"[red]Missing built targets: {', '.join(missing)}[/red]")
+        console.print(f"[{RED}]Missing built targets: {', '.join(missing)}[/]")
         console.print("The image build likely failed. Try: [bold]docker compose build --no-cache[/bold]")
         sys.exit(1)
     commit = read_liboqs_commit()
-    console.print(f"[green]OK[/green] Build toolchain OK (liboqs commit {commit})")
+    console.print(f"[{GREEN}]OK[/] Build toolchain OK (liboqs commit {commit})")
     return commit
 
 
 def _wait_for_ollama() -> None:
     console.print("Waiting for Ollama service...", end=" ")
     if not wait_until_ready(OLLAMA_BASE_URL, timeout_s=90):
-        console.print("[red]unreachable[/red]")
+        console.print(f"[{RED}]unreachable[/]")
         console.print("Check it with: [bold]docker compose logs ollama[/bold]")
         sys.exit(1)
-    console.print("[green]OK[/green]")
+    console.print(f"[{GREEN}]OK[/]")
 
 
 def _choose_tier():
@@ -94,9 +108,9 @@ def _choose_tier():
     recommended = recommend_tier(ram_gb, disk_gb)
     if recommended is None:
         console.print(
-            "[yellow]Neither model tier's minimums are comfortably met on this "
+            f"[{ORANGE}]Neither model tier's minimums are comfortably met on this "
             "machine. You can still try the lightweight tier, but pulls or runs "
-            "may be slow.[/yellow]"
+            "may be slow.[/]"
         )
         recommended = tier_by_name("lightweight")
 
@@ -125,8 +139,8 @@ def _pull_models(tier):
     disk_gb = detect_disk_gb()
     if not fits_disk(tier, disk_gb):
         console.print(
-            f"[yellow]Only {disk_gb:.1f} GB free, but {tier.label} needs "
-            f"~{tier.approx_download_gb:.1f} GB to download.[/yellow]"
+            f"[{ORANGE}]Only {disk_gb:.1f} GB free, but {tier.label} needs "
+            f"~{tier.approx_download_gb:.1f} GB to download.[/]"
         )
         if tier.name != "lightweight":
             fallback = tier_by_name("lightweight")
@@ -134,17 +148,17 @@ def _pull_models(tier):
                 console.print(f"Falling back to: [bold]{fallback.label}[/bold]")
                 tier = fallback
             else:
-                console.print("[red]Not enough disk space even for the lightweight tier. Free up space and try again.[/red]")
+                console.print(f"[{RED}]Not enough disk space even for the lightweight tier. Free up space and try again.[/]")
                 sys.exit(1)
         else:
-            console.print("[red]Not enough disk space for the lightweight tier. Free up space and try again.[/red]")
+            console.print(f"[{RED}]Not enough disk space for the lightweight tier. Free up space and try again.[/]")
             sys.exit(1)
 
     for model in tier.models:
         console.print(f"Pulling {model}...")
         with Progress(
             "[progress.description]{task.description}",
-            BarColumn(),
+            BarColumn(complete_style=GREEN, finished_style=GREEN),
             DownloadColumn(),
             TransferSpeedColumn(),
         ) as progress:
@@ -154,7 +168,7 @@ def _pull_models(tier):
                 completed = event.get("completed")
                 if total and completed is not None:
                     progress.update(task, total=total, completed=completed)
-        console.print(f"[green]OK[/green] {model} ready")
+        console.print(f"[{GREEN}]OK[/] {model} ready")
     return tier
 
 
@@ -183,10 +197,10 @@ _STAGE_PATTERNS = (
 )
 
 _STAGE_COLOR = {
-    "INGEST": "blue",
-    "ORACLE": "cyan",
-    "REFINE": "magenta",
-    "DONE": "green",
+    "INGEST": BLUE,
+    "ORACLE": GREEN,
+    "REFINE": ORANGE,
+    "DONE": GREEN,
 }
 
 
@@ -210,17 +224,17 @@ def _style_line(line: str) -> str:
     misinterpreted as rich markup syntax."""
     safe = escape(line)
     if "PROMOTED" in line:
-        return f"[bold green]{safe}[/bold green]"
+        return f"[bold {GREEN}]{safe}[/]"
     if "DEMOTED" in line or "INVALIDATED" in line:
-        return f"[yellow]{safe}[/yellow]"
+        return f"[{RED}]{safe}[/]"
     if "WARNING" in line:
-        return f"[bold yellow]{safe}[/bold yellow]"
+        return f"[bold {RED}]{safe}[/]"
     if "waiting for feedback" in line:
-        return f"[dim cyan]{safe}[/dim cyan]"
+        return f"[dim {INK_SOFT}]{safe}[/]"
     if "detected hypothesis id" in line or "running oracle" in line:
-        return f"[cyan]{safe}[/cyan]"
+        return f"[{GREEN}]{safe}[/]"
     if "LOOP COMPLETE" in line:
-        return f"[bold]{safe}[/bold]"
+        return f"[bold {GREEN}]{safe}[/]"
     return safe
 
 
@@ -228,7 +242,7 @@ def _run_target(name: str, tier, target_index: int | None = None, target_total: 
     header = name
     if target_index is not None and target_total is not None:
         header = f"{name}  (target {target_index}/{target_total})"
-    console.rule(header)
+    console.rule(header, style=BORDER)
     script = REPO_ROOT / "track-b-engine" / "run_focused.sh"
     focused_file = FOCUSED_TARGETS[name]
     env = {**os.environ, "RAYQ_CODE_MODEL": tier.models[0], "RAYQ_REASON_MODEL": tier.models[1]}
@@ -242,7 +256,7 @@ def _run_target(name: str, tier, target_index: int | None = None, target_total: 
         bufsize=1,
     )
     stage = "INGEST"
-    with console.status(f"[{_STAGE_COLOR[stage]}]{stage}[/{_STAGE_COLOR[stage]}]", spinner="dots") as status:
+    with console.status(f"[{_STAGE_COLOR[stage]}]{stage}[/]", spinner="dots") as status:
         for line in proc.stdout:
             line = line.rstrip("\n")
             if not line:
@@ -250,21 +264,33 @@ def _run_target(name: str, tier, target_index: int | None = None, target_total: 
             new_stage = _stage_for_line(line)
             if new_stage:
                 stage = new_stage
-                status.update(f"[{_STAGE_COLOR[stage]}]{stage}[/{_STAGE_COLOR[stage]}]")
+                status.update(f"[{_STAGE_COLOR[stage]}]{stage}[/]")
             console.print(_style_line(line))
     proc.wait()
 
 
+_VERDICT_COLOR = {
+    "PROMOTED": GREEN,
+    "DEMOTED": RED,
+    "INVALIDATED": RED,
+}
+
+
+def _style_verdict(verdict: str) -> str:
+    color = _VERDICT_COLOR.get(verdict)
+    return f"[bold {color}]{verdict}[/]" if color else verdict
+
+
 def _print_summary(targets: list[str], commit: str) -> None:
     rows = build_summary(FINDINGS_DIR, targets)
-    table = Table(title="Summary")
+    table = Table(title="Summary", border_style=BORDER)
     table.add_column("Target")
     table.add_column("Hypothesis")
     table.add_column("Verdict")
     table.add_column("t-stat")
     for row in rows:
         t_stat = f"{row['t_statistic']:.1f}" if row["t_statistic"] is not None else "-"
-        table.add_row(row["target"], row["hypothesis_id"] or "-", row["verdict"], t_stat)
+        table.add_row(row["target"], row["hypothesis_id"] or "-", _style_verdict(row["verdict"]), t_stat)
     console.print(table)
     console.print(f"liboqs commit: {commit}")
     console.print(f"Full results saved to {FINDINGS_DIR} and {REPO_ROOT / 'shared' / 'feedback'}")
